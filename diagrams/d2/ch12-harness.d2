@@ -1,0 +1,29 @@
+# 第12章 图1：Harness 六大件架构（D2 源，渲染见 assets/ch12-harness.svg）
+direction: down
+
+classes: {
+  core:  { style: { fill: "#4F6D7A"; font-color: "#ffffff"; stroke: "#4F6D7A"; border-radius: 8 } }
+  part:  { style: { fill: "#C0D6DF"; stroke: "#4F6D7A"; border-radius: 8 } }
+  guard: { style: { fill: "#DD6E42"; font-color: "#ffffff"; stroke: "#DD6E42"; border-radius: 8 } }
+  ev:    { style: { fill: "#E8DAB2"; stroke: "#4F6D7A"; border-radius: 8 } }
+}
+
+llm: "LLM 核心\n（推理与决策）" { class: core }
+
+harness: "Harness 六大件" {
+  style.stroke: "#4F6D7A"
+  loop:   "① 循环引擎\nAgentic Loop·终止·预算\n→ 第 3、4 章" { class: part }
+  ctx:    "② 上下文引擎\n构成管理·压缩·注入\n→ 第 5、6 章" { class: part }
+  tools:  "③ 工具执行层\n注册表·重试·MCP·沙箱\n→ 第 7-9 章" { class: part }
+  state:  "④ 状态与恢复\nCheckpoint·记忆·工作区\n→ 第 10 章 + 本章" { class: part }
+  events: "⑤ 事件总线\n生命周期事件流\n→ 本章" { class: ev }
+  guard:  "⑥ 拦截与策略\nHooks·权限\n→ 第 6、13 章" { class: guard }
+}
+
+harness.loop -> harness.ctx -> llm: 构造上下文
+llm -> harness.loop: 决策
+harness.loop -> harness.guard -> harness.tools: 经拦截后执行
+harness.tools -> harness.loop: 观察回填
+harness.loop -> harness.events: 发射事件
+harness.tools -> harness.events: 发射事件
+harness.loop <-> harness.state: 检查点/记忆
