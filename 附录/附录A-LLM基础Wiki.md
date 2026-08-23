@@ -30,7 +30,7 @@ graph LR
     class C1,C2,C3 out
 ```
 
-*图 A-1：注意力直觉与三个工程后果的推导关系——这张图回答"为什么一个机制学直觉能解释 Agent 工程里的三条铁律"。*
+*图 A-1：注意力直觉与三个工程后果的推导关系——这张图回答"为什么一个机制学直觉能解释 Agent 工程里的三条铁律"。 Transformer/注意力的论文原图见附录 F.2。*
 
 **外部资料指引**：想看图解直觉，搜 "The Illustrated Transformer"（Jay Alammar）；想动手拆解，看 Karpathy 的 "Let's build GPT" 视频；论文原文 "Attention Is All You Need" 留给确有兴趣者——对 Agent 使用者，上面三个后果就是全部必需品。
 
