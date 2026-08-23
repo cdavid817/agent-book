@@ -1,0 +1,19 @@
+# 第14章 图1：四层 Span 层级树
+direction: down
+classes: {
+  root: { style: { fill: "#4F6D7A"; font-color: "#ffffff"; stroke: "#4F6D7A"; border-radius: 8 } }
+  turn: { style: { fill: "#C0D6DF"; stroke: "#4F6D7A"; border-radius: 8 } }
+  tool: { style: { fill: "#E8DAB2"; stroke: "#4F6D7A"; border-radius: 8 } }
+  proc: { style: { fill: "#DD6E42"; font-color: "#ffffff"; stroke: "#DD6E42"; border-radius: 8 } }
+}
+S:  "① Session Span（根）\n必带: session_id · user/tenant · task_type\n总 token/费用 · 最终状态" { class: root }
+A1: "② Agent Span（每轮一个）\n必带: turn · model · stop_reason\ninput/output/cache tokens · 耗时" { class: turn }
+A2: "② Agent Span（turn=42）" { class: turn }
+T1: "③ Tool/MCP Span\n工具名 · effect 等级 · is_error\n重试次数 · 结果字节数" { class: tool }
+T2: "③ Tool Span: update_ticket" { class: tool }
+P1: "④ Process Exec Span\n命令(脱敏) · 退出码\n沙箱标识 · 输出截断标记" { class: proc }
+S -> A1
+S -> A2
+A1 -> T1
+A2 -> T2
+T1 -> P1

@@ -1,0 +1,23 @@
+# 第20章 图1：三档部署光谱与数据边界
+direction: right
+classes: {
+  app:   { style: { fill: "#4F6D7A"; font-color: "#ffffff"; stroke: "#4F6D7A"; border-radius: 8 } }
+  model: { style: { fill: "#C0D6DF"; stroke: "#4F6D7A"; border-radius: 8 } }
+  bound: { style: { fill: "#E8DAB2"; stroke: "#4F6D7A"; border-radius: 8 } }
+}
+T1: "第一档：全托管 API" {
+  a1: "企业应用" { class: app }
+  m1: "供应商公有端点\n旗舰模型 · 零运维" { class: model }
+  a1 -> m1: "数据出域\n依赖合同条款"
+}
+T2: "第二档：VPC 内网关" {
+  a2: "企业应用(VPC)" { class: app }
+  g2: "私有网关" { class: model }
+  m2: "云厂商托管模型" { class: model }
+  a2 -> g2 -> m2: "云合规边界内\n区域承诺+网络隔离"
+}
+T3: "第三档：私有化开源" {
+  a3: "企业应用" { class: app }
+  m3: "自管 GPU 推理\n开源权重 · 完全域内" { class: model }
+  a3 -> m3: "物理隔离"
+}

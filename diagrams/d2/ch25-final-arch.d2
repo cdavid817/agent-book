@@ -1,0 +1,36 @@
+# 第25章 图1：贯穿项目最终架构（四层十六模块）
+direction: down
+classes: {
+  ing:  { style: { fill: "#E8DAB2"; stroke: "#4F6D7A"; border-radius: 8 } }
+  core: { style: { fill: "#4F6D7A"; font-color: "#ffffff"; stroke: "#4F6D7A"; border-radius: 8 } }
+  state:{ style: { fill: "#C0D6DF"; stroke: "#4F6D7A"; border-radius: 8 } }
+  qual: { style: { fill: "#DD6E42"; font-color: "#ffffff"; stroke: "#DD6E42"; border-radius: 8 } }
+}
+接入层: {
+  GW: "会话网关 · OBO/限流 §13/§21" { class: ing }
+  MQ: "队列触发 · 幂等消费 §21" { class: ing }
+}
+核心层: {
+  LOOP: "AgentLoop 循环+熔断+收尾 §2/§3" { class: core }
+  PLAN: "规划策略 P2E/重规划 §4" { class: core }
+  CTX: "上下文引擎 压缩+记忆注入 §5/§10" { class: core }
+  HOOK: "Hook 管线+PDP/PEP §6/§13" { class: core }
+  TOOLS: "工具注册表+重试器 §7" { class: core }
+  MCPC: "MCP Client+快照 §8" { class: core }
+  SHELL: "沙箱执行器+分级 §9" { class: core }
+  RAGT: "混合检索/数据查询 §11/§21" { class: core }
+}
+状态协作层: {
+  EVT: "事件总线 §12" { class: state }
+  CKPT: "Shadow Checkpoint §12" { class: state }
+  MEM: "SQLite 记忆仓储 §10" { class: state }
+  GRAPH: "图执行器+Tracer §18/§19" { class: state }
+}
+质量数据层: {
+  OTEL: "OTel 四层 Span §14" { class: qual }
+  COST: "成本台账 §16" { class: qual }
+  EVAL: "Scorer+回归 §15" { class: qual }
+  EXPORT: "轨迹导出 §24" { class: qual }
+}
+接入层 -> 核心层 -> 状态协作层
+核心层 -> 质量数据层: 事件驱动

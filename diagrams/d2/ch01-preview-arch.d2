@@ -1,0 +1,24 @@
+# 第1章 图4：贯穿项目最终形态预告
+direction: down
+classes: {
+  core: { style: { fill: "#4F6D7A"; font-color: "#ffffff"; stroke: "#4F6D7A"; border-radius: 8 } }
+  layer:{ style: { fill: "#C0D6DF"; stroke: "#4F6D7A"; border-radius: 8 } }
+  ext:  { style: { fill: "#E8DAB2"; stroke: "#4F6D7A"; border-radius: 8 } }
+  guard:{ style: { fill: "#DD6E42"; font-color: "#ffffff"; stroke: "#DD6E42"; border-radius: 8 } }
+}
+U: "用户 / 上游系统" { class: ext }
+GW: "接入层\n会话管理 · 权限校验 → 第 13 章" { class: guard }
+RT: "Agent 运行时\nAgentic Loop · 事件流 → 第 3、12 章" { class: core }
+CTX: "上下文引擎\nSystem Prompt/Skills/压缩 → 第 5、6 章" { class: layer }
+TOOLS: "工具执行层\nFunction Calling · MCP · 沙箱 → 第 7-9 章" { class: layer }
+MEMS: "记忆与检索\nSQLite 持久化 · RAG → 第 10、11 章" { class: layer }
+ORCH: "多 Agent 编排\n拓扑 · 图执行 → 第 17-19 章" { class: layer }
+EXT: "企业内部系统\n订单/工单/知识库" { class: ext }
+OBS: "可观测与评测\nOTel · Eval · 成本 → 第 14-16 章" { class: guard }
+U -> GW -> RT
+RT -> CTX
+RT -> TOOLS
+RT -> MEMS
+RT -> ORCH
+TOOLS -> EXT
+RT -> OBS

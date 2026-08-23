@@ -180,28 +180,9 @@ graph TB
 
 本书的每一章代码都累加到同一个贯穿项目——**示例助手**：一个企业内部的运维/客服混合场景 Agent（Python 实现），最终具备工具调用、MCP 接入、分层记忆、可观测性与多 Agent 协作能力。本章不写代码（第一行代码在第 2 章的最小 ReAct Loop 中出现），只给出项目最终形态的一页纸架构，供你在后续每一章中定位"现在写的这块属于哪里"。
 
-```mermaid
-graph TB
-    U["用户 / 上游系统"] --> GW["接入层<br/>会话管理 · 权限校验 → 第 13 章"]
-    GW --> RT["Agent 运行时<br/>Agentic Loop · 事件流 → 第 3、12 章"]
+![贯穿项目最终形态预告架构](../assets/ch01-preview-arch.svg)
 
-    RT --> CTX["上下文引擎<br/>System Prompt / Skills / 压缩 → 第 5、6 章"]
-    RT --> TOOLS["工具执行层<br/>Function Calling · MCP · 沙箱 → 第 7–9 章"]
-    RT --> MEMS["记忆与检索<br/>SQLite 持久化 · RAG → 第 10、11 章"]
-    RT --> ORCH["多 Agent 编排<br/>拓扑 · 图执行 → 第 17–19 章"]
-
-    TOOLS --> EXT["企业内部系统<br/>订单 / 工单 / 知识库"]
-    RT --> OBS["可观测与评测<br/>OTel · Eval · 成本 → 第 14–16 章"]
-
-    classDef core fill:#4F6D7A,stroke:#4F6D7A,color:#ffffff;
-    classDef layer fill:#C0D6DF,stroke:#4F6D7A,color:#1f2d33;
-    classDef ext fill:#E8DAB2,stroke:#4F6D7A,color:#1f2d33;
-    classDef guard fill:#DD6E42,stroke:#DD6E42,color:#ffffff;
-    class RT core
-    class CTX,TOOLS,MEMS,ORCH layer
-    class U,EXT ext
-    class GW,OBS guard
-```
+<!-- 架构/分层图用 D2（见《图表规范》）；源 diagrams/d2/ch01-preview-arch.d2 -->
 
 *图 4：贯穿项目示例助手的最终形态——这张图回答"全书代码最终拼成一个什么样的系统、每个模块在哪一章落地"。橙色模块（接入层、可观测与评测）是企业落地的两道安全网。*
 
