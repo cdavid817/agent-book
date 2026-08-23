@@ -24,6 +24,30 @@
 
 **ReAct（Reasoning + Acting）** 由 Yao 等人在 2022 年的论文《ReAct: Synergizing Reasoning and Acting in Language Models》中提出，核心思想是让模型交替产生**推理轨迹（Thought）** 和**行动（Action）**，行动的**观察结果（Observation）** 再反馈给下一轮推理。相比"只推理"（如纯 CoT，容易幻觉出不存在的事实）和"只行动"（无规划，容易乱调工具），交替结构让每一步行动都有推理依据、每一步推理都有真实观察支撑——这正是第 1 章"教训二：无验证"的最小对策：**观察结果就是天然的验证信号**。
 
+```mermaid
+graph TB
+    subgraph A["只推理（纯 CoT）"]
+        A1["Thought₁"] --> A2["Thought₂"] --> A3["答案<br/>无外部校验 → 可能幻觉"]
+    end
+    subgraph B["只行动（无规划）"]
+        B1["Act₁"] --> B2["Act₂"] --> B3["结果<br/>无推理依据 → 乱调工具"]
+    end
+    subgraph C["ReAct：推理-行动-观察交替"]
+        C1["Thought"] --> C2["Act"] --> C3["Observation"]
+        C3 -->|反馈为下一轮依据| C1
+        C3 --> C4["答案<br/>每步有依据 + 真实校验"]
+    end
+
+    classDef mid fill:#E8DAB2,stroke:#4F6D7A,color:#1f2d33
+    classDef bad fill:#DD6E42,stroke:#DD6E42,color:#ffffff
+    classDef good fill:#4F6D7A,stroke:#4F6D7A,color:#ffffff
+    class A1,A2,B1,B2,C1,C2,C3 mid
+    class A3,B3 bad
+    class C4 good
+```
+
+*图 1：ReAct 与"只推理/只行动"的对比——这张图回答"为什么推理-行动-观察的交替结构能同时抑制纯推理的幻觉和纯行动的盲目"。观察结果回流构成天然的验证信号（本图重绘自 ReAct 论文要义，原图见附录 F.1）。*
+
 早期 ReAct 靠提示词约定 `Thought:/Action:/Observation:` 文本格式，再用正则解析——脆弱且易被格式错误打断。2023 年中之后，**原生工具调用 API（Tool Use API）** 把"行动"变成了结构化协议：模型输出带 JSON Schema 校验的 `tool_use` 内容块，运行时执行后以 `tool_result` 块回填。本章直接使用原生协议，文本解析式 ReAct 只需了解其历史地位（两种方式的可靠性对比参见第 7 章与附录 A.6）。
 
 ### 2.2 最小循环的四个组成部分
@@ -57,7 +81,7 @@ flowchart TB
     class OUT done
 ```
 
-*图 1：最小 ReAct Loop 的控制流——这张图回答"一个 Agent 循环里到底有几个分支、终止发生在哪两个位置"。橙色的强制终止是运行时收回的刹车权，不依赖模型自觉。*
+*图 2：最小 ReAct Loop 的控制流——这张图回答"一个 Agent 循环里到底有几个分支、终止发生在哪两个位置"。橙色的强制终止是运行时收回的刹车权，不依赖模型自觉。*
 
 ### 2.3 消息协议：一次三轮任务的完整时序
 
@@ -88,7 +112,7 @@ sequenceDiagram
     A-->>U: 最终答复
 ```
 
-*图 2：三轮工具调用任务的完整消息时序——这张图回答"每一轮网络上到底传了什么、历史如何随轮数累积"。注意四次 LLM 调用中，前三次都以 `stop_reason=tool_use` 结束，只有最后一次是 `end_turn`。*
+*图 3：三轮工具调用任务的完整消息时序——这张图回答"每一轮网络上到底传了什么、历史如何随轮数累积"。注意四次 LLM 调用中，前三次都以 `stop_reason=tool_use` 结束，只有最后一次是 `end_turn`。*
 
 从时序图能直接读出两个工程事实：其一，**n 轮任务要付 n 次"全量历史"的输入 token 费用**，这是第 5 章上下文管理与附录 A.1 提示缓存（Prompt Caching）存在的经济学动因；其二，`tool_use` 与 `tool_result` 靠 `id` 严格配对，配对规则出错是新手最高频的报错来源（详见第 7 章，本章"常见坑 2"先给最典型的一例）。
 
@@ -253,7 +277,7 @@ if __name__ == "__main__":
 
 ### 3.2 运行演示：一次多步任务的完整轨迹
 
-在含有 `README.md` 的目录下运行 `python minimal_agent.py`，典型输出（对应图 2 的时序）：
+在含有 `README.md` 的目录下运行 `python minimal_agent.py`，典型输出（对应图 3 的时序）：
 
 ```text
 [行动] list_files({})
