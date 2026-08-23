@@ -86,6 +86,55 @@
 
 *核验状态：术语真实（Karpathy 2025 提出），此处按其公认含义描述。*
 
+## D.10 同赛道开源项目分类速览（社区快照）
+
+> **性质与核验**：本节是"给 AI 编码 CLI 增加工作流约束、子 Agent、多角色团队、任务拆解、TDD、规划评审"这一赛道的**社区项目快照**，条目多、更名与存续变动极快，本书**未逐一独立核验**，统一挂 [C-07]——发行前按项目仓库逐项复核，失效即删。用法不是"选一个抄"，而是用本书坐标（六大件 × 第 17 章拓扑 × 第 6 章 Skill/第 22 章 SDD）快速判断每个项目"到底给了什么、属于哪一格"。四大类：① OpenCode 插件；② Claude Code 生态插件；③ 独立完整 Agent；④ 工作流/技能套件。
+
+**① OpenCode 插件**（与 OhMyOpencode 同底座，经 `opencode.json` 安装；与 Claude Code 插件**底座不同、不可混用**）：
+
+- **CrewBee**：OpenCode 原生多 Agent 团队，自定义产品/后端/测试角色、可控并行——第 17 章 Supervisor/Parallel 的插件化；比 OMO 轻、token 开销低。
+- **Slim（Pocket-Universe）**：轻量子 Agent，只做局部子任务拆解、不大规模并行，复用 OpenCode 钩子，适合中小项目。
+- **Micode**：规划驱动（头脑风暴→方案→实现），擅长产出 spec 需求文档，子 Agent 能力中等。
+- **Spec-Superflow**：Superpowers 衍生，**Spec-first 契约驱动**（第 22 章 SDD + OpenSpec 规划引擎），跨 OpenCode/Claude Code/Cursor/Copilot-CLI。
+- **oh-my-superagents**：桥接 Superpowers 工作流，把 phase 计划自动生成 OpenCode 的 agents/commands 配置，减少手写。
+- 社区总清单：`awesome-opencode`。
+
+**② Claude Code 生态插件**（跑在官方 Claude Code CLI 上，不能跑在 OpenCode）：
+
+- **oh-my-claudecode（OMC）**：热门多 Agent 编排层，约 21 个专业角色，`/team` 启动 plan→prd→exec→verify→fix 五阶段流水线（第 17 章 Pipeline + 角色团队），tmux 多进程隔离子 Agent。
+- **Everything-claude-code**：13 个专家子 Agent + 40+ Skills + 会话记忆持久化 + 自动规范检查，一套配置升级 Claude Code。
+- **Ruflo（claude-flow）**：Queen-Worker 蜂群模式（第 17 章 Hierarchical/Swarm 谱系），多进程分发/并行/合并，SPARC 工作流。
+- **SuperClaude**：9 套预置专家 Persona + 大量斜杠命令/钩子，给官方 CLI 加虚拟团队。
+- **Get-Shit-Done（gstd）**：极简套件，**不强制 TDD**、优先快速交付，与 Superpowers 的重型流程相反。
+- **Coding-Workflow**：可组合 skills+agents、Hive 团队调度、多模型后端，TDD/安全审计/文档同步，模块化不写死流程。
+
+**③ 独立完整 Agent**（不依赖 OpenCode/Claude Code，可直接运行）：
+
+- **OhMyCode**（中科大 AlphaLab）：约 3k 行核心，轻量子 Agent 调度、可改自身源码，适合学习与二次开发。
+- **Claw-Code**：Claude Code 的净室开源实现，完整钩子/子 Agent/MCP，可脱离 Anthropic 官方 CLI 复刻 OMO 式工作流。（对应 D.7 "openclaw" 一名的可能所指之一，仍需核验。）
+- **OpenHands**（原 OpenDevin）：成熟的自主编码 Agent，多角色分工 + 沙箱执行，适合完整项目，资源消耗偏大。
+- **MetaGPT**：经典软件多 Agent 团队（产品/架构/开发/测试）——第 17 章 Pipeline 的代表，**擅长从零生成新项目**，存量重构偏弱。
+- **Goose**（Block，Apache-2.0）：Leader-Worker 简单多 Agent（第 17 章 Supervisor），MCP 原生、模型无关、插件友好。
+
+**④ 工作流 / 技能套件**（跨平台，OpenCode/Claude Code/Cursor 通用）：
+
+- **Superpowers**：见 D.7；强制 TDD + 头脑风暴 + git worktree 隔离 + 代码评审，**工程纪律优先**，子 Agent 少、不搞大规模并行。
+- **Hyperpowers**：Superpowers 超集，加长期记忆、史诗级任务拆分、高级规划，更重。
+- **OpenSpec**：**spec 契约驱动**（第 22 章 SDD 的独立工具化），先写规格再编码，可与 Superpowers 叠加。
+
+**快速选型参考**（用途 → 首选；具体能力以项目当前文档为准）：
+
+| 想要什么 | 优先选 |
+|---|---|
+| 用 OpenCode，要多 Agent 又不想太重 | CrewBee |
+| 用 OpenCode，要最强多 Agent 虚拟团队 | oh-my-opencode（OMO） |
+| 强制 TDD/工程规范，不在乎多 Agent 并行 | Superpowers / Spec-Superflow |
+| 用官方 Claude Code CLI，要多 Agent 团队 | oh-my-claudecode / Everything-claude-code |
+| 不依赖任何闭源 CLI，完整开源可控 | Claw-Code / OhMyCode |
+| 从零新建完整项目 | MetaGPT |
+
+三条使用提示：**其一**，多 Agent 类项目 token 消耗普遍很高（第 17 章代价模型、第 16 章成本——上生产前按自家负载实测放大系数）；**其二**，OpenCode 插件与 Claude Code 插件**底座不同、不能互相混用**；**其三**，工程纪律套件（Superpowers）可与多 Agent 团队（OMO/CrewBee）**叠加**，得到"多 Agent 团队 + TDD 纪律"的组合——组合时代价模型相乘，按第 17 章重算账。
+
 ## 使用纪律（三条）
 
 1. **名单会过期，方法不过期**：本附录的任何产品描述以其当前文档为准；三坐标定位法（六大件 × 拓扑 × 集成/部署）是常青的。
