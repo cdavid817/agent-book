@@ -58,7 +58,7 @@
 
 **opencode**（SST 社区，开源）：终端形态的**模型无关（provider-agnostic）Coding Agent**——同一套 Harness 可后端接 Claude、OpenAI 或本地模型，卖点正是"不锁定单一供应商"（第 20 章退出成本的一种规避）。定位坐标：自带六大件的完整 CLI/TUI 产品，集成方式对应第 12 章"方式一/自身运行时"，开源可自托管。与 Claude Code 的区别是**模型层可插拔**；代价是六大件的打磨深度通常滞后于厂商第一方产品（第 12 章 45%/78% 实验的含义——同模型下 Harness 成熟度仍是变量）。*核验状态：项目真实、活跃；细节以其仓库为准。*
 
-**OhMyOpencode**：从命名（对标 oh-my-zsh）判断，是 **opencode 的社区配置/插件增强分发层**——预置提示词、Skill、Hook、主题的一键装配，本身不是独立 Agent。定位坐标：它增强的是 opencode 的上下文引擎与拦截层（第 6 章三控制面的社区打包）。*核验状态：待确认——按名称定位，其确切形态与维护状态发行前务必核实或删除。*
+**OhMyOpencode（OMO）**：从命名（对标 oh-my-zsh）判断，是 **opencode 的社区增强分发层**——一键装配提示词、Skill、Hook、以及**预置的多角色 Agent 团队配置**（D.10 选型表把它列为 OpenCode 上"最强多 Agent 虚拟团队"的首选，正是指这套预置团队；它本身不是独立 Agent，而是把多 Agent 编排打包进 opencode 的第 6 章三控制面）。*核验状态：待确认——按名称定位，其确切形态与维护状态发行前务必核实或删除。*
 
 **Superpowers**：Claude Code 之上的 **Skill 集合 / 插件生态**（第 6 章 Skill 机制的社区放大），把一批可复用的任务技能打包分发，甚至含"用于安装技能的技能"。定位坐标：它不改 Claude Code 的循环，只扩充其程序记忆（第 10 章 Skill=程序记忆的落地）。价值与风险并存：Skill 正文会进上下文并被执行，第三方 Skill 是供应链面（第 8 章 2.4、第 13 章）——来源白名单 + 入库评审不可省。*核验状态：项目存在；具体技能清单与维护方以其仓库为准。*
 
@@ -127,7 +127,7 @@
 | 想要什么 | 优先选 |
 |---|---|
 | 用 OpenCode，要多 Agent 又不想太重 | CrewBee |
-| 用 OpenCode，要最强多 Agent 虚拟团队 | oh-my-opencode（OMO） |
+| 用 OpenCode，要最强多 Agent 虚拟团队 | OhMyOpencode（OMO） |
 | 强制 TDD/工程规范，不在乎多 Agent 并行 | Superpowers / Spec-Superflow |
 | 用官方 Claude Code CLI，要多 Agent 团队 | oh-my-claudecode / Everything-claude-code |
 | 不依赖任何闭源 CLI，完整开源可控 | Claw-Code / OhMyCode |
