@@ -220,7 +220,7 @@ class MCPStdioClient:
 ```python
 # src/assistant/mcp/bridge.py — MCP 工具 → 第 7 章 RegisteredTool 的适配
 import hashlib, json
-from assistant.core.tools import RegisteredTool, ToolRegistry, TransientError
+from assistant.core.tools import RegisteredTool, ToolRegistry, InvalidInputError
 
 
 def snapshot_digest(tools: list[dict]) -> str:
@@ -242,7 +242,10 @@ def register_mcp_tools(registry: ToolRegistry, client, *,
             def run(inp: dict) -> str:
                 text, is_err = client.call_tool(name, inp)
                 if is_err:
-                    raise TransientError(text)     # 交给第 7 章重试器分类处理
+                    # MCP 的 isError 多为确定性错误（参数/未找到/权限），按第 7 章
+                    # 立即回喂路径处理：把原始错误文本交给模型判断改道，而非当成
+                    # 瞬时超时去重试。真为上游瞬时故障时，错误文本本身即是线索。
+                    raise InvalidInputError(text)
                 return text[:20_000]               # 截断层兜底（第 5、7 章管线）
             return run
         registry.register(RegisteredTool(
