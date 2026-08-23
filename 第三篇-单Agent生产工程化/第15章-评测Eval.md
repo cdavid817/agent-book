@@ -8,7 +8,7 @@
 
 ## 1. 场景引入：一次"感觉变好了"的优化
 
-VaneHub 团队的周会上，一位工程师展示了对工单处理提示词的优化："我改了工作流层的指令，试了五六个 case，明显变聪明了。"改动当天合入。两周后，第 14 章的仪表盘揭开了真相：整体任务成功率从 78% 滑到 71%——优化的确让"多步骤复杂工单"场景变好了（工程师试的那几个 case 恰好都是这类），但"简单查询"场景的成功率掉了 15 个百分点：新指令让模型在简单任务上也强行走完整流程，多出的轮次引入了新的失败面。
+示例团队的周会上，一位工程师展示了对工单处理提示词的优化："我改了工作流层的指令，试了五六个 case，明显变聪明了。"改动当天合入。两周后，第 14 章的仪表盘揭开了真相：整体任务成功率从 78% 滑到 71%——优化的确让"多步骤复杂工单"场景变好了（工程师试的那几个 case 恰好都是这类），但"简单查询"场景的成功率掉了 15 个百分点：新指令让模型在简单任务上也强行走完整流程，多出的轮次引入了新的失败面。
 
 复盘会上的对话极具代表性。"合入前你怎么判断变好的？"——"我跑了几个例子，都对了。"——"哪几个？还能复现吗？"——"……手头没存。"这就是**玄学调参**的完整画像：无固定用例、无重复运行、无对照基线、无分层报告。第 1 章坑 4 预言过的事故一件不少地发生了。
 
@@ -28,7 +28,7 @@ VaneHub 团队的周会上，一位工程师展示了对工单处理提示词的
 
 ### 2.2 Scorer 设计：三类打分器的边界与组合
 
-**Scorer（打分器）**是评测的裁判。三类裁判各有适用边界，生产评测几乎总是组合使用：
+**Scorer（打分器）** 是评测的裁判。三类裁判各有适用边界，生产评测几乎总是组合使用：
 
 **规则打分（结果断言）**：文件存在且非空、字段等于期望值、输出匹配正则、禁止词不出现。快（毫秒）、便宜（零 token）、完全确定。边界：只能测可枚举的硬性质，测不了"报告写得好不好"。
 
@@ -128,10 +128,10 @@ flowchart TB
 
 ## 3. 动手实现（贯穿项目增量）
 
-本章增量：`src/vanehub/eval/`——**Scorer 协议**、三类实现与**回归运行器**（k 次采样、逐用例 diff），并给出贯穿项目的 10 用例最小回归集。
+本章增量：`src/assistant/eval/`——**Scorer 协议**、三类实现与**回归运行器**（k 次采样、逐用例 diff），并给出贯穿项目的 10 用例最小回归集。
 
 ```python
-# src/vanehub/eval/scorers.py — Scorer 协议与三类实现
+# src/assistant/eval/scorers.py — Scorer 协议与三类实现
 import re
 import subprocess
 from dataclasses import dataclass, field
@@ -211,7 +211,7 @@ class JudgeScorer:
 ```
 
 ```python
-# src/vanehub/eval/runner.py — 回归运行器：k 次采样 + 逐用例基线 diff
+# src/assistant/eval/runner.py — 回归运行器：k 次采样 + 逐用例基线 diff
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -260,7 +260,7 @@ def run_eval(cases, agent_factory, make_workspace,
 ```python
 CASES = [
     EvalCase("file-summary", "读取 README.md 并生成 200 字内的 summary.md",
-             seed_files={"README.md": "# VaneHub..."},
+             seed_files={"README.md": "# 示例助手..."},
              scorers=[RuleScorer("产物", file_exists="summary.md")],
              origin="第 2 章基础能力冒烟"),
     EvalCase("no-fabrication", "读取 CHANGELOG.md 写摘要（环境中故意不放该文件）",

@@ -1,6 +1,6 @@
 # 第 2 章 第一个 Agent
 
-> 本章目标：不依赖任何框架，用一个单文件、约 150 行的 Python 程序手写最小 **ReAct Loop**，把第 1 章图 3 的闭环真正跑起来，并建立贯穿全书的心智模型——**Agent = LLM + Loop + Tools**。同时搭好贯穿项目 VaneHub 助手的仓库骨架。
+> 本章目标：不依赖任何框架，用一个单文件、约 150 行的 Python 程序手写最小 **ReAct Loop**，把第 1 章图 3 的闭环真正跑起来，并建立贯穿全书的心智模型——**Agent = LLM + Loop + Tools**。同时搭好贯穿项目示例助手的仓库骨架。
 
 ---
 
@@ -22,9 +22,9 @@
 
 ### 2.1 ReAct：推理与行动的交替
 
-**ReAct（Reasoning + Acting）** 由 Yao 等人在 2022 年的论文《ReAct: Synergizing Reasoning and Acting in Language Models》中提出，核心思想是让模型交替产生**推理轨迹（Thought）**和**行动（Action）**，行动的**观察结果（Observation）**再反馈给下一轮推理。相比"只推理"（如纯 CoT，容易幻觉出不存在的事实）和"只行动"（无规划，容易乱调工具），交替结构让每一步行动都有推理依据、每一步推理都有真实观察支撑——这正是第 1 章"教训二：无验证"的最小对策：**观察结果就是天然的验证信号**。
+**ReAct（Reasoning + Acting）** 由 Yao 等人在 2022 年的论文《ReAct: Synergizing Reasoning and Acting in Language Models》中提出，核心思想是让模型交替产生**推理轨迹（Thought）** 和**行动（Action）**，行动的**观察结果（Observation）** 再反馈给下一轮推理。相比"只推理"（如纯 CoT，容易幻觉出不存在的事实）和"只行动"（无规划，容易乱调工具），交替结构让每一步行动都有推理依据、每一步推理都有真实观察支撑——这正是第 1 章"教训二：无验证"的最小对策：**观察结果就是天然的验证信号**。
 
-早期 ReAct 靠提示词约定 `Thought:/Action:/Observation:` 文本格式，再用正则解析——脆弱且易被格式错误打断。2023 年中之后，**原生工具调用 API（Tool Use API）**把"行动"变成了结构化协议：模型输出带 JSON Schema 校验的 `tool_use` 内容块，运行时执行后以 `tool_result` 块回填。本章直接使用原生协议，文本解析式 ReAct 只需了解其历史地位（两种方式的可靠性对比参见第 7 章与附录 A.6）。
+早期 ReAct 靠提示词约定 `Thought:/Action:/Observation:` 文本格式，再用正则解析——脆弱且易被格式错误打断。2023 年中之后，**原生工具调用 API（Tool Use API）** 把"行动"变成了结构化协议：模型输出带 JSON Schema 校验的 `tool_use` 内容块，运行时执行后以 `tool_result` 块回填。本章直接使用原生协议，文本解析式 ReAct 只需了解其历史地位（两种方式的可靠性对比参见第 7 章与附录 A.6）。
 
 ### 2.2 最小循环的四个组成部分
 
@@ -168,7 +168,7 @@ TOOLS_BY_NAME = {t["name"]: t for t in TOOLS}
 **第二段：系统提示构造。** 这段解决的问题是"给 Agent 定人设与边界"。哪怕最小实现，也要包含身份、工作方式、约束三层——这是第 6 章分层设计的雏形。"文件不存在时如实报告"这一句是用一行提示词对抗幻觉的实例。
 
 ```python
-SYSTEM_PROMPT = """你是 VaneHub 助手，一个严谨的企业内部任务执行 Agent。
+SYSTEM_PROMPT = """你是示例助手，一个严谨的企业内部任务执行 Agent。
 工作方式：先思考需要哪些信息，再调用工具获取；信息足够后完成任务，直接给出最终答复。
 约束：只操作当前工作目录；文件不存在或读取失败时如实报告，绝不编造内容。"""
 ```
@@ -277,16 +277,16 @@ agent-book-outline.md
 
 ### 3.3 心智模型总结与贯穿项目骨架
 
-现在可以回答小江的面试题了：**Agent = LLM + Loop + Tools**。LangChain 的 `AgentExecutor`、各类框架的 `Runner`，封装的正是 3.1 节第四段那不到 40 行的循环，附加价值在于回调、重试、可观测等外围设施——"这些外围是否值得引入一个框架"的完整讨论在第 12 章展开，此处只需记住：**你随时写得出这个循环，框架对你就是选择题而非必答题**。
+现在可以回答小江的面试题了：**Agent = LLM + Loop + Tools**。LangChain 的 `AgentExecutor`、各类框架的 `Runner`，封装的正是 3.1 节第四段那不到 40 行的循环，附加价值在于回调、重试、可观测等外围设施——"这些外围是否值得引入一个框架"的完整讨论在第 12 章展开，此处只需记住：**你随时写得出这个循环，框架对你就是选择题而非必答题**（常见框架与产品的全景定位见附录 D）。
 
-贯穿项目 VaneHub 助手在本章正式启动。骨架把单文件按职责拆开，并沉淀两个将贯穿全书的接口——`Tool`（第 7 章起持续扩展）与 `AgentEvent`（第 12 章事件模型、第 14 章可观测性的原料）：
+贯穿项目示例助手在本章正式启动。骨架把单文件按职责拆开，并沉淀两个将贯穿全书的接口——`Tool`（第 7 章起持续扩展）与 `AgentEvent`（第 12 章事件模型、第 14 章可观测性的原料）：
 
 ```text
-vanehub-assistant/
+agent-assistant/
 ├── pyproject.toml          # 仅依赖: requests
 ├── examples/
 │   └── minimal_agent.py    # 本章单文件版，保留作教学参照
-└── src/vanehub/
+└── src/assistant/
     ├── core/
     │   ├── types.py        # 核心接口（下方）
     │   └── agent_loop.py   # AgentLoop：3.1 循环的类封装
@@ -296,7 +296,7 @@ vanehub-assistant/
 ```
 
 ```python
-# src/vanehub/core/types.py — 全书代码的地基，后续各章只增不改
+# src/assistant/core/types.py — 全书代码的地基，后续各章只增不改
 from dataclasses import dataclass, field
 from typing import Any, Callable, Literal, Protocol
 
@@ -330,7 +330,7 @@ class AgentLoopOptions:
     on_event: Callable[[AgentEvent], None] | None = None   # 把循环内部翻译给外部世界
 ```
 
-`AgentLoop` 类只是把 `run_agent` 装进这套接口并逐处发射事件，代码与 3.1 节同构，此处不再重复（完整代码见仓库 `src/vanehub/core/agent_loop.py`）。
+`AgentLoop` 类只是把 `run_agent` 装进这套接口并逐处发射事件，代码与 3.1 节同构，此处不再重复（完整代码见仓库 `src/assistant/core/agent_loop.py`）。
 
 ---
 

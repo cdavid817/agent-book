@@ -8,7 +8,7 @@
 
 ## 1. 场景引入：为什么是代码先跑通了
 
-2024–2026 年的 Agent 产品版图有一个显眼的不对称：Coding Agent（Claude Code 及同类）已经在真实生产里修 bug、写功能、做迁移，而"通用办公 Agent"们还在演示视频里订机票。VaneHub 团队复盘自家两条产品线时也看到同样的落差：代码助手线的任务成功率 81%，业务流程线只有 64%——**同一套 Harness，同一个模型**。
+2024–2026 年的 Agent 产品版图有一个显眼的不对称：Coding Agent（Claude Code 及同类，产品全景见附录 D）已经在真实生产里修 bug、写功能、做迁移，而"通用办公 Agent"们还在演示视频里订机票。示例团队复盘自家两条产品线时也看到同样的落差：代码助手线的任务成功率 81%，业务流程线只有 64%——**同一套 Harness，同一个模型**。
 
 差距不是巧合，是领域结构决定的。三个结构性优势让 Coding 成为 Agent 技术的试验田：
 
@@ -188,10 +188,10 @@ graph TB
 
 ## 3. 动手实现（贯穿项目增量）
 
-本章增量：`src/vanehub/coding/repair.py`——**端到端的测试驱动修复环**，跑通"issue → 修复 → 测试通过"。编辑用 str_replace（唯一匹配语义），验证用真实的测试执行，环受次数上限约束。
+本章增量：`src/assistant/coding/repair.py`——**端到端的测试驱动修复环**，跑通"issue → 修复 → 测试通过"。编辑用 str_replace（唯一匹配语义），验证用真实的测试执行，环受次数上限约束。
 
 ```python
-# src/vanehub/coding/repair.py — 测试驱动修复环
+# src/assistant/coding/repair.py — 测试驱动修复环
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path

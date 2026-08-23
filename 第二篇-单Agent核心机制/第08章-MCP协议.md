@@ -2,15 +2,13 @@
 
 > 第二篇 C. 能力扩展（行动层）
 >
-> 第 7 章教你把工具做好，本章解决"工具从哪来"的规模问题。**MCP（Model Context Protocol，模型上下文协议）**是 Agent 与外部能力之间的标准化连接层——它把"每个团队为每个数据源手写一遍封装"的 M×N 问题，变成"数据源实现一次、所有 Agent 复用"的 M+N 问题。本章讲协议本身，更讲工程取舍：**什么时候该用 MCP，什么时候原生工具仍是更好的选择**。
+> 第 7 章教你把工具做好，本章解决"工具从哪来"的规模问题。**MCP（Model Context Protocol，模型上下文协议）** 是 Agent 与外部能力之间的标准化连接层——它把"每个团队为每个数据源手写一遍封装"的 M×N 问题，变成"数据源实现一次、所有 Agent 复用"的 M+N 问题。本章讲协议本身，更讲工程取舍：**什么时候该用 MCP，什么时候原生工具仍是更好的选择**。
 
 ---
 
-## 1. 场景引入：第五个团队来要工具了
+## 1. 场景引入：第五个团队来要工具了示例助手的工具层（第 7 章）运行良好，麻烦来自它的成功：数据平台组想把工单工具接进他们的分析 Agent，风控组想要发布记录查询，第三个、第四个团队接踵而至。每次"复用"的实际动作是——把工具代码复制过去、改依赖、对方的运行时是另一套框架于是再改接口签名。三个月后，同一个"查询工单"逻辑在公司里存在五份实现，其中两份已经和上游 API 脱节（第 7 章的合同测试只护住了原始那份）。
 
-VaneHub 助手的工具层（第 7 章）运行良好，麻烦来自它的成功：数据平台组想把工单工具接进他们的分析 Agent，风控组想要发布记录查询，第三个、第四个团队接踵而至。每次"复用"的实际动作是——把工具代码复制过去、改依赖、对方的运行时是另一套框架于是再改接口签名。三个月后，同一个"查询工单"逻辑在公司里存在五份实现，其中两份已经和上游 API 脱节（第 7 章的合同测试只护住了原始那份）。
-
-反过来的需求同样在堆积：VaneHub 想接入 GitHub、内部 Wiki、监控平台。每个数据源都要专人写封装、维护鉴权、跟进 API 变更——工具接入排期排到了两个月开外。
+反过来的需求同样在堆积：示例助手想接入 GitHub、内部 Wiki、监控平台。每个数据源都要专人写封装、维护鉴权、跟进 API 变更——工具接入排期排到了两个月开外。
 
 算一笔结构账：M 个 Agent 应用 × N 个数据源，点对点封装是 **M×N** 份集成代码；而如果存在一个标准协议，数据源方实现一次服务端、Agent 方实现一次客户端，就是 **M+N**。2024 年 11 月 Anthropic 开源的 MCP 正是这个协议，2025 年起被主要模型厂商与工具生态相继采纳，事实上成为 Agent 工具接入的行业标准——它对 Agent 生态的意义，类似 LSP（Language Server Protocol）之于编辑器生态：编辑器不再逐个适配语言，语言不再逐个适配编辑器。
 
@@ -22,7 +20,7 @@ VaneHub 助手的工具层（第 7 章）运行良好，麻烦来自它的成功
 
 MCP 的消息层是 **JSON-RPC 2.0**（请求/响应/通知三种消息形态），角色分三层：
 
-- **Host（宿主）**：Agent 应用本体（VaneHub 运行时、Claude Code、IDE 插件）。它拥有会话与安全策略，决定接入哪些 Server、把哪些能力暴露给模型。
+- **Host（宿主）**：Agent 应用本体（示例运行时、Claude Code、IDE 插件）。它拥有会话与安全策略，决定接入哪些 Server、把哪些能力暴露给模型。
 - **Client（客户端）**：Host 内部的协议适配器，与 Server **一对一**连接，负责握手、能力协商、请求路由。一个 Host 可持有多个 Client（连多个 Server）。
 - **Server（服务端）**：能力提供方——包装一个数据源或工具集（文件系统、GitHub、内部工单系统），以三原语（2.2 节）对外暴露能力。
 
@@ -63,7 +61,7 @@ graph TB
 
 ### 2.2 三原语：Resources、Tools、Prompts
 
-MCP Server 暴露能力用三种原语，语义区别在于**"谁决定使用它"**：
+MCP Server 暴露能力用三种原语，语义区别在于 **"谁决定使用它"**：
 
 **Tools（工具）**——**模型决定**调用。语义与第 7 章的原生工具一致：名称 + 描述 + JSON Schema + 执行。这是使用最广的原语，`tools/list` 枚举、`tools/call` 执行。第 7 章的全部设计原则（粒度、幂等、返回值友好度）原样适用于 MCP 工具——协议只标准化了"怎么接"，不能替你解决"怎么设计好"。
 
@@ -145,16 +143,16 @@ graph LR
 
 *图 3：MCP 与原生工具的四维对比——这张图回答"两种接入方式各在哪个维度占优"。MCP 赢在复用与解耦，原生赢在延迟与治理简单；决策的主变量是"这个能力有多少个消费方"。*
 
-选型规则可以收敛成三条：**消费方数量**是主变量——只有本应用用的核心业务工具（VaneHub 的 9 个工单工具）留原生，一份代码一个 Review 流程最省；两个以上团队要用、或本就是通用能力（GitHub、文件系统、监控），走 MCP。**性能敏感路径**留原生——循环里高频调用的工具（每轮都跑的状态读取）经不起毫秒级 RPC 叠加。**外部生态直接拿**——社区已有成熟 Server 的（GitHub/数据库/浏览器），自建原生封装纯属重复劳动，治理成本花在 2.4 节的供应链纪律上更值。
+选型规则可以收敛成三条：**消费方数量**是主变量——只有本应用用的核心业务工具（示例助手的 9 个工单工具）留原生，一份代码一个 Review 流程最省；两个以上团队要用、或本就是通用能力（GitHub、文件系统、监控），走 MCP。**性能敏感路径**留原生——循环里高频调用的工具（每轮都跑的状态读取）经不起毫秒级 RPC 叠加。**外部生态直接拿**——社区已有成熟 Server 的（GitHub/数据库/浏览器），自建原生封装纯属重复劳动，治理成本花在 2.4 节的供应链纪律上更值。
 
 ---
 
 ## 3. 动手实现（贯穿项目增量）
 
-本章增量：`src/vanehub/mcp/client.py`——一个最小可用的 **stdio MCP Client**（JSON-RPC 帧收发 + 三步握手 + 工具枚举与调用），以及把 MCP 工具适配成第 7 章 `RegisteredTool` 的桥接层。依然零框架：只用标准库 `subprocess` 与 `json`。
+本章增量：`src/assistant/mcp/client.py`——一个最小可用的 **stdio MCP Client**（JSON-RPC 帧收发 + 三步握手 + 工具枚举与调用），以及把 MCP 工具适配成第 7 章 `RegisteredTool` 的桥接层。依然零框架：只用标准库 `subprocess` 与 `json`。
 
 ```python
-# src/vanehub/mcp/client.py — 最小 stdio MCP Client
+# src/assistant/mcp/client.py — 最小 stdio MCP Client
 import json
 import subprocess
 from dataclasses import dataclass, field
@@ -177,7 +175,7 @@ class MCPStdioClient:
         init = self._request("initialize", {
             "protocolVersion": PROTOCOL_VERSION,
             "capabilities": {},
-            "clientInfo": {"name": "vanehub", "version": "0.8.0"},
+            "clientInfo": {"name": "assistant", "version": "0.8.0"},
         })
         self._notify("notifications/initialized", {})   # 第三步：握手完成通知
         return init["capabilities"]
@@ -218,9 +216,9 @@ class MCPStdioClient:
 桥接层把远端工具翻译成本地注册表的公民——**MCP 工具与原生工具经过完全相同的 Hook 拦截、重试分类与结果管线**，这是"不因来自标准协议而豁免"在代码上的落实：
 
 ```python
-# src/vanehub/mcp/bridge.py — MCP 工具 → 第 7 章 RegisteredTool 的适配
+# src/assistant/mcp/bridge.py — MCP 工具 → 第 7 章 RegisteredTool 的适配
 import hashlib, json
-from vanehub.core.tools import RegisteredTool, ToolRegistry, TransientError
+from assistant.core.tools import RegisteredTool, ToolRegistry, TransientError
 
 
 def snapshot_digest(tools: list[dict]) -> str:

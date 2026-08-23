@@ -8,7 +8,7 @@
 
 ## 1. 场景引入：一段被红队攻破的"绝对禁止"
 
-VaneHub 助手接入运维场景后，平台组给它加了三条规矩：写完代码文件自动跑格式化、绝对禁止执行删除类命令、所有工具调用记审计日志。第一版实现简单直接——全部写进 System Prompt：
+示例助手接入运维场景后，平台组给它加了三条规矩：写完代码文件自动跑格式化、绝对禁止执行删除类命令、所有工具调用记审计日志。第一版实现简单直接——全部写进 System Prompt：
 
 > "……你必须在每次写入 .py 文件后运行格式化工具。你在任何情况下都绝对不允许执行 rm、drop、delete 等破坏性命令。你必须在每次工具调用后记录审计日志……"
 
@@ -68,7 +68,7 @@ graph TB
 
 ### 2.3 CLAUDE.md / AGENTS.md：项目级上下文文件
 
-介于 Prompt 与 Skill 之间还有第三种载体：**项目级上下文文件**（Claude Code 的 CLAUDE.md、开放规范 AGENTS.md）。它随会话启动自动注入，作用域是"这个代码仓库/项目"，回答的问题是**"如何在此项目中工作"**：构建与测试命令、架构地图（模块职责一句话索引）、团队约定（提交规范、代码风格中无法被 linter 表达的部分）、明确禁区（哪些目录不许动）。
+介于 Prompt 与 Skill 之间还有第三种载体：**项目级上下文文件**（Claude Code 的 CLAUDE.md、开放规范 AGENTS.md）。它随会话启动自动注入，作用域是"这个代码仓库/项目"，回答的问题是 **"如何在此项目中工作"**：构建与测试命令、架构地图（模块职责一句话索引）、团队约定（提交规范、代码风格中无法被 linter 表达的部分）、明确禁区（哪些目录不许动）。
 
 内容组织的纪律与 System Prompt 同构：它是常驻注入的，每一行都在每轮付费——所以只写"几乎每次会话都用得到"的内容，把任务级细节下沉到 Skill 或指向具体文档的一行引用（"数据库迁移见 docs/migration.md"）。它与 **Spec 文件**的分工：CLAUDE.md 讲"怎么在这里干活"，Spec 讲"要构建什么"——前者是环境说明书，后者是需求契约（规范驱动的协作流程参见第 22 章与附录 B.5）。
 
@@ -138,10 +138,10 @@ flowchart TB
 
 ## 3. 动手实现（贯穿项目增量）
 
-本章增量：`src/vanehub/core/hooks.py`（Hook 注册表与决策模型）+ `agent_loop.py` 的工具执行段接入 Pre/Post 管线。设计要点：PreToolUse 支持三种决议（放行/拒绝/改写），多个 Hook 按优先级顺序执行、拒绝即短路；拒绝以 `is_error` 观察回填而非抛异常——复用第 2 章的错误回填机制，循环不中断。
+本章增量：`src/assistant/core/hooks.py`（Hook 注册表与决策模型）+ `agent_loop.py` 的工具执行段接入 Pre/Post 管线。设计要点：PreToolUse 支持三种决议（放行/拒绝/改写），多个 Hook 按优先级顺序执行、拒绝即短路；拒绝以 `is_error` 观察回填而非抛异常——复用第 2 章的错误回填机制，循环不中断。
 
 ```python
-# src/vanehub/core/hooks.py — Hook 注册表与 PreToolUse 拦截管线
+# src/assistant/core/hooks.py — Hook 注册表与 PreToolUse 拦截管线
 import json
 import re
 import time
@@ -193,7 +193,7 @@ class HookRegistry:
 两个内置 Hook——正是场景引入中的"危险命令拦截"与"审计日志"，从提示词请愿变成代码裁决：
 
 ```python
-# src/vanehub/hooks/builtin.py — 内置 Hook：危险命令拦截 + 审计日志
+# src/assistant/hooks/builtin.py — 内置 Hook：危险命令拦截 + 审计日志
 DANGEROUS = re.compile(
     r"\brm\b|\bdrop\s+(table|database)\b|\btruncate\b|-exec\s+rm|\bmkfs\b",
     re.IGNORECASE)

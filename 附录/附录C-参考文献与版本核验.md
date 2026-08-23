@@ -21,6 +21,7 @@
 | C-03 | 第 8 章 MCP 传输层与 HTTP+SSE 兼容状态 | Model Context Protocol, *Transports*：https://modelcontextprotocol.io/specification/2025-06-18/basic/transports | 2026-08-23 |
 | C-04 | 第 14 章 GenAI trace/metric 属性 | OpenTelemetry, *GenAI semantic conventions*：https://opentelemetry.io/docs/specs/semconv/registry/attributes/gen-ai/ | 2026-08-23 |
 | C-05 | 第 15、23 章 Agent/Coding Agent 公共基准 | SWE-bench：https://www.swebench.com/；WebArena：https://webarena.dev/；OSWorld：https://os-world.github.io/ | 2026-08-23 |
+| C-06 | 附录 D 全部产品/框架的名称、归属与成熟度状态 | 各产品供应商官方页面与开源仓库（发行前逐项复核，名单半衰期 6–12 个月） | 2026-08-23 |
 
 > **阅读提示**：C-01/C-02 中的数字仅在各自论文的模型、提示和评测设置下成立，不能外推为生产收益承诺；C-03/C-04 为会演进的规范，正文实现必须 pin 具体版本。
 
@@ -40,6 +41,7 @@
 - 第 8 章：C-03
 - 第 14 章：C-04
 - 第 15、23 章：C-05
+- 附录 D：C-06
 - 第 16、20、24 章：按发布时的供应商/标准官方页面增补时效性条目
 
 ---
