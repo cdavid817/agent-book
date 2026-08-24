@@ -17,6 +17,7 @@
 - 第 8 章 MCP 升级到 2026-07-28 无状态协议（移除 initialize 握手、逐请求 `_meta`、`server/discover`、Tasks/MRTR），依据官方 changelog 核验（TG2）。
 - 统一第 12/14/16 章事件契约：`turn_end.payload.usage` 嵌套、`tool_call/tool_result` 用 `call_id`，`session_end.status` 取有限枚举。
 - 审读报告迁入 `reviews/review-2026-08-23.md`（原样保留历史）。
+- 第 14 章 OpenTelemetry 修订（§10.6）：GenAI 语义约定标注为 Development 稳定级并 pin 版本、区分规范 `gen_ai.*` 与本书自定义属性、明确消息内容采集默认关闭（opt-in）、补高基数/隐私约束；依据官方 semconv 核验。
 
 ### 修复
 - 第 14 章 OtelBridge 按契约读取 `usage` 嵌套与 `call_id`（此前读扁平字段会丢 token 指标）。

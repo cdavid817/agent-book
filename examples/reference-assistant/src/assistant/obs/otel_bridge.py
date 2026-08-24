@@ -29,11 +29,16 @@ class OtelBridge:
         self._turns: dict[str, object] = {}
         self._tools: dict[str, dict[str, object]] = {}
 
+    # 属性来源两类（第 14 章 §4）：
+    #   规范属性  gen_ai.*        —— OTel GenAI 语义约定（Development 稳定级，见 [C-04]）
+    #   自定义属性 session.id / task.type / tool.* / trace.pointer —— 本书运行时维度
+    # 只写元数据；prompt/completion/工具入参结果等内容默认不采（隐私，§4）。
     def on_event(self, ev: AgentEvent) -> None:      # EventBus 消费者接口
         p, t, sid = ev.payload, ev.type, ev.session_id
         if t == "session_start":
             self._sessions[sid] = self.tracer.start_span("session", attributes={
-                "session.id": sid, "task.type": p.get("task_type", "unknown")})
+                "session.id": sid,                   # 自定义
+                "task.type": p.get("task_type", "unknown")})
             self._tools[sid] = {}
         elif t == "turn_start":
             ctx = trace.set_span_in_context(self._sessions[sid])

@@ -19,7 +19,7 @@
 | C-01 | 第 4 章 Self-Consistency、GSM8K 增益 | Wang et al., *Self-Consistency Improves Chain of Thought Reasoning in Language Models*, ICLR 2023：https://openreview.net/pdf?id=1PL1NIMMrw | 2026-08-23 |
 | C-02 | 第 4 章 Tree of Thoughts、Game of 24 结果 | Yao et al., *Tree of Thoughts: Deliberate Problem Solving with Large Language Models*, NeurIPS 2023：https://proceedings.neurips.cc/paper_files/paper/2023/file/271db9922b8d1f4dd7aaef84ed5ac703-Paper-Conference.pdf | 2026-08-23 |
 | C-03 | 第 8 章 MCP 2026-07-28 无状态协议（移除 initialize 握手/Mcp-Session-Id）、传输层与废弃状态 | Model Context Protocol, *2026-07-28 Specification — Key Changes*：https://modelcontextprotocol.io/specification/2026-07-28/changelog （传输层见 .../basic/transports/streamable-http） | 2026-08-24 |
-| C-04 | 第 14 章 GenAI trace/metric 属性 | OpenTelemetry, *GenAI semantic conventions*：https://opentelemetry.io/docs/specs/semconv/registry/attributes/gen-ai/ | 2026-08-23 |
+| C-04 | 第 14 章 GenAI trace/metric 属性；语义约定稳定级（Development）与消息内容采集默认关闭 | OpenTelemetry, *GenAI semantic conventions*（已迁至专门仓库；内容采集 opt-in，默认关闭）：https://opentelemetry.io/docs/specs/semconv/gen-ai/ | 2026-08-24 |
 | C-05 | 第 15、23 章 Agent/Coding Agent 公共基准 | SWE-bench：https://www.swebench.com/；WebArena：https://webarena.dev/；OSWorld：https://os-world.github.io/ | 2026-08-23 |
 | C-08 | 第 5 章 / 附录 A.5 lost-in-the-middle、中部召回跌幅 | Liu et al., *Lost in the Middle: How Language Models Use Long Contexts*, TACL 2024（arXiv 2023）：https://arxiv.org/abs/2307.03172 | 2026-08-23 |
 | C-09 | 附录 F ReAct 范式原图 | Yao et al., *ReAct: Synergizing Reasoning and Acting in Language Models*, ICLR 2023：https://arxiv.org/abs/2210.03629 | 2026-08-23 |

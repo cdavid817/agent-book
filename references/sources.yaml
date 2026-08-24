@@ -43,14 +43,15 @@ sources:
     url: "https://modelcontextprotocol.io/specification/2026-07-28/changelog"
 
   - id: C-04
-    title: "OpenTelemetry GenAI Semantic Conventions"
+    title: "OpenTelemetry GenAI Semantic Conventions（Development 稳定级；内容采集默认关闭）"
     publisher: "OpenTelemetry"
     source_type: official-spec
+    stability: development
     claim_scope: [ch14]
-    verified_at: "2026-08-23"
+    verified_at: "2026-08-24"
     expires_at: "2026-11-24"
     status: verified
-    url: "https://opentelemetry.io/docs/specs/semconv/registry/attributes/gen-ai/"
+    url: "https://opentelemetry.io/docs/specs/semconv/gen-ai/"
 
   - id: C-05
     title: "Agent / Coding Agent 公共基准：SWE-bench / WebArena / OSWorld"
