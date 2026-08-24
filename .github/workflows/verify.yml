@@ -1,0 +1,68 @@
+name: verify
+
+# 仓库验证：书稿渲染、内部引用、图源、代码片段同步、贯穿项目测试。
+# 每个门禁一个 job，PR 上失败位置一目了然（计划 11.4）。
+# 依赖 TG4（book.yml）/ TG5（sources.yaml）的检查随对应 Task Group 接入，此处不伪造。
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  markdown-render:
+    name: markdown-render (无失效加粗)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-ci.txt
+      - run: python tools/check_render.py
+
+  cross-reference-check:
+    name: cross-reference-check (章/附录/图号)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python tools/check_crossrefs.py
+
+  snippet-sync-check:
+    name: snippet-sync-check (章节代码=源码)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python examples/reference-assistant/tools/check_snippets.py
+
+  diagram-source-check:
+    name: diagram-source-check (D2 已渲染/被引用)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python tools/check_diagrams.py
+
+  contract-tests:
+    name: contract-tests (贯穿项目 pytest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-ci.txt
+      - run: pip install -e examples/reference-assistant
+      - run: python -m pytest -q examples/reference-assistant

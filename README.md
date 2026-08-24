@@ -94,6 +94,27 @@
 
 企业运维/客服场景的 Agent 参考实现（Python ≥ 3.10，唯一硬依赖 `requests`），从第 2 章约 150 行长成四层十六模块。模块地图与教学简化清单见[第 25 章](第六篇-专家视野/第25章-完整实战收尾.md)第 3 节的项目 README——**它是教学参考实现，不是生产框架**；每处简化都标注了对应章节的补齐路标。全部章节代码均经真实测试（含真实 OTel SDK、真实 pytest、模拟 MCP Server 的端到端协议往返（server/discover + tools/call））。
 
+## 仓库验证与 CI
+
+书稿与贯穿项目的一致性由脚本门禁保证，干净克隆后：
+
+```bash
+make setup      # 安装锁定依赖（requirements-ci.txt）+ 可编辑装入贯穿项目
+make verify     # 运行全部真实门禁
+```
+
+`make verify` 包含五道门禁，GitHub Actions（`.github/workflows/verify.yml`）对每个 PR 逐 job 运行：
+
+| Job | 门禁 |
+|---|---|
+| `markdown-render` | 全书渲染无失效加粗（cmarkgfm，GitHub 同款渲染器） |
+| `cross-reference-check` | 章/附录/图号内部引用全部指向真实目标 |
+| `snippet-sync-check` | 章节内代码与贯穿项目源码**逐字符一致**，漂移即失败 |
+| `diagram-source-check` | 每个 D2 图源已渲染为 SVG、被正文引用且可在 GitHub 显示 |
+| `contract-tests` | 贯穿项目 `pytest`（事件契约 + OTel/成本消费者，真实 OTel SDK） |
+
+> 依赖 `book.yml`（目录单一来源）与 `references/sources.yaml`（来源时效治理）的检查随后续里程碑接入；当前未接入的门禁在 `Makefile` 中显式标注 pending，不伪造通过。
+
 ## 全书的五条不折旧判断
 
 若只带走五句话（出处见各章）：
