@@ -5,6 +5,7 @@
 ## [Unreleased]
 
 ### 新增
+- **P1 · 13.1 MCP/A2A 互操作**：`interop/a2a.py`（A2A Task 九态状态机 + Agent Card 校验 + A2A Task↔内部 Run 映射）+ 9 项测试；第 18 章新增 2.7 节（MCP/A2A/内部图三边界 + Agent Card + Task 生命周期 + 身份/权限/Trace 贯通，含 snippet）；来源 C-21（A2A 协议）。
 - **P1 · 13.2 Durable Execution / Agent SRE**：`durable/executor.py`（重试归属矩阵 + 幂等键 + 租约/心跳/崩溃回收 + 退避/死信）+ 7 项测试；第 12 章 §4 新增 durable execution 小节（含 snippet）；来源 C-20（Saga）。
 - **P1 · 13.5 安全标准映射**：第 13 章新增 2.6 节（风险×控制矩阵 + OWASP Agentic / NIST AI RMF / NIST GenAI Profile / MITRE ATLAS 框架映射）；来源 C-16~C-19。
 - **P1 · 13.6 统计可靠的评测门禁**：`examples/reference-assistant/src/assistant/eval/gate.py`（Wilson 区间 + 两比例检验 + 分层门禁）+ 11 项合同测试；第 15 章新增 2.6 节（置信区间与分层门禁）并接入 snippet；来源 C-15（Wilson 1927）。

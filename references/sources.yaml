@@ -200,6 +200,16 @@ sources:
     verified_at: "2026-08-24"
     status: stable
     url: "https://doi.org/10.1145/38713.38742"
+  - id: C-21
+    title: "Agent2Agent (A2A) Protocol Specification"
+    publisher: "A2A Project / Linux Foundation"
+    source_type: official-spec
+    version: "v0.3.0"
+    claim_scope: [ch18]
+    verified_at: "2026-08-24"
+    expires_at: "2026-11-24"
+    status: verified
+    url: "https://a2a-protocol.org/latest/specification/"
 
 # 协议版本一致性锚点：check_sources 校验 C-03.version 与第 8 章 PROTOCOL_VERSION 常量相等。
 version_anchors:
