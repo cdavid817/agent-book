@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "reference-assistant"
+version = "0.1.0"
+description = "《企业级 Agent 从入门到专家》贯穿项目参考实现——教学参考，非生产框架"
+requires-python = ">=3.10"
+dependencies = [
+    "requests>=2.31",
+]
+
+[project.optional-dependencies]
+obs = ["opentelemetry-sdk>=1.20"]
+dev = ["pytest>=7", "opentelemetry-sdk>=1.20"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
