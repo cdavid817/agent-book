@@ -5,6 +5,7 @@
 ## [Unreleased]
 
 ### 新增
+- **P1 · 13.4 人机交互与自治级别**：`hitl/autonomy.py`（L0–L4 自治级别 × 风险/可逆性 × 策略 → EXECUTE/CONFIRM/SUGGEST_ONLY/REFUSE/ESCALATE 裁决 + HITL 能力清单）+ 9 项测试；第 13 章新增 2.7 节（自治级别→审批闸门 + 人在环 UX 契约，含 snippet）。
 - **P1 · 13.1 MCP/A2A 互操作**：`interop/a2a.py`（A2A Task 九态状态机 + Agent Card 校验 + A2A Task↔内部 Run 映射）+ 9 项测试；第 18 章新增 2.7 节（MCP/A2A/内部图三边界 + Agent Card + Task 生命周期 + 身份/权限/Trace 贯通，含 snippet）；来源 C-21（A2A 协议）。
 - **P1 · 13.2 Durable Execution / Agent SRE**：`durable/executor.py`（重试归属矩阵 + 幂等键 + 租约/心跳/崩溃回收 + 退避/死信）+ 7 项测试；第 12 章 §4 新增 durable execution 小节（含 snippet）；来源 C-20（Saga）。
 - **P1 · 13.5 安全标准映射**：第 13 章新增 2.6 节（风险×控制矩阵 + OWASP Agentic / NIST AI RMF / NIST GenAI Profile / MITRE ATLAS 框架映射）；来源 C-16~C-19。
