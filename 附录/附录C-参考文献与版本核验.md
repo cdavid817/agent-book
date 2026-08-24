@@ -33,6 +33,7 @@
 | C-17 | 第 13 章 AI 风险治理框架 | NIST, *AI Risk Management Framework 1.0*（AI 100-1）：https://doi.org/10.6028/NIST.AI.100-1 | 2026-08-24 |
 | C-18 | 第 13 章 生成式 AI 专项动作 | NIST, *Generative AI Profile*（AI 600-1）：https://doi.org/10.6028/NIST.AI.600-1 | 2026-08-24 |
 | C-19 | 第 13 章 攻击者战术词典（红队） | MITRE, *ATLAS*：https://atlas.mitre.org/ | 2026-08-24 |
+| C-20 | 第 12 章 Saga 补偿（长事务/跨进程恰好一次） | Garcia-Molina & Salem, *Sagas*, ACM SIGMOD 1987：https://doi.org/10.1145/38713.38742 | 2026-08-24 |
 | C-06 | 附录 D 全部产品/框架的名称、归属与成熟度状态 | 各产品供应商官方页面与开源仓库（发行前逐项复核，名单半衰期 6–12 个月） | 2026-08-23 |
 | C-07 | 附录 D.7/D.8/D.9/D.10 社区与新兴项目（opencode / OhMyOpencode / Superpowers / codex / openclaw / DeepSeek Harness / Hermes Agent / Vibe Coding / D.10 分类速览全部条目 等） | 各项目开源仓库/官方页面；**标注"待确认"者发行前必须核实真实形态与存续，无法确证即删除**——不进发布稿 | 2026-08-23 |
 
@@ -57,6 +58,7 @@
 - 附录 F（经典图版索引）：C-09（ReAct）、C-10（CoT）、C-11（Reflexion）、C-12（ReWOO）、C-13（Transformer）、C-14（CoALA）；另复用 C-01（Self-Consistency）、C-02（ToT）、C-08（lost-in-the-middle）、C-03（MCP）、C-05（SWE-bench）
 - 第 15、23 章：C-05；第 15 章另加 C-15（评测统计门禁）
 - 第 13 章：C-16（OWASP Agentic）、C-17（NIST AI RMF）、C-18（NIST GenAI Profile）、C-19（MITRE ATLAS）
+- 第 12 章：C-20（Saga 补偿）
 - 附录 D：C-06（D.1–D.6）、C-07（D.7/D.8/D.9/D.10 社区与新兴项目及分类速览，含"待确认"条目）
 - 第 16、20、24 章：按发布时的供应商/标准官方页面增补时效性条目
 

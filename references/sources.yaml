@@ -192,6 +192,14 @@ sources:
     expires_at: "2026-11-24"
     status: verified
     url: "https://atlas.mitre.org/"
+  - id: C-20
+    title: "Sagas (long-lived transactions / compensation)"
+    publisher: "Garcia-Molina, H. & Salem, K. (ACM SIGMOD 1987)"
+    source_type: paper
+    claim_scope: [ch12]
+    verified_at: "2026-08-24"
+    status: stable
+    url: "https://doi.org/10.1145/38713.38742"
 
 # 协议版本一致性锚点：check_sources 校验 C-03.version 与第 8 章 PROTOCOL_VERSION 常量相等。
 version_anchors:
