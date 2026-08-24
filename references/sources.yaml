@@ -1,0 +1,152 @@
+# 结构化来源账本（Task Group 5）。附录 C 的机器可检查版本。
+# 校验：python3 tools/check_sources.py（CI job: source-freshness）。
+#
+# 字段：id / title / publisher / source_type / version(适用时) / claim_scope /
+#       verified_at / expires_at(时效性来源) / status / url
+# source_type 优先级（§10.3）：official-spec > official-sdk-doc > official-announcement
+#       > paper > official-benchmark > secondary-analysis > community
+# status：verified（已核验，时效性）| stable（稳定结论，不设过期）| partial（含待确认子项）
+
+snapshot:
+  ecosystem_edition: "2026.08"
+  last_verified_at: "2026-08-24"
+  next_review_at: "2026-11-24"
+
+sources:
+  - id: C-01
+    title: "Self-Consistency Improves Chain of Thought Reasoning in Language Models"
+    publisher: "Wang et al. (ICLR 2023)"
+    source_type: paper
+    claim_scope: [ch04]
+    verified_at: "2026-08-23"
+    status: stable
+    url: "https://openreview.net/pdf?id=1PL1NIMMrw"
+
+  - id: C-02
+    title: "Tree of Thoughts: Deliberate Problem Solving with Large Language Models"
+    publisher: "Yao et al. (NeurIPS 2023)"
+    source_type: paper
+    claim_scope: [ch04]
+    verified_at: "2026-08-23"
+    status: stable
+    url: "https://proceedings.neurips.cc/paper_files/paper/2023/file/271db9922b8d1f4dd7aaef84ed5ac703-Paper-Conference.pdf"
+
+  - id: C-03
+    title: "Model Context Protocol Specification — 2026-07-28 Key Changes"
+    publisher: "Model Context Protocol"
+    source_type: official-spec
+    version: "2026-07-28"
+    claim_scope: [ch08, appendix-c]
+    verified_at: "2026-08-24"
+    expires_at: "2026-11-24"
+    status: verified
+    url: "https://modelcontextprotocol.io/specification/2026-07-28/changelog"
+
+  - id: C-04
+    title: "OpenTelemetry GenAI Semantic Conventions"
+    publisher: "OpenTelemetry"
+    source_type: official-spec
+    claim_scope: [ch14]
+    verified_at: "2026-08-23"
+    expires_at: "2026-11-24"
+    status: verified
+    url: "https://opentelemetry.io/docs/specs/semconv/registry/attributes/gen-ai/"
+
+  - id: C-05
+    title: "Agent / Coding Agent 公共基准：SWE-bench / WebArena / OSWorld"
+    publisher: "SWE-bench, WebArena, OSWorld"
+    source_type: official-benchmark
+    claim_scope: [ch15, ch23]
+    verified_at: "2026-08-23"
+    expires_at: "2026-11-24"
+    status: verified
+    url: "https://www.swebench.com/"
+
+  - id: C-06
+    title: "附录 D.1–D.6 产品/框架名称、归属与成熟度状态"
+    publisher: "各供应商官方页面与开源仓库"
+    source_type: vendor-page
+    claim_scope: [appendix-d]
+    verified_at: "2026-08-23"
+    expires_at: "2026-11-24"
+    status: verified
+    url: "https://appendix-d/see-per-product-links"
+
+  - id: C-07
+    title: "附录 D.7–D.10 社区与新兴项目（含待确认条目）"
+    publisher: "各项目开源仓库/官方页面"
+    source_type: community
+    claim_scope: [appendix-d]
+    verified_at: "2026-08-23"
+    expires_at: "2026-11-24"
+    status: partial   # 含待确认子项：OhMyOpencode / openclaw / Hermes Agent，发行前核实或删除
+    url: "https://appendix-d/community-and-emerging"
+
+  - id: C-08
+    title: "Lost in the Middle: How Language Models Use Long Contexts"
+    publisher: "Liu et al. (TACL 2024)"
+    source_type: paper
+    claim_scope: [ch05, appendix-a]
+    verified_at: "2026-08-23"
+    status: stable
+    url: "https://arxiv.org/abs/2307.03172"
+
+  - id: C-09
+    title: "ReAct: Synergizing Reasoning and Acting in Language Models"
+    publisher: "Yao et al. (ICLR 2023)"
+    source_type: paper
+    claim_scope: [appendix-f]
+    verified_at: "2026-08-23"
+    status: stable
+    url: "https://arxiv.org/abs/2210.03629"
+
+  - id: C-10
+    title: "Chain-of-Thought Prompting Elicits Reasoning in Large Language Models"
+    publisher: "Wei et al. (NeurIPS 2022)"
+    source_type: paper
+    claim_scope: [appendix-f]
+    verified_at: "2026-08-23"
+    status: stable
+    url: "https://arxiv.org/abs/2201.11903"
+
+  - id: C-11
+    title: "Reflexion: Language Agents with Verbal Reinforcement Learning"
+    publisher: "Shinn et al. (NeurIPS 2023)"
+    source_type: paper
+    claim_scope: [appendix-f]
+    verified_at: "2026-08-23"
+    status: stable
+    url: "https://arxiv.org/abs/2303.11366"
+
+  - id: C-12
+    title: "ReWOO: Decoupling Reasoning from Observations for Efficient Augmented Language Models"
+    publisher: "Xu et al."
+    source_type: paper
+    claim_scope: [appendix-f]
+    verified_at: "2026-08-23"
+    status: stable
+    url: "https://arxiv.org/abs/2305.18323"
+
+  - id: C-13
+    title: "Attention Is All You Need"
+    publisher: "Vaswani et al. (NeurIPS 2017)"
+    source_type: paper
+    claim_scope: [appendix-f]
+    verified_at: "2026-08-23"
+    status: stable
+    url: "https://arxiv.org/abs/1706.03762"
+
+  - id: C-14
+    title: "Cognitive Architectures for Language Agents (CoALA)"
+    publisher: "Sumers et al. (TMLR 2024)"
+    source_type: paper
+    claim_scope: [appendix-f]
+    verified_at: "2026-08-23"
+    status: stable
+    url: "https://arxiv.org/abs/2309.02427"
+
+# 协议版本一致性锚点：check_sources 校验 C-03.version 与第 8 章 PROTOCOL_VERSION 常量相等。
+version_anchors:
+  - source_id: C-03
+    file: "第二篇-单Agent核心机制/第08章-MCP协议.md"
+    constant: "PROTOCOL_VERSION"

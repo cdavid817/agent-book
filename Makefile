@@ -9,7 +9,7 @@ REF := examples/reference-assistant
 
 .PHONY: setup verify test test-contract \
         check-render check-book check-crossrefs check-snippets check-diagrams \
-        check-sources check-links lint typecheck docs-build baseline help
+        check-sources check-sources-strict check-links lint typecheck docs-build baseline help
 
 help:
 	@echo "make setup           安装锁定依赖并以可编辑方式装入贯穿项目"
@@ -20,6 +20,8 @@ help:
 	@echo "make check-crossrefs 章/附录/图号内部引用有效"
 	@echo "make check-snippets  章节代码片段与源码零漂移"
 	@echo "make check-diagrams  D2 图源已渲染、被引用且可在 GitHub 显示"
+	@echo "make check-sources   来源账本一致、协议版本一致（CI 非严格）"
+	@echo "make check-sources-strict  发行前：待确认/过期升级为失败"
 	@echo "make baseline        重新生成仓库基线报告（信息性）"
 
 setup:
@@ -46,7 +48,7 @@ check-diagrams:
 test-contract test:
 	$(PY) -m pytest -q $(REF)
 
-verify: check-render check-book check-crossrefs check-snippets check-diagrams test
+verify: check-render check-book check-crossrefs check-snippets check-diagrams check-sources test
 	@echo "✓ verify 全部通过"
 
 # ---- 信息性 / 依赖后续 Task Group（不阻断，不伪造通过）----
@@ -55,7 +57,10 @@ baseline:
 	@echo "基线报告已刷新：reviews/baseline-2026-08-24.md"
 
 check-sources:
-	@echo "check-sources: pending Task Group 5（references/sources.yaml 尚未建立）"
+	$(PY) tools/check_sources.py
+
+check-sources-strict:
+	$(PY) tools/check_sources.py --strict
 
 check-links:
 	@echo "check-links: 外链检查为可选 nightly（非代码正确性门禁，见计划 11.4）"

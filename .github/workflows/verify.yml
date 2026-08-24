@@ -66,6 +66,19 @@ jobs:
           python-version: "3.12"
       - run: python tools/check_diagrams.py
 
+  source-freshness:
+    name: source-freshness (来源账本/版本一致)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-ci.txt
+      # CI 非严格：硬失败（缺来源/版本不一致/日期非法）阻断；待确认/过期为告警。
+      # 发行前用 tools/check_sources.py --strict 将告警升级为失败。
+      - run: python tools/check_sources.py
+
   contract-tests:
     name: contract-tests (贯穿项目 pytest)
     runs-on: ubuntu-latest

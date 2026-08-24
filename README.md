@@ -113,8 +113,9 @@ make verify     # 运行全部真实门禁
 | `snippet-sync-check` | 章节内代码与贯穿项目源码**逐字符一致**，漂移即失败 |
 | `diagram-source-check` | 每个 D2 图源已渲染为 SVG、被正文引用且可在 GitHub 显示 |
 | `contract-tests` | 贯穿项目 `pytest`（事件契约 + OTel/成本消费者，真实 OTel SDK） |
+| `source-freshness` | `references/sources.yaml` 与正文/附录 C/代码常量一致，协议版本一致，时效与「待确认」可机器判定 |
 
-> 目录单一来源 `book.yml` 已接入（`book-structure`）：新增章节只需改 `book.yml` 与正文，CI 自动检出目录漂移。依赖 `references/sources.yaml`（来源时效治理）的检查随后续里程碑接入，当前在 `Makefile` 中显式标注 pending，不伪造通过。
+> 目录单一来源 `book.yml`（`book-structure`）与来源账本 `references/sources.yaml`（`source-freshness`）均已接入：新增章节改 `book.yml` + 正文即可，时效性来源与「待确认」条目可机器判定。发行前用 `make check-sources-strict` 把「待确认」/过期升级为失败。外链存活检查与文档站构建（`check-links` / `docs-build`）为后续里程碑，当前在 `Makefile` 中显式标注 pending，不伪造通过。
 
 ## 全书的五条不折旧判断
 
