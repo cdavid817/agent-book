@@ -124,6 +124,56 @@ flowchart TB
 
 *图 3：一次完整 Eval run 的流程——这张图回答"从用例到放行/阻断，一次评测跑过哪些步骤"。两个关键设计：每用例独立沙箱（隔离与并行），逐用例 diff 而非平均分决定放行。*
 
+### 2.6 统计可靠性：置信区间与分层门禁
+
+2.5 的基线管理留了一个统计漏洞：**“通过率低于基线即 BLOCK”过于敏感**。k=3 时一个用例从 3/3 掉到 2/3，通过率 -33%，但这几乎全是抽样噪声——按原样阻断，团队很快学会无视红灯。反过来，小样本上的“+5%”也常是噪声，却被当成进步。修法是给通过率**加上置信区间**，只在**统计显著**时才动作。
+
+**Wilson score 区间**比朴素正态近似在小样本和极端比例（接近 0 或 1）下更稳，是通过率这种二项比例的合适刻度。判定回归是否真实，用**两比例检验**看基线与当前的差异是否超出抽样波动——20 个用例各跑 1 次的差异基本不可信，够多的用例 × 采样次数才让区间收窄到能下结论。
+
+据此把门禁**分层**，不同类型用不同判据（这也回应场景引入的“平均分绿灯”事故）：
+
+| 测试类型 | 判据 | 门禁 |
+|---|---|---|
+| 安全 / 权限 / Schema（确定性） | 任一失败 | 立即 **BLOCK**（不谈置信区间） |
+| 功能评测（概率性） | 通过率**置信显著**低于阈值或基线 | 显著才 **BLOCK**，噪声放行 |
+| 风格 / 主观质量 | CI 上界低于阈值 | 只 **告警**或人工复核 |
+
+生产实现（贯穿项目 `src/assistant/eval/gate.py`，本片段由 `check_snippets` 与源码保持同步）：
+
+<!-- snippet: examples/reference-assistant/src/assistant/eval/gate.py#ch15-eval-gate mode=executable verified_by=examples/reference-assistant/tests/test_eval_gate.py -->
+```python
+def classify_case(r: CaseResult, z: float = Z95) -> tuple[Verdict, str]:
+    """对单个用例给出裁决与理由。"""
+    if r.kind == "deterministic":
+        # 确定性用例：任一失败即阻断，不谈概率
+        if r.passes < r.n:
+            return "BLOCK", f"确定性用例失败 {r.passes}/{r.n}"
+        return "PASS", "确定性用例全过"
+
+    lo, hi = wilson_interval(r.passes, r.n, z)
+
+    if r.kind == "style":
+        if r.threshold is not None and hi < r.threshold:
+            return "WARN", f"主观质量置信偏低（CI 上界 {hi:.2f} < 阈值 {r.threshold})"
+        return "PASS", "主观质量未见显著问题"
+
+    # probabilistic：两条阻断条件，均要求“置信显著”
+    if r.threshold is not None and hi < r.threshold:
+        # 即便乐观估计（CI 上界）也低于阈值 → 确信不达标
+        return "BLOCK", f"置信低于阈值：CI 上界 {hi:.2f} < {r.threshold}"
+    if (r.baseline_passes is not None and r.baseline_n is not None
+            and r.rate < r.baseline_passes / r.baseline_n
+            and two_proportion_significant(r.baseline_passes, r.baseline_n,
+                                           r.passes, r.n, z)):
+        return "BLOCK", (f"相对基线显著回归："
+                         f"{r.baseline_passes}/{r.baseline_n} → {r.passes}/{r.n}")
+    return "PASS", f"未达显著回归（CI [{lo:.2f}, {hi:.2f}]）"
+```
+
+对比 3 节的最小 `run_eval`（`now < baseline` 即记回归）：那是教学骨架；`gate.py` 是它的统计化生产层——确定性用例仍是硬失败即阻断，概率性用例改为“CI 上界低于阈值”或“两比例检验显著回归”才阻断，其余放行。合同测试 `test_eval_gate.py` 钉死了关键行为：**3/3→2/3 不 BLOCK**（噪声），**920/1000→850/1000 会 BLOCK**（真回归）。
+
+统计可靠还牵出四件配套纪律：**Judge 校准**——LLM 评审要定期与人工标注算一致率（inter-rater agreement / Cohen's κ），低于阈值就修 rubric，judge 版本与提示词纳入变更管理（2.2 节）；**基准污染**——公共基准可能已进训练集，用私有 held-out 集或时间切分防“背题”；**切片评测**（slice-based）——分任务类型/难度看分位，别让某类 -15% 被总分平均掉（坑 2）；**上线前的影子与灰度**——shadow evaluation 与 canary/在线 A/B 用真实流量在小风险面上验证，观测“成本-质量帕累托前沿”而非单点通过率。
+
 ---
 
 ## 3. 动手实现（贯穿项目增量）
@@ -282,7 +332,7 @@ CASES = [
 ]
 ```
 
-CI 接线：`run_eval(...)["verdict"] == "BLOCK"` 时阻断合入——提示词与策略的 PR 从此和代码 PR 过同一道门。
+CI 接线：`run_eval(...)["verdict"] == "BLOCK"` 时阻断合入——提示词与策略的 PR 从此和代码 PR 过同一道门。统计化的分层门禁（2.6 节 `gate.py`）在此之上：确定性失败硬阻断，概率性回归按置信区间判定（Wilson 区间见 [C-15]），避免小样本噪声误阻断。
 
 ---
 

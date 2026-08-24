@@ -17,6 +17,10 @@
 
 P1 主题在 P0 完成后以独立 PR 实施，每项须含真实源码 + 测试 + 一手来源。详见实施方案第 13 节。
 
+**已完成**：13.6 统计可靠的评测门禁（Wilson 区间 + 分层门禁，gate.py + 测试 + 第 15 章 2.6）。
+
+**待推进**：13.1 MCP/A2A 互操作、13.2 Durable Execution/Agent SRE、13.3 多模态/Browser/Computer Use、13.4 人机交互与自治级别、13.5 安全标准映射、13.7 扩展供应链、13.8 观测增强。
+
 ## 发行前门禁
 
 - `make verify`（CI 每 PR）　- `make check-sources-strict`（`待确认`/过期升级为失败）

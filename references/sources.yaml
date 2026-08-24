@@ -145,6 +145,14 @@ sources:
     verified_at: "2026-08-23"
     status: stable
     url: "https://arxiv.org/abs/2309.02427"
+  - id: C-15
+    title: "Probable Inference, the Law of Succession, and Statistical Inference (Wilson score interval)"
+    publisher: "Wilson, E. B. (JASA 1927)"
+    source_type: paper
+    claim_scope: [ch15]
+    verified_at: "2026-08-24"
+    status: stable
+    url: "https://doi.org/10.1080/01621459.1927.10502953"
 
 # 协议版本一致性锚点：check_sources 校验 C-03.version 与第 8 章 PROTOCOL_VERSION 常量相等。
 version_anchors:
