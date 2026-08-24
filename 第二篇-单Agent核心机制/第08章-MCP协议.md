@@ -173,6 +173,50 @@ sequenceDiagram
 
 此外还有两类**可选扩展**（能力经 `ClientCapabilities.extensions` / `ServerCapabilities.extensions` 声明，不属核心协议）：**MCP Apps**（服务端分发交互式界面）与 **EMA（Enterprise Managed Authorization，企业托管授权）**——按需接入即可，本书不展开。
 
+### 2.7 扩展供应链：签名、验证与撤销
+
+2.4 把每个 MCP Server 当"npm 依赖 + 数据通道"治理。这条纪律不止 MCP 一家——**Skill、Plugin、Prompt Pack、Agent Template、Tool Schema、Model Adapter、浏览器扩展、Sidecar**，凡是"从外部装进来、会进入模型上下文或获得执行权"的东西，都走同一条供应链信任链：
+
+> Publisher → 签名密钥 → 包 → 版本 → 内容哈希 → 签名 → **验证** → 安装 → 激活 → 运行期策略 → **撤销**
+
+链上两个最关键的闸是**验证**（装之前）与**撤销**（装之后出事）。验证有四关，任一不过即拒装——其中"内容哈希锁定"正是 2.4 节 `snapshot_digest` 的一般化（防"评审时干净、更新后投毒"的 rug pull）：
+
+<!-- snippet: examples/reference-assistant/src/assistant/supply/registry.py#ch08-supply-verify mode=executable verified_by=examples/reference-assistant/tests/test_supply.py -->
+```python
+@dataclass
+class Registry:
+    """扩展信任库：发布者白名单 + 公钥 + 哈希锁定 + 撤销名单。"""
+    trusted_keys: dict[str, bytes] = field(default_factory=dict)   # publisher -> key
+    pinned: dict[str, str] = field(default_factory=dict)          # name -> 锁定的内容哈希
+    revoked_hashes: set[str] = field(default_factory=set)
+
+    def verify(self, pkg: Package) -> tuple[bool, str]:
+        """四关顺序校验；任一不过即拒装，返回 (是否通过, 原因)。"""
+        key = self.trusted_keys.get(pkg.publisher)
+        if key is None:
+            return False, VerifyError.UNTRUSTED_PUBLISHER.value
+        # ① 真实性：签名必须由该发布者密钥产生（也就一并防了内容被改）
+        if not hmac.compare_digest(pkg.signature, sign(pkg.content, key)):
+            return False, VerifyError.BAD_SIGNATURE.value
+        # ② 防 rug pull：若该扩展已锁定哈希，本次内容必须一致
+        if pkg.name in self.pinned and pkg.digest != self.pinned[pkg.name]:
+            return False, VerifyError.HASH_MISMATCH.value
+        # ③ 撤销名单：被撤销的内容哈希一律拒装
+        if pkg.digest in self.revoked_hashes:
+            return False, VerifyError.REVOKED.value
+        return True, "ok"
+
+    def revoke(self, digest: str) -> None:
+        self.revoked_hashes.add(digest)
+
+    def pin(self, name: str, digest: str) -> None:
+        self.pinned[name] = digest
+```
+
+四关的顺序有讲究：**先验签名**（内容被改一个字节，签名即失效，真实性与完整性一并防住）、**再查白名单**（来源可信）、**再比锁定哈希**（防 rug pull）、**最后查撤销名单**（事后应急的唯一开关）。**撤销**是这条链里最容易被忽略却最救命的一环：漏洞在装了之后才发现时，按内容哈希把它拉黑，所有实例下次验证即拒装——没有撤销通道，供应链只有"入口检查"没有"事后止血"。
+
+工程落地补两条：**签名要用非对称**（本书示例用 HMAC 占位，生产用 Ed25519 / Sigstore 这类可公开验签、私钥不下发的方案，配合 SBOM 与供应链完整性等级 [C-22]）；**运行期策略是最后兜底**（即便验证通过，高危扩展仍受第 6、13 章 PreToolUse 闸门约束——供应链治理与最小权限是两道独立的墙，不互相替代）。
+
 ---
 
 ## 3. 动手实现（贯穿项目增量）

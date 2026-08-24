@@ -210,6 +210,15 @@ sources:
     expires_at: "2026-11-24"
     status: verified
     url: "https://a2a-protocol.org/latest/specification/"
+  - id: C-22
+    title: "SLSA — Supply-chain Levels for Software Artifacts"
+    publisher: "OpenSSF / SLSA"
+    source_type: standard
+    claim_scope: [ch08]
+    verified_at: "2026-08-24"
+    expires_at: "2026-11-24"
+    status: verified
+    url: "https://slsa.dev/"
 
 # 协议版本一致性锚点：check_sources 校验 C-03.version 与第 8 章 PROTOCOL_VERSION 常量相等。
 version_anchors:

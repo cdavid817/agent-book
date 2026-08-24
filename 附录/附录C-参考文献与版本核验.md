@@ -35,6 +35,7 @@
 | C-19 | 第 13 章 攻击者战术词典（红队） | MITRE, *ATLAS*：https://atlas.mitre.org/ | 2026-08-24 |
 | C-20 | 第 12 章 Saga 补偿（长事务/跨进程恰好一次） | Garcia-Molina & Salem, *Sagas*, ACM SIGMOD 1987：https://doi.org/10.1145/38713.38742 | 2026-08-24 |
 | C-21 | 第 18 章 A2A 协议（Agent Card / Task 生命周期 / 跨组织互操作） | A2A Project (Linux Foundation), *Agent2Agent Protocol Specification*：https://a2a-protocol.org/latest/specification/ | 2026-08-24 |
+| C-22 | 第 8 章 扩展供应链签名/SBOM/完整性等级 | OpenSSF, *SLSA — Supply-chain Levels for Software Artifacts*：https://slsa.dev/ | 2026-08-24 |
 | C-06 | 附录 D 全部产品/框架的名称、归属与成熟度状态 | 各产品供应商官方页面与开源仓库（发行前逐项复核，名单半衰期 6–12 个月） | 2026-08-23 |
 | C-07 | 附录 D.7/D.8/D.9/D.10 社区与新兴项目（opencode / OhMyOpencode / Superpowers / codex / openclaw / DeepSeek Harness / Hermes Agent / Vibe Coding / D.10 分类速览全部条目 等） | 各项目开源仓库/官方页面；**标注"待确认"者发行前必须核实真实形态与存续，无法确证即删除**——不进发布稿 | 2026-08-23 |
 
@@ -61,6 +62,7 @@
 - 第 13 章：C-16（OWASP Agentic）、C-17（NIST AI RMF）、C-18（NIST GenAI Profile）、C-19（MITRE ATLAS）
 - 第 12 章：C-20（Saga 补偿）
 - 第 18 章：C-21（A2A 协议）
+- 第 8 章：C-03（MCP 规范）、C-22（SLSA 供应链）
 - 附录 D：C-06（D.1–D.6）、C-07（D.7/D.8/D.9/D.10 社区与新兴项目及分类速览，含"待确认"条目）
 - 第 16、20、24 章：按发布时的供应商/标准官方页面增补时效性条目
 
