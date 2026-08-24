@@ -1,0 +1,17 @@
+# 许可证 / Licensing
+
+本仓库对**代码**与**内容**分别授权，边界如下。
+
+## 代码 — MIT License
+
+适用范围：`examples/`、`tools/`、`reviews/*.py`、`diagrams/render.sh`、以及正文代码块中的示例代码。
+完整条款见 [`LICENSE-CODE`](LICENSE-CODE)。
+
+## 正文与图表 — CC BY 4.0
+
+适用范围：全部章节与附录 Markdown 正文、`diagrams/` 图源、`assets/` 导出图。
+署名即可自由分享与改编（含商用）。完整条款见 [`LICENSE-CONTENT`](LICENSE-CONTENT)。
+
+---
+
+判定规则：可执行/可导入的程序文本按 MIT；供阅读的散文、图示与表格按 CC BY 4.0。二者同处一文件时（如正文里的代码块），代码片段按 MIT，其余按 CC BY 4.0。

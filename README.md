@@ -127,6 +127,12 @@ make verify     # 运行全部真实门禁
 4. **窗口即预算**——每个 token 背负计费/延迟/注意力三重成本（第 5 章）。
 5. **Harness 决定同一模型的表现上限**——转型工程师的工作物是 Harness，不是模型（第 12 章）。
 
+## 许可证与贡献
+
+许可证分离：**代码 MIT**（[`LICENSE-CODE`](LICENSE-CODE)）、**正文与图表 CC BY 4.0**（[`LICENSE-CONTENT`](LICENSE-CONTENT)），概览见 [`LICENSE`](LICENSE)。
+
+参与贡献前请读 [`CONTRIBUTING.md`](CONTRIBUTING.md) 并本地跑通 `make verify`；行为准则见 [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md)，安全问题走 [`SECURITY.md`](SECURITY.md) 的非公开渠道。路线图见 [`ROADMAP.md`](ROADMAP.md)，引用方式见 `CITATION.cff`。
+
 ## 写作约定
 
 - 每章六段固定模板（场景/原理/实现/生产/坑/面试）；正文 8000–12000 字，代码不超正文 1/3。

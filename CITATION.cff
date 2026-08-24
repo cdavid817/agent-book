@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "如果本书对你的工作有帮助，请按以下方式引用。"
+title: "企业级 Agent 从入门到专家（2026版）"
+abstract: "从单 Agent 核心机制到多 Agent 与企业落地的工程化实战教程，配套可运行贯穿项目与验证门禁。"
+type: dataset
+authors:
+  - alias: cdavid817
+    # 发行前请补充作者真实姓名（given-names / family-names）
+repository-code: "https://github.com/cdavid817/agent-book"
+license: CC-BY-4.0
+license-url: "https://creativecommons.org/licenses/by/4.0/"
+version: "2026.08"
+date-released: "2026-08-24"
+keywords:
+  - LLM Agent
+  - Agent Engineering
+  - MCP
+  - OpenTelemetry
+  - Multi-Agent
