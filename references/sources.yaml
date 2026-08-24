@@ -153,6 +153,45 @@ sources:
     verified_at: "2026-08-24"
     status: stable
     url: "https://doi.org/10.1080/01621459.1927.10502953"
+  - id: C-16
+    title: "OWASP Top 10 for Agentic Applications (2025-12) 与 Agentic AI Threats & Mitigations (2025-02)"
+    publisher: "OWASP GenAI Security Project / Agentic Security Initiative"
+    source_type: standard
+    claim_scope: [ch13]
+    verified_at: "2026-08-24"
+    expires_at: "2026-11-24"
+    status: verified
+    url: "https://genai.owasp.org/resource/agentic-ai-threats-and-mitigations/"
+
+  - id: C-17
+    title: "NIST AI Risk Management Framework (AI RMF 1.0, NIST AI 100-1)"
+    publisher: "NIST"
+    source_type: standard
+    version: "AI 100-1"
+    claim_scope: [ch13]
+    verified_at: "2026-08-24"
+    status: stable
+    url: "https://doi.org/10.6028/NIST.AI.100-1"
+
+  - id: C-18
+    title: "NIST Generative AI Profile (NIST-AI-600-1)"
+    publisher: "NIST"
+    source_type: standard
+    version: "AI 600-1"
+    claim_scope: [ch13]
+    verified_at: "2026-08-24"
+    status: stable
+    url: "https://doi.org/10.6028/NIST.AI.600-1"
+
+  - id: C-19
+    title: "MITRE ATLAS (Adversarial Threat Landscape for AI Systems)"
+    publisher: "MITRE"
+    source_type: standard
+    claim_scope: [ch13]
+    verified_at: "2026-08-24"
+    expires_at: "2026-11-24"
+    status: verified
+    url: "https://atlas.mitre.org/"
 
 # 协议版本一致性锚点：check_sources 校验 C-03.version 与第 8 章 PROTOCOL_VERSION 常量相等。
 version_anchors:

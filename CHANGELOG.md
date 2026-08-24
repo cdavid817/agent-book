@@ -5,6 +5,7 @@
 ## [Unreleased]
 
 ### 新增
+- **P1 · 13.5 安全标准映射**：第 13 章新增 2.6 节（风险×控制矩阵 + OWASP Agentic / NIST AI RMF / NIST GenAI Profile / MITRE ATLAS 框架映射）；来源 C-16~C-19。
 - **P1 · 13.6 统计可靠的评测门禁**：`examples/reference-assistant/src/assistant/eval/gate.py`（Wilson 区间 + 两比例检验 + 分层门禁）+ 11 项合同测试；第 15 章新增 2.6 节（置信区间与分层门禁）并接入 snippet；来源 C-15（Wilson 1927）。
 - 贯穿项目 `examples/reference-assistant/`：统一事件契约包（`contracts/`）+ 合同/消费者测试（TG1）。
 - 章节代码片段同步机制 `tools/check_snippets.py` + region/snippet 标记（TG3，首片接入第 12 章）。
