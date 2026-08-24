@@ -61,7 +61,7 @@ def test_single_turn_consumed_by_both():
     bus.publish(make_turn_end(session_id="s1", seq=bus.next_seq(), turn=1,
                               model="test-model",
                               usage={"input_tokens": 100, "output_tokens": 20}))
-    bus.publish(make_session_end(session_id="s1", seq=bus.next_seq(), status="ok",
+    bus.publish(make_session_end(session_id="s1", seq=bus.next_seq(), status="success",
                                  turns=1, task_type="qa"))
 
     from opentelemetry import trace

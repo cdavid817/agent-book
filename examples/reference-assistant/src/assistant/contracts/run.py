@@ -21,12 +21,11 @@ from enum import Enum
 
 
 class SessionStatus(str, Enum):
-    """session_end.status 的有限枚举。"""
+    """session_end.status 的有限枚举（与第 12 章事件表一致）。"""
 
-    OK = "ok"
-    ERROR = "error"
+    SUCCESS = "success"        # 正常完成
     ABORTED = "aborted"        # 预算/策略中断（参见第 3、13 章）
-    CANCELLED = "cancelled"    # 用户取消
+    FAILED = "failed"          # 异常失败
 
     @classmethod
     def is_valid(cls, value: str) -> bool:

@@ -35,6 +35,7 @@ class ContractError(ValueError):
     """生产者侧契约违规——必须在 emit 处失败，不得让消费者静默兜底。"""
 
 
+# region book:ch12-event-envelope
 @dataclass(frozen=True, slots=True)
 class AgentEvent:
     """版本化的运行时事实。第 2 章的 AgentEvent 以此为准。"""
@@ -54,6 +55,7 @@ class AgentEvent:
                 f"supported={sorted(SUPPORTED_SCHEMA_VERSIONS)}"
             )
         _validate_payload(self.type, self.payload)
+# endregion book:ch12-event-envelope
 
 
 def _validate_payload(etype: str, p: Mapping[str, Any]) -> None:

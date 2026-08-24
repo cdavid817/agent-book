@@ -116,6 +116,6 @@ def test_session_end_invalid_status_fails():
 
 
 def test_session_end_valid_status_ok():
-    ev = make_session_end(session_id="s", seq=0, status=SessionStatus.OK.value,
+    ev = make_session_end(session_id="s", seq=0, status=SessionStatus.SUCCESS.value,
                           turns=3)
-    assert ev.payload["status"] == "ok"
+    assert ev.payload["status"] == "success"

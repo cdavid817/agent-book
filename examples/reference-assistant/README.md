@@ -36,7 +36,26 @@ tests/
 ```bash
 cd examples/reference-assistant
 python -m pip install -e ".[dev]"    # 或仅 pip install pytest opentelemetry-sdk
-pytest -q
+pytest -q                            # 一条命令跑测试（合同 + 消费者）
+python tools/check_snippets.py       # 一条命令验证：章节片段与源码零漂移
 ```
 
 `obs/otel_bridge.py` 需要 `opentelemetry-sdk`（`.[obs]` 附加依赖）；契约与台账仅用标准库。
+
+## 片段同步（Task Group 3 · 8.4）
+
+章节代码不再各存一份，而是从本工程受控引用。源码用 region 标记：
+
+```python
+# region book:ch12-event-envelope
+...
+# endregion book:ch12-event-envelope
+```
+
+Markdown 用嵌入标记（放在代码块正上方）：
+
+```html
+<!-- snippet: examples/reference-assistant/src/assistant/contracts/event.py#ch12-event-envelope mode=executable verified_by=... -->
+```
+
+`tools/check_snippets.py` 校验：目标文件存在、region 唯一、Markdown 片段与源码逐字符一致、anchor 缺失即失败。**源码漂移 → 检查失败**（接入 CI 后即 CI 失败）。已接入的片段：`第 12 章 · AgentEvent 事件外壳`。
