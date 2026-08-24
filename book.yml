@@ -1,0 +1,238 @@
+# 全书结构单一来源（Task Group 4）。README / outline / 目录 / 审读范围 均以此为准。
+# 校验：python3 tools/check_book.py（CI job: book-structure）。
+title: 企业级 Agent 从入门到专家
+edition: "2026.08"
+language: zh-CN
+
+parts:
+  - id: part-1
+    title: 认知与基础
+    path: 第一篇-认知与基础
+    chapters:
+      - id: ch01
+        number: 1
+        title: Agent 是什么
+        path: 第一篇-认知与基础/第01章-Agent是什么.md
+        status: reviewed
+        code_status: none
+        sources_verified_at: 2026-08-23
+      - id: ch02
+        number: 2
+        title: 第一个 Agent
+        path: 第一篇-认知与基础/第02章-第一个Agent.md
+        status: reviewed
+        code_status: verified
+        sources_verified_at: 2026-08-23
+  - id: part-2
+    title: 单 Agent 核心机制
+    path: 第二篇-单Agent核心机制
+    chapters:
+      - id: ch03
+        number: 3
+        title: Agentic Loop 解剖
+        path: 第二篇-单Agent核心机制/第03章-AgenticLoop解剖.md
+        status: reviewed
+        code_status: verified
+        sources_verified_at: 2026-08-23
+      - id: ch04
+        number: 4
+        title: 规划与推理
+        path: 第二篇-单Agent核心机制/第04章-规划与推理.md
+        status: reviewed
+        code_status: verified
+        sources_verified_at: 2026-08-23
+      - id: ch05
+        number: 5
+        title: Context Window 管理
+        path: 第二篇-单Agent核心机制/第05章-ContextWindow管理.md
+        status: reviewed
+        code_status: verified
+        sources_verified_at: 2026-08-23
+      - id: ch06
+        number: 6
+        title: 提示工程、Skills 与 Hooks
+        path: 第二篇-单Agent核心机制/第06章-提示工程Skills与Hooks.md
+        status: reviewed
+        code_status: verified
+        sources_verified_at: 2026-08-23
+      - id: ch07
+        number: 7
+        title: 工具调用
+        path: 第二篇-单Agent核心机制/第07章-工具调用.md
+        status: reviewed
+        code_status: verified
+        sources_verified_at: 2026-08-23
+      - id: ch08
+        number: 8
+        title: MCP 协议
+        path: 第二篇-单Agent核心机制/第08章-MCP协议.md
+        status: reviewed
+        code_status: verified
+        sources_verified_at: 2026-08-24
+      - id: ch09
+        number: 9
+        title: 代码执行与环境交互
+        path: 第二篇-单Agent核心机制/第09章-代码执行与环境交互.md
+        status: reviewed
+        code_status: verified
+        sources_verified_at: 2026-08-23
+      - id: ch10
+        number: 10
+        title: 记忆系统
+        path: 第二篇-单Agent核心机制/第10章-记忆系统.md
+        status: reviewed
+        code_status: verified
+        sources_verified_at: 2026-08-23
+      - id: ch11
+        number: 11
+        title: RAG 与检索
+        path: 第二篇-单Agent核心机制/第11章-RAG与检索.md
+        status: reviewed
+        code_status: verified
+        sources_verified_at: 2026-08-23
+  - id: part-3
+    title: 单 Agent 生产工程化
+    path: 第三篇-单Agent生产工程化
+    chapters:
+      - id: ch12
+        number: 12
+        title: 运行时架构
+        path: 第三篇-单Agent生产工程化/第12章-运行时架构.md
+        status: reviewed
+        code_status: verified
+        sources_verified_at: 2026-08-23
+      - id: ch13
+        number: 13
+        title: 安全与权限
+        path: 第三篇-单Agent生产工程化/第13章-安全与权限.md
+        status: reviewed
+        code_status: verified
+        sources_verified_at: 2026-08-23
+      - id: ch14
+        number: 14
+        title: 可观测性
+        path: 第三篇-单Agent生产工程化/第14章-可观测性.md
+        status: reviewed
+        code_status: verified
+        sources_verified_at: 2026-08-23
+      - id: ch15
+        number: 15
+        title: 评测（Eval）
+        path: 第三篇-单Agent生产工程化/第15章-评测Eval.md
+        status: reviewed
+        code_status: verified
+        sources_verified_at: 2026-08-23
+      - id: ch16
+        number: 16
+        title: 成本与性能
+        path: 第三篇-单Agent生产工程化/第16章-成本与性能.md
+        status: reviewed
+        code_status: verified
+        sources_verified_at: 2026-08-23
+  - id: part-4
+    title: 多 Agent
+    path: 第四篇-多Agent
+    chapters:
+      - id: ch17
+        number: 17
+        title: 多 Agent 拓扑分类学
+        path: 第四篇-多Agent/第17章-多Agent拓扑分类学.md
+        status: reviewed
+        code_status: none
+        sources_verified_at: 2026-08-23
+      - id: ch18
+        number: 18
+        title: 编排、通信与图执行
+        path: 第四篇-多Agent/第18章-编排通信与图执行.md
+        status: reviewed
+        code_status: verified
+        sources_verified_at: 2026-08-23
+      - id: ch19
+        number: 19
+        title: 可行性权衡与工程约束
+        path: 第四篇-多Agent/第19章-可行性权衡与工程约束.md
+        status: reviewed
+        code_status: verified
+        sources_verified_at: 2026-08-23
+  - id: part-5
+    title: 企业落地
+    path: 第五篇-企业落地
+    chapters:
+      - id: ch20
+        number: 20
+        title: 部署与选型
+        path: 第五篇-企业落地/第20章-部署与选型.md
+        status: reviewed
+        code_status: none
+        sources_verified_at: 2026-08-23
+      - id: ch21
+        number: 21
+        title: 与存量系统集成
+        path: 第五篇-企业落地/第21章-与存量系统集成.md
+        status: reviewed
+        code_status: verified
+        sources_verified_at: 2026-08-23
+      - id: ch22
+        number: 22
+        title: 组织与流程
+        path: 第五篇-企业落地/第22章-组织与流程.md
+        status: reviewed
+        code_status: none
+        sources_verified_at: 2026-08-23
+  - id: part-6
+    title: 专家视野
+    path: 第六篇-专家视野
+    chapters:
+      - id: ch23
+        number: 23
+        title: 领域深潜：Coding Agent
+        path: 第六篇-专家视野/第23章-领域深潜CodingAgent.md
+        status: reviewed
+        code_status: verified
+        sources_verified_at: 2026-08-23
+      - id: ch24
+        number: 24
+        title: 前沿方向
+        path: 第六篇-专家视野/第24章-前沿方向.md
+        status: reviewed
+        code_status: verified
+        sources_verified_at: 2026-08-23
+      - id: ch25
+        number: 25
+        title: 完整实战收尾
+        path: 第六篇-专家视野/第25章-完整实战收尾.md
+        status: reviewed
+        code_status: none
+        sources_verified_at: 2026-08-23
+
+appendices:
+  - id: appendix-a
+    letter: A
+    title: LLM 基础 Wiki
+    path: 附录/附录A-LLM基础Wiki.md
+    status: reviewed
+  - id: appendix-b
+    letter: B
+    title: Agent Engineering 方法论速查
+    path: 附录/附录B-AgentEngineering方法论速查.md
+    status: reviewed
+  - id: appendix-c
+    letter: C
+    title: 参考文献与版本核验
+    path: 附录/附录C-参考文献与版本核验.md
+    status: reviewed
+  - id: appendix-d
+    letter: D
+    title: 常见 Agent 产品与框架速览
+    path: 附录/附录D-常见Agent产品与框架速览.md
+    status: reviewed
+  - id: appendix-e
+    letter: E
+    title: 易混概念辨析速查
+    path: 附录/附录E-易混概念辨析速查.md
+    status: reviewed
+  - id: appendix-f
+    letter: F
+    title: 关键知识点·经典图版索引
+    path: 附录/附录F-关键知识点经典图版索引.md
+    status: reviewed

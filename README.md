@@ -107,13 +107,14 @@ make verify     # 运行全部真实门禁
 
 | Job | 门禁 |
 |---|---|
+| `book-structure` | `book.yml` 与磁盘/README/outline 目录一致、章号连续、每章六段结构 |
 | `markdown-render` | 全书渲染无失效加粗（cmarkgfm，GitHub 同款渲染器） |
 | `cross-reference-check` | 章/附录/图号内部引用全部指向真实目标 |
 | `snippet-sync-check` | 章节内代码与贯穿项目源码**逐字符一致**，漂移即失败 |
 | `diagram-source-check` | 每个 D2 图源已渲染为 SVG、被正文引用且可在 GitHub 显示 |
 | `contract-tests` | 贯穿项目 `pytest`（事件契约 + OTel/成本消费者，真实 OTel SDK） |
 
-> 依赖 `book.yml`（目录单一来源）与 `references/sources.yaml`（来源时效治理）的检查随后续里程碑接入；当前未接入的门禁在 `Makefile` 中显式标注 pending，不伪造通过。
+> 目录单一来源 `book.yml` 已接入（`book-structure`）：新增章节只需改 `book.yml` 与正文，CI 自动检出目录漂移。依赖 `references/sources.yaml`（来源时效治理）的检查随后续里程碑接入，当前在 `Makefile` 中显式标注 pending，不伪造通过。
 
 ## 全书的五条不折旧判断
 

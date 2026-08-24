@@ -1,5 +1,6 @@
 # CI 锁定依赖（Task Group 6）。与本地验证一致的确切版本，避免 CI 漂移。
 cmarkgfm==2025.10.22
+PyYAML==6.0.3
 pytest==9.1.1
 opentelemetry-sdk==1.44.0
 opentelemetry-api==1.44.0

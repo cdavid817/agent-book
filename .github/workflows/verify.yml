@@ -14,6 +14,17 @@ permissions:
   contents: read
 
 jobs:
+  book-structure:
+    name: book-structure (book.yml=磁盘=README=outline)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-ci.txt
+      - run: python tools/check_book.py
+
   markdown-render:
     name: markdown-render (无失效加粗)
     runs-on: ubuntu-latest

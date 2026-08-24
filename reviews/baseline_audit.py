@@ -210,7 +210,7 @@ def chapters_mentioned(path):
 actual_ch = set(int(CHAP_RE.search(os.path.basename(m)).group(1)) for m in CHAPTERS)
 readme_ch = chapters_mentioned("README.md")
 outline_ch = chapters_mentioned("agent-book-outline.md")
-report_ch = chapters_mentioned("审读报告-2026-08-23.md")
+report_ch = chapters_mentioned("reviews/review-2026-08-23.md")
 
 # ---------- existing tests / CI / examples ----------
 has_ci = os.path.isdir(".github/workflows")
@@ -278,7 +278,7 @@ o(f"- D2 图源：{len(d2_srcs)} → {[os.path.basename(x) for x in d2_srcs]}")
 o(f"- Excalidraw 说明：{len(excalidraw)} → {[os.path.basename(x) for x in excalidraw]}")
 o(f"- 已渲染 SVG：{len(svgs)} → {[os.path.basename(x) for x in svgs]}")
 o(f"- 脚本：{len(scripts)} → {[os.path.relpath(x) for x in scripts]}")
-o(f"- 顶层文档：README.md, agent-book-outline.md, 图表规范.md, 审读报告-2026-08-23.md")
+o(f"- 顶层文档：README.md, agent-book-outline.md, 图表规范.md, reviews/review-2026-08-23.md")
 o()
 
 o("## 3. 代码围栏统计 (0.3)")
