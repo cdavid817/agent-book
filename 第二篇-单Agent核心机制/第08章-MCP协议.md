@@ -23,7 +23,7 @@
 MCP 的消息层是 **JSON-RPC 2.0**（请求/响应/通知三种消息形态），角色分三层：
 
 - **Host（宿主）**：Agent 应用本体（示例运行时、Claude Code、IDE 插件）。它拥有会话与安全策略，决定接入哪些 Server、把哪些能力暴露给模型。
-- **Client（客户端）**：Host 内部的协议适配器，与 Server **一对一**连接，负责握手、能力协商、请求路由。一个 Host 可持有多个 Client（连多个 Server）。
+- **Client（客户端）**：Host 内部的协议适配器，与 Server **一对一**连接，负责能力发现（`server/discover`）、逐请求的版本与能力协商（`_meta`）、请求路由。一个 Host 可持有多个 Client（连多个 Server）。
 - **Server（服务端）**：能力提供方——包装一个数据源或工具集（文件系统、GitHub、内部工单系统），以三原语（2.2 节）对外暴露能力。
 
 关键设计意图：**Server 不知道也不需要知道模型的存在**。它只应答协议请求；"什么时候调用、结果如何进上下文"全部是 Host 的职权——这条边界既是解耦的来源，也是安全模型的基础（2.4 节）。
@@ -31,8 +31,8 @@ MCP 的消息层是 **JSON-RPC 2.0**（请求/响应/通知三种消息形态）
 传输层三种，生命周期与部署形态差异显著：
 
 - **stdio**：Host 把 Server 作为子进程拉起，JSON-RPC 消息走标准输入/输出。零网络配置、天然单用户隔离、进程随会话生灭；适合本地工具（文件系统、git、本机数据库）。约束：Server 的 `stdout` 是协议信道，**日志必须走 `stderr`**（坑 2）。
-- **SSE（已废弃）**：早期的 HTTP 远程方案，"SSE 下行 + 独立 POST 上行"双端点设计。2025-03 版协议起被 Streamable HTTP 取代——双端点带来的会话粘滞与恢复复杂度是主要动因。识别它的意义在于兼容存量 Server（坑 1）。
-- **Streamable HTTP**：现行远程标准。单一 HTTP 端点，普通请求走请求/响应，需要流式或服务端主动通知时同一端点升级为 SSE 流；支持无状态部署与会话恢复，适合企业集中部署的共享 Server（一个工单 MCP Server 服务全公司的 Agent），可加载标准 HTTP 设施（网关、鉴权、限流）。
+- **SSE（已废弃）**：早期的 HTTP 远程方案，"SSE 下行 + 独立 POST 上行"双端点设计。2025-03 版协议起被 Streamable HTTP 取代，2026-07-28 版正式归入废弃生命周期（deprecated，保留至少 12 个月过渡期）——双端点带来的会话粘滞与恢复复杂度是主要动因。识别它的意义在于兼容存量 Server（坑 1）。
+- **Streamable HTTP**：现行远程标准。单一 HTTP 端点，普通请求走请求/响应，需要流式或服务端主动通知时同一端点升级为 SSE 流。2026-07-28 版把协议本身改为**无状态**：移除了 `initialize` 握手与 `Mcp-Session-Id`，每个请求自带协议版本与能力（`_meta`），因此**任一请求可落到轮询负载均衡后的任意实例**；请求头 `Mcp-Method` / `Mcp-Name` 让网关无需解包 body 即可路由与鉴权。代价是移除了 SSE 断点续传（`Last-Event-ID`）——响应流断裂即丢弃在途请求，客户端须以新请求 ID 重发。适合企业集中部署的共享 Server（一个工单 MCP Server 服务全公司的 Agent），可加载标准 HTTP 设施（网关、鉴权、限流）。
 
 ```mermaid
 graph TB
@@ -73,9 +73,9 @@ MCP Server 暴露能力用三种原语，语义区别在于 **"谁决定使用�
 
 三原语的控制权划分（模型/应用/用户）不是学究式分类，而是安全与体验设计的接口：副作用只可能从 Tools 发起，因此审批与拦截（第 6 章 Hook、第 13 章策略）只需覆盖 `tools/call` 一条通道。
 
-### 2.3 完整生命周期
+### 2.3 完整生命周期（2026-07-28 无状态模型）
 
-一次 stdio 会话从拉起到关闭的完整消息流：
+MCP 在 2026-07-28 版从"有状态双向会话"转为"无状态请求/响应"：**不再有 `initialize` 握手，也没有 `notifications/initialized`**。每个请求在 `_meta` 里自带协议版本、客户端标识与能力声明，服务端在每个结果的 `_meta` 里回带自己的标识。需要提前确认能力的客户端，可用新增的 `server/discover`（服务端 MUST 实现）一次性拿到"支持的协议版本 + 能力 + 身份"；stdio 下它还兼作向后兼容探针。一次 stdio 会话的消息流：
 
 ```mermaid
 sequenceDiagram
@@ -83,24 +83,27 @@ sequenceDiagram
     participant S as MCP Server(子进程)
 
     H->>S: 拉起子进程
-    H->>S: initialize(protocolVersion, client capabilities)
-    S-->>H: 响应(server capabilities: tools/resources/prompts, serverInfo)
-    H->>S: notifications/initialized(握手完成通知)
-    Note over H,S: 能力协商完成, 进入就绪态
-    H->>S: tools/list
-    S-->>H: 工具清单(name/description/inputSchema)
+    opt 可选: 提前确认能力/版本
+        H->>S: server/discover
+        S-->>H: 支持的协议版本 + capabilities + serverInfo
+    end
+    Note over H,S: 无握手; 每个请求自带 _meta<br/>(protocolVersion / clientInfo / clientCapabilities)
+    H->>S: tools/list(_meta)
+    S-->>H: 工具清单 + resultType:"complete" + ttlMs/cacheScope
     Note over H: Host 把工具适配进模型的 tools 参数<br/>(经安全过滤与描述审查, 见 2.4)
-    H->>S: tools/call(name, arguments)
-    S-->>H: result(content[], isError)
+    H->>S: tools/call(name, arguments, _meta)
+    S-->>H: result(content[], isError, resultType:"complete")
     Note over H: 结果经第 7 章管线加工后回填模型
-    S-->>H: notifications/tools/list_changed(可选: 工具集变更)
-    H->>S: tools/list(重新拉取)
+    opt 订阅变更通知
+        H->>S: subscriptions/listen(toolsListChanged...)
+        S-->>H: 长连接流: 工具集变更等通知
+    end
     H->>S: 关闭 stdin / 终止子进程(stdio 的关闭语义)
 ```
 
-*图 2：MCP 完整生命周期——这张图回答"从握手到调用到关闭，线上按顺序跑过哪些消息"。initialize 三步握手（请求→响应→initialized 通知）先于一切能力调用；list_changed 通知是第 7 章动态工具集的协议级支持。*
+*图 2：MCP 无状态生命周期（2026-07-28）——这张图回答"去掉握手后，线上按顺序跑过哪些消息"。`server/discover` 是可选的前置能力确认；此后每个请求靠 `_meta` 自描述，任一请求可独立落到任意服务端实例；`subscriptions/listen` 取代了旧的 GET 端点与 `list_changed`，承载服务端主动通知。*
 
-两个容易忽略的协议点：其一，**版本协商**——`initialize` 双方交换协议版本字符串，不匹配时由 Server 提议可用版本，Client 不能跳过握手直接调用（坑 5 的一种形态）；其二，**能力声明**——三原语按 capability 声明，Client 只应请求对方声明过的能力，`list_changed` 之类的动态通知也须双方都声明支持才生效。
+两个容易忽略的协议点：其一，**版本协商前移到每个请求**——`_meta` 里的 `io.modelcontextprotocol/protocolVersion` 与 `io.modelcontextprotocol/clientCapabilities` 逐请求携带，版本不匹配时服务端回 `UnsupportedProtocolVersionError`（错误码 `-32022`），而不再是握手期一次性协商；要提前选版本就调 `server/discover`。其二，**跨调用状态必须显式化**——协议层不再有会话，`tools/list` 等清单不随连接变化；需要跨调用状态的服务端得自己铸造句柄（server-minted handle）当作普通工具参数传递，而不能依赖连接粘滞（坑 5）。
 
 ### 2.4 安全边界：把 Server 当第三方依赖对待
 
@@ -147,19 +150,54 @@ graph LR
 
 选型规则可以收敛成三条：**消费方数量**是主变量——只有本应用用的核心业务工具（示例助手的 9 个工单工具）留原生，一份代码一个 Review 流程最省；两个以上团队要用、或本就是通用能力（GitHub、文件系统、监控），走 MCP。**性能敏感路径**留原生——循环里高频调用的工具（每轮都跑的状态读取）经不起毫秒级 RPC 叠加。**外部生态直接拿**——社区已有成熟 Server 的（GitHub/数据库/浏览器），自建原生封装纯属重复劳动，治理成本花在 2.4 节的供应链纪律上更值。
 
+### 2.6 无状态化的配套机制：Tasks 与 MRTR
+
+去掉会话后立刻冒出两个问题：**长任务怎么办、需要中途问用户怎么办**——2026-07-28 用两个机制回答，都建立在"服务端铸造句柄、客户端轮询/重试"之上，不依赖连接状态。
+
+**Tasks（长任务，扩展 `io.modelcontextprotocol/tasks`）**。工具执行耗时较长时，`tools/call` 可直接返回一个**任务句柄**而非阻塞等待；客户端用 `tasks/get` 轮询进度与结果、用 `tasks/update` 中途追加输入。句柄是服务端铸造的普通标识，可跨请求、跨实例复用——这正是无状态协议做长任务的唯一正确姿势（旧版阻塞式 `tasks/result` 与 `tasks/list` 已被移除，Tasks 也从核心下沉为官方扩展）。
+
+**MRTR（多轮往返请求，Multi Round-Trip Request）**。当服务端处理到一半需要客户端补充信息（过去靠服务端反向发起 `sampling/createMessage`、`elicitation/create`、`roots/list`——这些反向请求连同 Roots / Sampling / Logging 一起在本版废弃），它改为返回 `resultType: "input_required"` 的 `InputRequiredResult`，把所需信息列在 `inputRequests` 里；客户端补齐后，**用 `inputResponses` 重试同一个原始请求**。整个交互无需服务端主动连回客户端，天然适配"任一请求落到任意实例"的无状态部署。
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant S as Server
+    C->>S: tools/call(deploy, env=prod)
+    S-->>C: resultType:"input_required"<br/>inputRequests:[确认高危操作]
+    Note over C: 客户端向用户征询确认<br/>(第 6 章 Hook / 人在环)
+    C->>S: tools/call(deploy, env=prod, inputResponses:[已确认])
+    S-->>C: resultType:"complete" result
+```
+
+*图 4：MRTR 的人在环重试——服务端不反向连客户端，而是以"需要输入"中断、由客户端补全后重试原请求。这把"人在环审批"从有状态回调改成了无状态重试。*
+
+此外还有两类**可选扩展**（能力经 `ClientCapabilities.extensions` / `ServerCapabilities.extensions` 声明，不属核心协议）：**MCP Apps**（服务端分发交互式界面）与 **EMA（Enterprise Managed Authorization，企业托管授权）**——按需接入即可，本书不展开。
+
 ---
 
 ## 3. 动手实现（贯穿项目增量）
 
-本章增量：`src/assistant/mcp/client.py`——一个最小可用的 **stdio MCP Client**（JSON-RPC 帧收发 + 三步握手 + 工具枚举与调用），以及把 MCP 工具适配成第 7 章 `RegisteredTool` 的桥接层。依然零框架：只用标准库 `subprocess` 与 `json`。
+本章增量：`src/assistant/mcp/client.py`——一个最小可用的 **stdio MCP Client**（JSON-RPC 帧收发 + `server/discover` 能力发现 + 逐请求 `_meta` + 工具枚举与调用），以及把 MCP 工具适配成第 7 章 `RegisteredTool` 的桥接层。依然零框架：只用标准库 `subprocess` 与 `json`。
 
 ```python
-# src/assistant/mcp/client.py — 最小 stdio MCP Client
+# src/assistant/mcp/client.py — 最小 stdio MCP Client（2026-07-28 无状态）
 import json
 import subprocess
 from dataclasses import dataclass, field
 
-PROTOCOL_VERSION = "2025-06-18"  # 该版本的传输层规范见 [C-03]；升级时同步回归握手/传输用例
+PROTOCOL_VERSION = "2026-07-28"  # 无状态协议：无 initialize 握手，版本逐请求带在 _meta；规范见 [C-03]
+
+# 每个请求都要带的自描述元数据（键名为规范定义的反向域名命名空间）
+CLIENT_META = {
+    "io.modelcontextprotocol/protocolVersion": PROTOCOL_VERSION,
+    "io.modelcontextprotocol/clientInfo": {"name": "assistant", "version": "0.8.0"},
+    "io.modelcontextprotocol/clientCapabilities": {},
+}
+
+
+class InputRequired(Exception):             # MRTR 中断信号：需补充输入后重试（2.6 节）
+    def __init__(self, requests):
+        self.requests = requests
 
 
 @dataclass
@@ -169,24 +207,24 @@ class MCPStdioClient:
     _next_id: int = field(default=0)
 
     def start(self) -> dict:
-        """拉起子进程并完成三步握手，返回 Server 能力声明"""
+        """拉起子进程；无握手，用 server/discover 提前确认能力与版本"""
         self._proc = subprocess.Popen(
             self.command, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,          # 关键：stderr 单独收，stdout 只走协议帧
             text=True, encoding="utf-8")
-        init = self._request("initialize", {
-            "protocolVersion": PROTOCOL_VERSION,
-            "capabilities": {},
-            "clientInfo": {"name": "assistant", "version": "0.8.0"},
-        })
-        self._notify("notifications/initialized", {})   # 第三步：握手完成通知
-        return init["capabilities"]
+        info = self._request("server/discover", {})     # 服务端 MUST 实现
+        versions = info.get("protocolVersions", [PROTOCOL_VERSION])
+        if PROTOCOL_VERSION not in versions:            # 启动期 fail-fast，不留到运行期
+            raise RuntimeError(f"版本不匹配: 本地 {PROTOCOL_VERSION} 不在 {versions}")
+        return info.get("capabilities", {})
 
     def list_tools(self) -> list[dict]:
         return self._request("tools/list", {})["tools"]
 
     def call_tool(self, name: str, arguments: dict) -> tuple[str, bool]:
         r = self._request("tools/call", {"name": name, "arguments": arguments})
+        if r.get("resultType") == "input_required":     # MRTR：补齐后重试（见 2.6）
+            raise InputRequired(r["inputRequests"])
         text = "\n".join(c.get("text", "") for c in r.get("content", []))
         return text, bool(r.get("isError"))
 
@@ -198,6 +236,7 @@ class MCPStdioClient:
     # ---- JSON-RPC 帧层（newline-delimited JSON）----
     def _request(self, method: str, params: dict) -> dict:
         self._next_id += 1
+        params = {**params, "_meta": CLIENT_META}        # 每个请求自带 _meta（无状态核心）
         self._send({"jsonrpc": "2.0", "id": self._next_id,
                     "method": method, "params": params})
         while True:                          # 跳过通知帧，等待本请求的响应
@@ -206,9 +245,6 @@ class MCPStdioClient:
                 if "error" in msg:
                     raise RuntimeError(f"MCP error: {msg['error']}")
                 return msg["result"]
-
-    def _notify(self, method: str, params: dict):
-        self._send({"jsonrpc": "2.0", "method": method, "params": params})
 
     def _send(self, msg: dict):
         self._proc.stdin.write(json.dumps(msg) + "\n")
@@ -262,14 +298,14 @@ def register_mcp_tools(registry: ToolRegistry, client, *,
 ```python
 client = MCPStdioClient(["npx", "-y",
                          "@modelcontextprotocol/server-filesystem", "."])
-caps = client.start()          # → {'tools': {'listChanged': True}, ...}
+caps = client.start()          # server/discover → {'tools': {'listChanged': True}, ...}
 tools = client.list_tools()    # → read_file / write_file / list_directory ...
 print(snapshot_digest(tools))  # 首次接入：人工评审描述后把指纹存入配置
 text, err = client.call_tool("list_directory", {"path": "."})
 client.close()
 ```
 
-在 `_send`/`_request` 处加两行打印即可看到线上的原始帧序——与图 2 逐条对应：`initialize` 请求与响应、`initialized` 通知、`tools/list`、`tools/call`。建议真的做一次：对协议的手感来自看过原始帧，而不是背过时序图。
+在 `_send`/`_request` 处加两行打印即可看到线上的原始帧序——与图 2 逐条对应：`server/discover` 请求与响应、每个请求 `params._meta` 的自描述、`tools/list`、`tools/call`。注意再也没有 `initialize` / `initialized` 帧。建议真的做一次：对协议的手感来自看过原始帧，而不是背过时序图。
 
 ---
 
@@ -281,14 +317,14 @@ client.close()
 
 **凭据下发纪律。** stdio Server 的凭据通常经环境变量注入——这意味着凭据管理系统要接到 Agent 运行时（第 13 章）；禁止把密钥写进 Server 启动参数（进程列表可见）；远程 Server 一律走网关侧的集中凭据，Agent 侧零持有。
 
-**版本与兼容矩阵。** 协议版本、Server 版本、工具 Schema 三层都会演进。锁定策略：协议版本跟随 Client SDK 大版本；Server 锁具体版本并纳入第 7 章的合同测试（每日回放 `tools/list` + 关键 `tools/call`）；升级走"影子接入比对输出"再切流，与普通服务依赖升级同一套纪律。
+**版本与兼容矩阵。** 协议版本、Server 版本、工具 Schema 三层都会演进。本书以 **2026-07-28**（无状态）为基线；该版把 Roots / Sampling / Logging、旧 SSE 传输、DCR 动态注册等一并列入废弃生命周期（保留至少 12 个月过渡期，新接入不应再采用）。锁定策略：协议版本跟随 Client SDK 大版本，并用 `server/discover` 在启动期核对服务端支持的版本集；Server 锁具体版本并纳入第 7 章的合同测试（每日回放 `tools/list` + 关键 `tools/call`）；升级走"影子接入比对输出"再切流，与普通服务依赖升级同一套纪律。
 
 ---
 
 ## 5. 常见坑
 
 **坑 1：新 Client 接旧 SSE Server（或反之），握手即挂。**
-*症状*：连接建立后 `initialize` 无响应或 404；同一 Server 用某些老工具能连上。
+*症状*：连接建立后首个请求（`server/discover` 或 `tools/list`）无响应或 404；同一 Server 用某些老客户端能连上。
 *根因*：SSE 传输（双端点）与 Streamable HTTP（单端点）的端点结构不同，2025-03 版协议废弃前者；新旧两端各说各话。
 *修复*：确认 Server 支持的传输与协议版本再接入；企业网关做传输层适配（对内统一 Streamable HTTP，对存量 SSE Server 做桥接），存量 Server 排期迁移。
 
@@ -307,10 +343,10 @@ client.close()
 *根因*：把"协议标准化"误解为"质量已达标"——Server 作者不知道你的上下文预算，描述冗长与全量返回是生态常态。
 *修复*：桥接层承担加工责任：只注册任务需要的工具子集（第 7 章静态裁剪）、结果过截断/摘要管线（本章 `run` 中的截断兜底）、必要时在桥接层重写描述（保留语义、压缩篇幅，重写后纳入快照）。
 
-**坑 5：跳过或忘记重新握手。**
-*症状*：Client 重连（进程重启/网络闪断恢复）后调用 `tools/call` 直接报错"server not initialized"；或版本不匹配的错误在生产才暴露。
-*根因*：把 MCP 会话当成无状态 HTTP——但协议要求 initialize 三步握手先于一切能力请求，重连即新会话，必须重新协商。
-*修复*：连接管理器把"握手完成"作为连接可用的判定条件（而非 TCP 建立）；重连后自动重跑 initialize + `tools/list`（工具集可能已变，正好过一遍快照比对）；版本协商失败在启动期 fail-fast，不留到运行期。
+**坑 5：把无状态协议当有状态用——依赖握手态或连接粘滞。**
+*症状*：Client 在轮询负载均衡后偶发 `tools/call` 失败，或跨调用的"上下文"莫名丢失；代码里还留着重连后重跑 `initialize` 的逻辑（该方法在 2026-07-28 服务端上已不存在）。
+*根因*：沿用旧心智——以为存在会话、以为请求会落到同一实例。但本版移除了 `initialize` 握手与 `Mcp-Session-Id`，任一请求可落到任意实例，连接不再承载状态。
+*修复*：每个请求都带全 `_meta`（协议版本/能力/身份），别把版本协商留在"连接建立时"；需要跨调用状态就用服务端铸造的句柄当工具参数（如 Tasks 句柄），不要依赖连接；要提前选版本就调 `server/discover`，失败在启动期 fail-fast。
 
 ---
 
@@ -328,7 +364,7 @@ client.close()
 
 结论先行：**Host 是拥有会话与安全策略的 Agent 应用，Client 是 Host 内与 Server 一对一的协议适配器，Server 是不感知模型存在的能力提供方。**
 - Host 决定接入哪些 Server、暴露哪些能力给模型、执行拦截策略。
-- Client 负责握手、能力协商、请求路由；一个 Host 多个 Client。
+- Client 负责能力发现（`server/discover`）、逐请求版本/能力协商（`_meta`）、请求路由；一个 Host 多个 Client。
 - Server 只应答协议请求——"何时调用、结果如何用"与它无关，这条边界是解耦与安全的基础。
 - 加分点：安全设计的推论——副作用只从 tools/call 发起，拦截面收敛为一条通道。
 
@@ -344,7 +380,7 @@ client.close()
 
 结论先行：**本地工具用 stdio（子进程、随会话生灭、零网络配置），远程共享用 Streamable HTTP（单端点、可无状态部署、可加网关设施），SSE 已废弃仅为兼容存量。**
 - stdio 两条纪律：stdout 是协议信道日志走 stderr；进程治理（超时/健康检查/资源限额）。
-- Streamable HTTP 对企业友好：标准 HTTP 设施（鉴权/限流/审计）直接复用。
+- Streamable HTTP 对企业友好：2026-07-28 起协议无状态（无 `initialize` / `Mcp-Session-Id`），任一请求可落任意实例，`Mcp-Method` / `Mcp-Name` 头供网关路由；标准 HTTP 设施（鉴权/限流/审计）直接复用。
 - SSE 被废弃的原因：双端点的会话粘滞与恢复复杂度。
 - 加分点：企业形态是 MCP 网关——Agent 只连网关，治理集中化。
 
@@ -355,6 +391,14 @@ client.close()
 - 混淆代理人对策：凭据按用途拆分、只读优先、目录/范围圈定。
 - 兜底：MCP 工具与原生工具走同一条 PreToolUse 拦截管线，不因协议标准而豁免（参见第 6、13 章）。
 - 加分点：信任模型一句话——每个 Server = npm 依赖 + 数据通道的复合体，两套纪律都要上。
+
+**Q6：2026-07-28 版把 MCP 改成无状态，具体改了什么？对落地有何影响？**
+
+结论先行：**移除 `initialize` 握手与 `Mcp-Session-Id`，每个请求靠 `_meta` 自描述（协议版本/能力/身份），任一请求可落到负载均衡后的任意实例；能力提前确认改用 `server/discover`。**
+- 长任务与人在环随之改造：Tasks 扩展用服务端句柄 + `tasks/get` 轮询取代阻塞；MRTR 用 `resultType:"input_required"` + 重试取代服务端反向请求。
+- 一批特性进入 12 个月废弃期：Roots / Sampling / Logging、旧 SSE 传输、DCR 动态注册。
+- 落地影响：网关可用 `Mcp-Method` / `Mcp-Name` 头直接路由鉴权；客户端要移除重连重握手逻辑，改为每请求带 `_meta`；跨调用状态必须显式句柄化。
+- 加分点：代价是丢了 SSE 断点续传——响应流断裂即以新请求 ID 重发。
 
 ---
 
