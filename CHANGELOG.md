@@ -5,6 +5,7 @@
 ## [Unreleased]
 
 ### 新增
+- **P1 · 13.8 观测性增强**：`obs/spans.py`（11 个 Agent span 名字表 + W3C traceparent 跨边界传播 + 内容采集三级 metadata_only/redacted/full 及机器脱敏）+ 8 项测试；第 14 章新增 2.6 节（span 语义表 + 跨边界传播 + 采集分级，含 snippet）。
 - **P1 · 13.7 扩展供应链**：`supply/registry.py`（内容哈希锁定 + 签名验证 + 白名单 + 撤销，覆盖 9 类扩展）+ 8 项测试；第 8 章新增 2.7 节（签名→验证→撤销信任链 + 四关校验 snippet）；来源 C-22（SLSA）。
 - **P1 · 13.4 人机交互与自治级别**：`hitl/autonomy.py`（L0–L4 自治级别 × 风险/可逆性 × 策略 → EXECUTE/CONFIRM/SUGGEST_ONLY/REFUSE/ESCALATE 裁决 + HITL 能力清单）+ 9 项测试；第 13 章新增 2.7 节（自治级别→审批闸门 + 人在环 UX 契约，含 snippet）。
 - **P1 · 13.1 MCP/A2A 互操作**：`interop/a2a.py`（A2A Task 九态状态机 + Agent Card 校验 + A2A Task↔内部 Run 映射）+ 9 项测试；第 18 章新增 2.7 节（MCP/A2A/内部图三边界 + Agent Card + Task 生命周期 + 身份/权限/Trace 贯通，含 snippet）；来源 C-21（A2A 协议）。
