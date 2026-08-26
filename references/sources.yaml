@@ -219,6 +219,14 @@ sources:
     expires_at: "2026-11-24"
     status: verified
     url: "https://slsa.dev/"
+  - id: C-23
+    title: "Plan-and-Solve Prompting: Improving Zero-Shot Chain-of-Thought Reasoning by Large Language Models"
+    publisher: "Wang et al. (ACL 2023)"
+    source_type: paper
+    claim_scope: [ch04, appendix-e]
+    verified_at: "2026-08-26"
+    status: stable
+    url: "https://arxiv.org/abs/2305.04091"
 
 # 协议版本一致性锚点：check_sources 校验 C-03.version 与第 8 章 PROTOCOL_VERSION 常量相等。
 version_anchors:
