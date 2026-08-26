@@ -8,7 +8,7 @@ PY ?= python3
 REF := examples/reference-assistant
 
 .PHONY: setup verify test test-contract \
-        check-render check-book check-crossrefs check-snippets check-diagrams \
+        check-render check-book check-crossrefs check-snippets check-diagrams check-mermaid \
         check-sources check-sources-strict check-links lint typecheck docs-build baseline help
 
 help:
@@ -20,6 +20,7 @@ help:
 	@echo "make check-crossrefs 章/附录/图号内部引用有效"
 	@echo "make check-snippets  章节代码片段与源码零漂移"
 	@echo "make check-diagrams  D2 图源已渲染、被引用且可在 GitHub 显示"
+	@echo "make check-mermaid   Mermaid 块可被 mermaid.js 解析（需 node; 依赖 npm i --no-save mermaid jsdom）"
 	@echo "make check-sources   来源账本一致、协议版本一致（CI 非严格）"
 	@echo "make check-sources-strict  发行前：待确认/过期升级为失败"
 	@echo "make baseline        重新生成仓库基线报告（信息性）"
@@ -44,6 +45,9 @@ check-snippets:
 
 check-diagrams:
 	$(PY) tools/check_diagrams.py
+
+check-mermaid:
+	node tools/check_mermaid.mjs
 
 test-contract test:
 	$(PY) -m pytest -q $(REF)

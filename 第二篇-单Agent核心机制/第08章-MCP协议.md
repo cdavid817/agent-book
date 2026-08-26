@@ -87,7 +87,7 @@ sequenceDiagram
         H->>S: server/discover
         S-->>H: 支持的协议版本 + capabilities + serverInfo
     end
-    Note over H,S: 无握手; 每个请求自带 _meta<br/>(protocolVersion / clientInfo / clientCapabilities)
+    Note over H,S: 无握手：每个请求自带 _meta<br/>(protocolVersion / clientInfo / clientCapabilities)
     H->>S: tools/list(_meta)
     S-->>H: 工具清单 + resultType:"complete" + ttlMs/cacheScope
     Note over H: Host 把工具适配进模型的 tools 参数<br/>(经安全过滤与描述审查, 见 2.4)
