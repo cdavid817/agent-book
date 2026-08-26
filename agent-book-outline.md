@@ -27,7 +27,7 @@
 **第 3 章 Agentic Loop 解剖**
 - ReAct 范式：Reason → Act → Observe
 - Loop 终止条件设计：max_turns、任务完成判定、预算熔断（反面案例：第 1 章 AutoGPT 的无限循环教训）
-- Loop Engineering：单轮 vs 多轮、内循环与外循环
+- 循环结构选型：单轮 vs 多轮、内循环与外循环（全章四节 = 附录 B.3 Loop Engineering 方法论主体）
 - 流式输出与中断恢复
 
 **第 4 章 规划与推理**
