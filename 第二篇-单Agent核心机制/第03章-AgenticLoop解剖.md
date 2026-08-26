@@ -24,7 +24,7 @@
 
 | 阶段 | 输入 | 输出 | 契约要点 |
 |---|---|---|---|
-| **Reason（推理）** | 完整上下文：System Prompt + 历史 messages + 上一轮观察 | ① 文本块（可见思考/答复）② 零或多个 `tool_use` 块（行动意图）③ `stop_reason`（继续/结束信号） | 输出是**意图不是执行**；`tool_use.input` 已过 Schema 校验，但业务合法性（如路径越界）不在此层保证 |
+| **Reason（推理）** | 完整上下文：System Prompt + 历史 messages + 上一轮观察 | ① 文本块（可见思考/答复）② 零或多个 `tool_use` 块（行动意图）③ `stop_reason`（继续/结束信号） | 输出是**意图不是执行**；`tool_use.input` 大概率符合 Schema 但 API 不保证严格通过（除非启用严格工具调用）——结构与业务合法性（如路径越界）都需运行时二次校验 |
 | **Act（行动）** | 经运行时二次校验的 `tool_use`（name + input） | 原始执行结果或异常 | 唯一产生**副作用**的阶段；执行者是运行时代码，不是模型；权限、超时、重试都在此层 |
 | **Observe（观察）** | Act 的原始结果 | 写回历史的规范化 `tool_result`（截断、脱敏、格式化、`is_error` 标记） | 观察是**主动加工**而非被动透传——原始结果对机器友好，回填内容必须对 LLM 友好且对上下文预算负责 |
 
@@ -116,6 +116,8 @@ flowchart TB
 `message_start`（响应开始，携带初始 usage）→ 若干组 `content_block_start / content_block_delta / content_block_stop`（每组对应一个内容块：文本块累积 `text_delta`，工具块累积 `input_json_delta` 的**分片 JSON 字符串**）→ `message_delta`（携带 `stop_reason` 与最终 usage）→ `message_stop`。
 
 解析器的两个要点：其一，`tool_use` 的参数是分片传输的字符串，必须**收齐整个块后**才能 `json.loads`——对半截字符串做解析是流式实现最常见的崩溃点；其二，`stop_reason` 直到 `message_delta` 才出现，此前不能做任何终止判断。
+
+`stop_reason` 还有一个必须处理的取值：**`max_tokens`——非中断的不完整轮次**。输出在 token 上限处被硬截断，流程上却会正常收到 `message_stop`，最容易被当成完整消息放行。截断落在文本块上只是答复没写完；落在 `tool_use` 的分片 JSON 上，这条 assistant 消息就带着永远解析不出的半截参数——与下文的中断情形殊途同归，同样违反"完整轮次边界"不变式。处理原则：检测到该 `stop_reason`，要么提高 `max_tokens` 后整轮重推，要么将截断轮丢弃并回填一条"输出超限，请精简后重试"的观察；绝不能对半截 JSON 做"尽力解析"。
 
 流式带来的真正难题是**中断（Interruption）**：用户点了停止、网关超时、进程收到 SIGTERM，此刻循环可能停在任何位置。状态一致性规则只有一条主律：**历史里不能存在残缺的轮次**。展开为三种情形：
 
@@ -373,6 +375,7 @@ loop = AgentLoop(
 - 执行中中断：副作用可能已发生，必须回填 `tool_result` 后才停——幂等性设计的动因。
 - 恢复：从检查点加载历史重新进入推理，代价只是被丢弃的半轮。
 - 加分点：SSE 解析要点——`tool_use` 参数分片传输，收齐才能解析；`stop_reason` 到 `message_delta` 才可用。
+- 加分点：`stop_reason=max_tokens` 是非中断的不完整轮次——半截 `tool_use` JSON 不得入历史，提高上限重推或丢弃回填观察。
 
 **Q5：四种预算熔断各防什么？顺序与位置有什么讲究？**
 
@@ -385,4 +388,4 @@ loop = AgentLoop(
 
 ---
 
-> **下一章预告**：循环有了骨架和刹车，下一个问题是"方向盘"——模型如何把大任务拆成步骤、何时重新规划、反思机制怎样接入循环。第 4 章比较隐式 CoT、显式 Plan-then-Execute 与解耦式 ReWOO 三种规划范式的工程权衡。
+> **下一章预告**：循环有了骨架和刹车，下一个问题是"方向盘"——模型如何把大任务拆成步骤、何时重新规划、反思机制怎样接入循环。第 4 章比较隐式 CoT、显式 Plan-then-Execute、TODO List 驱动与解耦式 ReWOO 四种规划取向的工程权衡。
