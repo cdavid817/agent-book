@@ -190,7 +190,8 @@ flowchart TB
     Q1 -->|"不可分解"| Q3A{"维度三: 质量如何验证?"}
     Q3A -->|"可自动验证"| SA["单 Agent + Verifier<br/>(质量再高 → +Reviewer)"]
     Q3A -->|"只能比较选优"| AR["Arena (best-of-n)"]
-    Q3A -->|"高价值离散判断"| DB["Debate (谨慎: 5-10×)"]
+    Q3A -->|"多专业视角并存汇总"| MO["专家团<br/>(异构 Parallel + 综合)"]
+    Q3A -->|"需相互质证攻防"| DB["Debate (谨慎: 5-10×)"]
     Q1 -->|"可分解"| Q2{"维度二: 子任务依赖形态?"}
     Q2 -->|"完全独立"| PA["Parallel (首选)"]
     Q2 -->|"固定链式"| PI["Pipeline (+级间校验)"]
@@ -203,7 +204,7 @@ flowchart TB
     classDef warn fill:#DD6E42,stroke:#DD6E42,color:#ffffff
     class Q1,Q2,Q3A judge
     class SA,PA good
-    class PI,SU,AR,SW mid
+    class PI,SU,AR,SW,MO mid
     class DB warn
 ```
 
