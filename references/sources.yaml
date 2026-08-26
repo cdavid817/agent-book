@@ -227,6 +227,23 @@ sources:
     verified_at: "2026-08-26"
     status: stable
     url: "https://arxiv.org/abs/2305.04091"
+  - id: C-24
+    title: "MemGPT: Towards LLMs as Operating Systems"
+    publisher: "Packer et al. (arXiv 2023)"
+    source_type: paper
+    claim_scope: [ch10]
+    verified_at: "2026-08-26"
+    status: stable
+    url: "https://arxiv.org/abs/2310.08560"
+  - id: C-25
+    title: "Introducing Contextual Retrieval"
+    publisher: "Anthropic"
+    source_type: vendor-doc
+    claim_scope: [ch11]
+    verified_at: "2026-08-26"
+    expires_at: "2026-11-26"
+    status: verified
+    url: "https://www.anthropic.com/news/contextual-retrieval"
 
 # 协议版本一致性锚点：check_sources 校验 C-03.version 与第 8 章 PROTOCOL_VERSION 常量相等。
 version_anchors:

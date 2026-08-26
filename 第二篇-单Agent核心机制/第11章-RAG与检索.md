@@ -83,6 +83,8 @@ flowchart TB
 
 **元数据与向量同等重要。** 每个块至少携带：来源路径、章节路径（"运维手册 > 存储 > 故障处理"）、更新时间、权限标签。它们支撑过滤检索（只搜某系统的文档）、新鲜度提示（第 10 章过时污染的知识库版）与权限裁剪（第 4 节的合规红线）。
 
+切分的一个残留病灶是**块的语境失忆**：块一旦离开文档，"该阈值调整后故障率降至 0.1%"这样的句子就不知道说的是哪个系统哪次调整——块内文本自身检索不到它省略掉的主语。**上下文检索（Contextual Retrieval，Anthropic 2024 [C-25]）** 的解法是入库时多花一步：用 LLM 通读全文，为每个块生成一两句语境说明（"本块出自服务 A 对象存储 2024-Q3 故障复盘的阈值配置节"）前置到块文本，再做 embedding 与 BM25 索引。官方实验中 top-20 检索失败率约降一半，叠加重排序降幅更大；全库过一遍 LLM 的成本靠提示缓存压到可接受（同一篇文档做 N 个块，文档本体只付一次）。它与结构感知切分互补：切分保住块的**完整性**，语境前置补回块的**归属**。
+
 ### 2.3 检索层：混合、重排与选型
 
 **为什么必须混合检索（Hybrid Retrieval）。** 两路检索的失败模式恰好互补：**稠密检索**（Dense，向量相似度；embedding 的机制基础与工程后果参见附录 A.8）擅长语义泛化（"上传失败"匹配到"对象存储写入异常"），但对**精确 token 失灵**——错误码 `ERR-4032`、工单号、函数名在 embedding 空间里与相邻编号几乎等距；**稀疏检索**（Sparse，BM25 词频统计）对精确词命中稳定，但改写同义就抓瞎。混合方案两路各自召回、用 **RRF（Reciprocal Rank Fusion，倒数排名融合）** 合并——RRF 只用排名不用分数（`score = Σ 1/(k + rank_i)`），天然规避了两路分数不可比的问题。经验数据：混合相对单路稠密，在含精确查询的混合负载上召回率普遍提升 10–20 个百分点。
@@ -159,7 +161,7 @@ def tokenize(text: str) -> list[str]:
     words = re.findall(r"[a-zA-Z0-9_\-]+|[一-鿿]+", text.lower())
     tokens = []
     for w in words:
-        if re.match(r"[a-zA-Z0-9]", w):
+        if re.match(r"[a-zA-Z0-9_\-]", w):   # 与 findall 首支一致: _mod/-flag 不落入 bigram 支
             tokens.append(w)
         else:
             tokens += [w[i:i+2] for i in range(len(w)-1)] or [w]
@@ -178,17 +180,20 @@ CODE_FENCE = "`" * 3   # 拼接写法：避免三连反引号提前终止书中�
 
 def chunk_markdown(path: Path, max_chars: int = 1200) -> list[Chunk]:
     """结构感知切分：按标题层级切；超长节内退化为定长；代码块/表格不拆"""
-    chunks, section, buf = [], path.stem, []
+    chunks, section, buf, in_code = [], path.stem, [], False
     for line in path.read_text("utf-8").splitlines():
-        if line.startswith("#"):
+        if line.startswith(CODE_FENCE):
+            in_code = not in_code        # 围栏状态：不跟踪它, 代码块内的 "# 注释" 会被误判为标题
+        if line.startswith("#") and not in_code:
             if buf:
                 chunks.append(Chunk(str(path), section, "\n".join(buf)))
             section, buf = line.lstrip("# ").strip(), []
         else:
             buf.append(line)
             over = sum(len(x) for x in buf) > max_chars
-            splittable = not (line.startswith("|") or line.startswith(CODE_FENCE))
-            if over and splittable:      # 表格行与代码围栏处不作为切点
+            splittable = not (in_code or line.startswith("|")
+                              or line.startswith(CODE_FENCE))
+            if over and splittable:      # 表格行与代码块（含内部行）不作为切点
                 chunks.append(Chunk(str(path), section, "\n".join(buf)))
                 buf = []
     if buf:
@@ -362,6 +367,14 @@ def build_doc_search(docs_dir: str):
 - Agent 检索的是自己刚改的代码——grep 读此刻磁盘，索引读的是旧世界。
 - 循环让 grep 会"换词重试"，这正是它在传统 RAG 时代输掉的那项能力。
 - 加分点：边界清晰——自然语言文档的同义与跨语言匹配仍是向量检索主场；符号级导航进一步交给 LSP（参见第 9 章）。
+
+**Q6：上下文窗口越来越大，RAG 会被取代吗？**
+
+结论先行：**不会，但分工在变——窗口再大也替代不了检索的四件事：成本（每问全量灌入无法摊销）、规模（知识库以千万 token 起步，窗口以百万计）、权限（裁剪必须发生在进窗口之前，第 4 节红线）、新鲜度（源文档持续在变）；长上下文真正改变的是检索的精度压力。**
+- 量级算术：示例助手 1.2 万篇文档远超任何窗口；即便塞得下，每次提问按全量 token 计费也不可持续（长上下文的注意力均匀性另见第 5 章 U 型曲线）。
+- 权限是硬边界：全库进上下文等于取消 ACL——这一条与窗口大小无关，永远成立。
+- 分工怎么变：窗口变大让 top-k 可以放宽、切分容错更高、Agentic 多轮检索的往返成本更可负担——长上下文是检索的减压阀而非替代品。
+- 加分点：小语料（如百页以内的项目文档）整体进上下文确实成为合法选项——判据还是量级与变更频率，而不是"RAG 是否过时"的站队。
 
 ---
 
