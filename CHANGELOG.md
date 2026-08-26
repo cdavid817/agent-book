@@ -5,7 +5,7 @@
 ## [Unreleased]
 
 ### 结构调整
-- **Coding Agent 独立成篇（第六篇拆分）**：原第 23 章"领域深潜：Coding Agent"扩为第六篇（三章，只讲领域特有层、机制回指前文）——第 23 章《代码库理解与编辑》（三层导航/探索外包/项目知识文件内容学/编辑三策略/遗留仓考古，新增 `coding/repo_map.py`）、第 24 章《验证闭环与质量工程》（修复环/测试基建三适配·flaky 隔离/SWE-bench/依赖幻觉与供应链卫生，承接 `coding/repair.py`）、第 25 章《协作形态与交付工程》（人机四档谱系/Reviewer/并行 worktree 与冲突治理四件套，新增 `coding/wt_dispatch.py`）。原第 24/25 章顺移为第七篇"专家视野"第 26/27 章。全书 25 章 → 27 章、六篇 → 七篇；book.yml/README/outline/附录 A–F/sources.yaml 及全书交叉引用同步重排。新增两模块代码经真实执行验证（repo_map 对贯穿项目实跑；wt_dispatch 含真实 git worktree 与 merge-tree 预检）。
+- **Coding Agent 独立成篇（第六篇拆分）**：原第 23 章扩为第六篇"Coding Agent"（三章，只讲领域特有层、机制回指前文）——第 23 章《代码库理解与编辑》（三层导航/探索外包/项目知识文件内容学/编辑三策略/遗留仓考古，新增 `coding/repo_map.py`）、第 24 章《验证闭环与质量工程》（修复环/测试基建三适配·flaky 隔离/SWE-bench/依赖幻觉与供应链卫生，承接 `coding/repair.py`）、第 25 章《协作形态与交付工程》（人机四档谱系/Reviewer/并行 worktree 与冲突治理四件套，新增 `coding/wt_dispatch.py`）。原第 24/25 章顺移为第七篇"专家视野"第 26/27 章。全书 25 章 → 27 章、六篇 → 七篇；book.yml/README/outline/附录 A–F/sources.yaml 及全书交叉引用同步重排。新增两模块代码经真实执行验证（repo_map 对贯穿项目实跑；wt_dispatch 含真实 git worktree 与 merge-tree 预检）。
 
 ### 新增
 - **P1 · 13.3 多模态/Browser/Computer Use**：`browser/loop.py`（Observe→Ground→PolicyCheck→Execute→Verify→Commit/Rollback 七段循环 + 过期守卫防坐标漂移 + 验证回滚）+ 5 项测试；第 9 章新增 2.5 节（三种感知 + 安全动作循环 + 页面注入/隐私/Voice，含 snippet）。P1 七个主题全部完成。

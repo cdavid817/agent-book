@@ -63,13 +63,13 @@
 | [第 21 章 与存量系统集成](第五篇-企业落地/第21章-与存量系统集成.md) | MQ 幂等（重放≠重现）、大数据接入的权限收敛与大结果三板斧、凭证三形态 | `tools/data_query.py` 受防护数据查询工具 |
 | [第 22 章 组织与流程](第五篇-企业落地/第22章-组织与流程.md) | Spec 驱动开发（OpenSpec 三阶段）、评审重心转移、成本治理组织化 | 真实 OpenSpec 变更包（三件套） |
 
-### 第六篇 领域深潜：Coding Agent
+### 第六篇 Coding Agent
 
 | 章节 | 核心问题 | 贯穿项目交付物 |
 |---|---|---|
-| [第 23 章 代码库理解与编辑](第六篇-领域深潜CodingAgent/第23章-代码库理解与编辑.md) | 为什么代码先跑通（验证信号天然存在）、三层导航与探索外包、项目知识文件内容学、编辑三策略、遗留仓考古三步 | `coding/repo_map.py` Repo Map 构建器（签名骨架+引用度排序） |
-| [第 24 章 验证闭环与质量工程](第六篇-领域深潜CodingAgent/第24章-验证闭环与质量工程.md) | test-driven repair loop、测试基建三适配（分层/选测/flaky）、SWE-bench 原理与局限、依赖幻觉与供应链卫生 | `coding/repair.py` 端到端修复环（issue→测试通过） |
-| [第 25 章 协作形态与交付工程](第六篇-领域深潜CodingAgent/第25章-协作形态与交付工程.md) | 人机协作四档谱系、Reviewer 与并行 worktree、冲突治理四件套、下游容量、机制总图回收全书 | `coding/wt_dispatch.py` worktree 分派（文件亲和+合并预检） |
+| [第 23 章 代码库理解与编辑](第六篇-CodingAgent/第23章-代码库理解与编辑.md) | 为什么代码先跑通（验证信号天然存在）、三层导航与探索外包、项目知识文件内容学、编辑三策略、遗留仓考古三步 | `coding/repo_map.py` Repo Map 构建器（签名骨架+引用度排序） |
+| [第 24 章 验证闭环与质量工程](第六篇-CodingAgent/第24章-验证闭环与质量工程.md) | test-driven repair loop、测试基建三适配（分层/选测/flaky）、SWE-bench 原理与局限、依赖幻觉与供应链卫生 | `coding/repair.py` 端到端修复环（issue→测试通过） |
+| [第 25 章 协作形态与交付工程](第六篇-CodingAgent/第25章-协作形态与交付工程.md) | 人机协作四档谱系、Reviewer 与并行 worktree、冲突治理四件套、下游容量、机制总图回收全书 | `coding/wt_dispatch.py` worktree 分派（文件亲和+合并预检） |
 
 ### 第七篇 专家视野（前沿与收尾）
 

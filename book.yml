@@ -180,27 +180,27 @@ parts:
         code_status: none
         sources_verified_at: 2026-08-23
   - id: part-6
-    title: 领域深潜：Coding Agent
-    path: 第六篇-领域深潜CodingAgent
+    title: Coding Agent
+    path: 第六篇-CodingAgent
     chapters:
       - id: ch23
         number: 23
         title: 代码库理解与编辑
-        path: 第六篇-领域深潜CodingAgent/第23章-代码库理解与编辑.md
+        path: 第六篇-CodingAgent/第23章-代码库理解与编辑.md
         status: draft
         code_status: verified
         sources_verified_at: 2026-08-26
       - id: ch24
         number: 24
         title: 验证闭环与质量工程
-        path: 第六篇-领域深潜CodingAgent/第24章-验证闭环与质量工程.md
+        path: 第六篇-CodingAgent/第24章-验证闭环与质量工程.md
         status: draft
         code_status: verified
         sources_verified_at: 2026-08-26
       - id: ch25
         number: 25
         title: 协作形态与交付工程
-        path: 第六篇-领域深潜CodingAgent/第25章-协作形态与交付工程.md
+        path: 第六篇-CodingAgent/第25章-协作形态与交付工程.md
         status: draft
         code_status: verified
         sources_verified_at: 2026-08-26
