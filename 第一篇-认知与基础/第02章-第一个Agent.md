@@ -22,7 +22,7 @@
 
 ### 2.1 ReAct：推理与行动的交替
 
-**ReAct（Reasoning + Acting）** 由 Yao 等人在 2022 年的论文《ReAct: Synergizing Reasoning and Acting in Language Models》中提出，核心思想是让模型交替产生**推理轨迹（Thought）** 和**行动（Action）**，行动的**观察结果（Observation）** 再反馈给下一轮推理。相比"只推理"（如纯 CoT，容易幻觉出不存在的事实）和"只行动"（无规划，容易乱调工具），交替结构让每一步行动都有推理依据、每一步推理都有真实观察支撑——这正是第 1 章"教训二：无验证"的最小对策：**观察结果就是天然的验证信号**。
+**ReAct（Reasoning + Acting）** 由 Yao 等人在 2022 年的论文《ReAct: Synergizing Reasoning and Acting in Language Models》中提出，核心思想是让模型交替产生**推理轨迹（Thought）** 和**行动（Action）**，行动的**观察结果（Observation）** 再反馈给下一轮推理。相比"只推理"（如纯 CoT，容易幻觉出不存在的事实）和"只行动"（无规划，容易乱调工具），交替结构让每一步行动都有推理依据、每一步推理都有真实观察支撑——这正是第 1 章"教训二：无验证"的最小对策：**观察结果就是天然的验证信号**。ReAct 只是范式谱系的起点——它与 CoT/Self-Consistency（推理技术）、Plan-then-Execute/ReWOO（其他循环范式）、Reflexion（修正回路）的分层关系有一张速查表在**附录 E.6**，各范式的工程权衡在第 4 章展开；本章先把这个最基础也最通用的一种亲手跑起来。
 
 ```mermaid
 graph TB
