@@ -54,8 +54,8 @@ sources:
     url: "https://opentelemetry.io/docs/specs/semconv/gen-ai/"
 
   - id: C-05
-    title: "Agent / Coding Agent 公共基准：SWE-bench / WebArena / OSWorld"
-    publisher: "SWE-bench, WebArena, OSWorld"
+    title: "Agent / Coding Agent 公共基准：SWE-bench / WebArena / OSWorld / GAIA / τ-bench / BFCL / Terminal-Bench / MLE-bench 等"
+    publisher: "SWE-bench, WebArena, OSWorld 等各基准官方"
     source_type: official-benchmark
     claim_scope: [ch15, ch23]
     verified_at: "2026-08-23"
