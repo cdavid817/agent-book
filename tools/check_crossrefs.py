@@ -3,7 +3,7 @@
 """内部交叉引用门禁（与 reviews/baseline_audit.py 同规则）。
 
 校验三类内部引用指向真实存在的目标：
-  - 第 N 章：N ∈ 1..25；
+  - 第 N 章：N ∈ 1..N_max（N_max 取自 book.yml）；
   - 附录 X：X ∈ A..F；
   - 跨章图引用 "第 N 章图 M"：目标章的图号上限 ≥ M；
   - 同文图引用 "图 M"：不超过本文图号上限。
@@ -16,7 +16,20 @@ import re
 import sys
 from pathlib import Path
 
-MAX_CH = 25
+def _max_ch() -> int:
+    """章数上限以 book.yml 为单一来源, 不在此硬编码"""
+    root = Path(__file__).resolve().parents[1]
+    try:
+        import yaml
+        book = yaml.safe_load((root / "book.yml").read_text(encoding="utf-8"))
+        nums = [c["number"] for part in book.get("parts", [])
+                for c in part.get("chapters", [])]
+        return max(nums) if nums else 25
+    except Exception:
+        return 25
+
+
+MAX_CH = _max_ch()
 VALID_APP = set("ABCDEF")
 CHAP_RE = re.compile(r"第(\d+)章")
 

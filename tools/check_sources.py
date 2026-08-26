@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import datetime as dt
 import re
+import pathlib
 import sys
 from pathlib import Path
 
@@ -34,7 +35,20 @@ except ImportError:
 
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 CID_RE = re.compile(r"\[(C-\d+)\]")
-VALID_SCOPE = {f"ch{n:02d}" for n in range(1, 26)} | \
+def _chapter_count() -> int:
+    """章数以 book.yml 为单一来源, 不在此硬编码"""
+    try:
+        import yaml
+        root = pathlib.Path(__file__).resolve().parents[1]
+        book = yaml.safe_load((root / "book.yml").read_text(encoding="utf-8"))
+        nums = [c["number"] for part in book.get("parts", [])
+                for c in part.get("chapters", [])]
+        return max(nums) if nums else 25
+    except Exception:
+        return 25
+
+
+VALID_SCOPE = {f"ch{n:02d}" for n in range(1, _chapter_count() + 1)} | \
               {f"appendix-{c}" for c in "abcdef"}
 
 

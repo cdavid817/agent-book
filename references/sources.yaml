@@ -57,7 +57,7 @@ sources:
     title: "Agent / Coding Agent 公共基准：SWE-bench / WebArena / OSWorld / GAIA / τ-bench / BFCL / Terminal-Bench / MLE-bench 等"
     publisher: "SWE-bench, WebArena, OSWorld 等各基准官方"
     source_type: official-benchmark
-    claim_scope: [ch15, ch23]
+    claim_scope: [ch15, ch24]
     verified_at: "2026-08-23"
     expires_at: "2026-11-24"
     status: verified
@@ -248,7 +248,7 @@ sources:
     title: "Agent Communication Protocol (ACP) — merged into A2A under the Linux Foundation"
     publisher: "IBM BeeAI / Linux Foundation"
     source_type: standard
-    claim_scope: [ch18, ch24]
+    claim_scope: [ch18, ch26]
     verified_at: "2026-08-26"
     expires_at: "2026-11-26"
     status: verified

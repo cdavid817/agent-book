@@ -180,27 +180,45 @@ parts:
         code_status: none
         sources_verified_at: 2026-08-23
   - id: part-6
-    title: 专家视野
-    path: 第六篇-专家视野
+    title: 领域深潜：Coding Agent
+    path: 第六篇-领域深潜CodingAgent
     chapters:
       - id: ch23
         number: 23
-        title: 领域深潜：Coding Agent
-        path: 第六篇-专家视野/第23章-领域深潜CodingAgent.md
-        status: reviewed
+        title: 代码库理解与编辑
+        path: 第六篇-领域深潜CodingAgent/第23章-代码库理解与编辑.md
+        status: draft
         code_status: verified
-        sources_verified_at: 2026-08-23
+        sources_verified_at: 2026-08-26
       - id: ch24
         number: 24
+        title: 验证闭环与质量工程
+        path: 第六篇-领域深潜CodingAgent/第24章-验证闭环与质量工程.md
+        status: draft
+        code_status: verified
+        sources_verified_at: 2026-08-26
+      - id: ch25
+        number: 25
+        title: 协作形态与交付工程
+        path: 第六篇-领域深潜CodingAgent/第25章-协作形态与交付工程.md
+        status: draft
+        code_status: verified
+        sources_verified_at: 2026-08-26
+  - id: part-7
+    title: 专家视野
+    path: 第七篇-专家视野
+    chapters:
+      - id: ch26
+        number: 26
         title: 前沿方向
-        path: 第六篇-专家视野/第24章-前沿方向.md
+        path: 第七篇-专家视野/第26章-前沿方向.md
         status: reviewed
         code_status: verified
         sources_verified_at: 2026-08-23
-      - id: ch25
-        number: 25
+      - id: ch27
+        number: 27
         title: 完整实战收尾
-        path: 第六篇-专家视野/第25章-完整实战收尾.md
+        path: 第七篇-专家视野/第27章-完整实战收尾.md
         status: reviewed
         code_status: none
         sources_verified_at: 2026-08-23

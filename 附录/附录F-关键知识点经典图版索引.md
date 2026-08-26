@@ -39,7 +39,7 @@
 |---|---|---|---|
 | **MCP 架构与传输** | Host/Client/Server 架构图 | MCP 官方文档 [C-03] | 第 8 章图 1（架构与三传输）、图 2（生命周期时序） |
 | **OTel 追踪 Span 树** | Trace/Span 层级示意 | OpenTelemetry 文档 [C-04] | 第 12 章图 4（事件分发）、第 14 章图 1（四层 Span 树，已按 Agent 场景特化） |
-| **SWE-bench 评测流程** | issue→patch→测试判定流水线 | SWE-bench [C-05] | 第 15 章 2.3 / 第 23 章 2.4（叙述）、第 23 章图 1（修复环） |
+| **SWE-bench 评测流程** | issue→patch→测试判定流水线 | SWE-bench [C-05] | 第 15 章 2.3 / 第 24 章 2.3（叙述）、第 24 章图 1（修复环） |
 
 ---
 

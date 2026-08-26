@@ -20,7 +20,7 @@
 | C-02 | 第 4 章 Tree of Thoughts、Game of 24 结果 | Yao et al., *Tree of Thoughts: Deliberate Problem Solving with Large Language Models*, NeurIPS 2023：https://proceedings.neurips.cc/paper_files/paper/2023/file/271db9922b8d1f4dd7aaef84ed5ac703-Paper-Conference.pdf | 2026-08-23 |
 | C-03 | 第 8 章 MCP 2026-07-28 无状态协议（移除 initialize 握手/Mcp-Session-Id）、传输层与废弃状态 | Model Context Protocol, *2026-07-28 Specification — Key Changes*：https://modelcontextprotocol.io/specification/2026-07-28/changelog （传输层见 .../basic/transports/streamable-http） | 2026-08-24 |
 | C-04 | 第 14 章 GenAI trace/metric 属性；语义约定稳定级（Development）与消息内容采集默认关闭 | OpenTelemetry, *GenAI semantic conventions*（已迁至专门仓库；内容采集 opt-in，默认关闭）：https://opentelemetry.io/docs/specs/semconv/gen-ai/ | 2026-08-24 |
-| C-05 | 第 15、23 章 Agent/Coding Agent 公共基准 | SWE-bench：https://www.swebench.com/；WebArena：https://webarena.dev/；OSWorld：https://os-world.github.io/ | 2026-08-23 |
+| C-05 | 第 15、24 章 Agent/Coding Agent 公共基准 | SWE-bench：https://www.swebench.com/；WebArena：https://webarena.dev/；OSWorld：https://os-world.github.io/ | 2026-08-23 |
 | C-08 | 第 5 章 / 附录 A.5 lost-in-the-middle、中部召回跌幅 | Liu et al., *Lost in the Middle: How Language Models Use Long Contexts*, TACL 2024（arXiv 2023）：https://arxiv.org/abs/2307.03172 | 2026-08-23 |
 | C-09 | 附录 F ReAct 范式原图 | Yao et al., *ReAct: Synergizing Reasoning and Acting in Language Models*, ICLR 2023：https://arxiv.org/abs/2210.03629 | 2026-08-23 |
 | C-10 | 附录 F 思维链（CoT）原图 | Wei et al., *Chain-of-Thought Prompting Elicits Reasoning in Large Language Models*, NeurIPS 2022：https://arxiv.org/abs/2201.11903 | 2026-08-23 |
@@ -38,7 +38,7 @@
 | C-22 | 第 8 章 扩展供应链签名/SBOM/完整性等级 | OpenSSF, *SLSA — Supply-chain Levels for Software Artifacts*：https://slsa.dev/ | 2026-08-24 |
 | C-24 | 第 10 章 模型自管记忆先驱（MemGPT/Letta） | Packer et al., *MemGPT: Towards LLMs as Operating Systems*, arXiv 2023：https://arxiv.org/abs/2310.08560 | 2026-08-26 |
 | C-25 | 第 11 章 上下文检索（Contextual Retrieval）、top-20 检索失败率降幅 | Anthropic, *Introducing Contextual Retrieval*, 2024-09：https://www.anthropic.com/news/contextual-retrieval | 2026-08-26 |
-| C-26 | 第 18 章 ACP 谱系与 2025 年并入 A2A 的整合动态（第 24 章引用） | IBM BeeAI / Linux Foundation, *Agent Communication Protocol*：https://agentcommunicationprotocol.dev/ | 2026-08-26 |
+| C-26 | 第 18 章 ACP 谱系与 2025 年并入 A2A 的整合动态（第 26 章引用） | IBM BeeAI / Linux Foundation, *Agent Communication Protocol*：https://agentcommunicationprotocol.dev/ | 2026-08-26 |
 | C-06 | 附录 D 全部产品/框架的名称、归属与成熟度状态 | 各产品供应商官方页面与开源仓库（发行前逐项复核，名单半衰期 6–12 个月） | 2026-08-23 |
 | C-07 | 附录 D.7/D.8/D.9/D.10 社区与新兴项目（opencode / OhMyOpencode / Superpowers / codex / openclaw / DeepSeek Harness / Hermes Agent / Vibe Coding / D.10 分类速览全部条目 等） | 各项目开源仓库/官方页面；**标注"待确认"者发行前必须核实真实形态与存续，无法确证即删除**——不进发布稿 | 2026-08-23 |
 
@@ -61,7 +61,7 @@
 - 第 14 章：C-04
 - 第 5 章 / 附录 A.5：C-08
 - 附录 F（经典图版索引）：C-09（ReAct）、C-10（CoT）、C-11（Reflexion）、C-12（ReWOO）、C-13（Transformer）、C-14（CoALA）；另复用 C-01（Self-Consistency）、C-02（ToT）、C-08（lost-in-the-middle）、C-03（MCP）、C-05（SWE-bench）
-- 第 15、23 章：C-05；第 15 章另加 C-15（评测统计门禁）
+- 第 15、24 章：C-05；第 15 章另加 C-15（评测统计门禁）
 - 第 13 章：C-16（OWASP Agentic）、C-17（NIST AI RMF）、C-18（NIST GenAI Profile）、C-19（MITRE ATLAS）
 - 第 12 章：C-20（Saga 补偿）
 - 第 18 章：C-21（A2A 协议）
