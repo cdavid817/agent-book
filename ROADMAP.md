@@ -11,7 +11,7 @@
 ## 进行中 / 剩余子项
 
 - **TG3 增量**：按依赖顺序把更多 `executable` 章节代码抽入 `examples/reference-assistant/` 并加 snippet 标记（contracts → loop → tools/retry → context → hooks/security → MCP → memory/RAG → obs/cost → eval → orchestration → coding-repair）。
-- **TG4 §9.5**：一份覆盖 25 章 + 附录 A–F + README/outline/图表规范/book.yml/示例 README 的完整编辑性复核报告。
+- **TG4 §9.5**：一份覆盖 27 章 + 附录 A–F + README/outline/图表规范/book.yml/示例 README 的完整编辑性复核报告。
 
 ## 后续（P1 内容补全）
 
