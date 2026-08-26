@@ -41,7 +41,7 @@ pie showData title 典型长会话的上下文构成（token 占比）
 | **工具结果** | 随轮数增长且方差大 | 工具层截断（第 7 章）+ 会话层压缩（本章） | 压缩的主要目标 |
 | **注入内容** | 阶跃式（触发即整块进入） | 渐进式披露（第 6 章）、检索精度（第 11 章） | 按需进出 |
 
-**优先级排序策略**——当窗口吃紧、必须取舍时，保留顺序为：① System Prompt 与当前任务定义（丢了任务就没了）；② 最近 N 轮完整消息（工作现场，模型正在依赖）；③ 决策与状态类信息（结论、承诺、约束、未决问题——单位 token 的信息价值最高）；④ 中期工具结果（已被消化成结论的，可降为摘要）；⑤ 过程细节（重试记录、被否决的尝试、原始数据转储——最先丢弃）。这个排序背后是一条经济学判断：**每个 token 有三重成本——计费成本（每轮重发都在付费）、延迟成本（输入越长首 token 越慢）、注意力成本（稀释关键信息）**。第三重最隐蔽也最贵：它不出现在账单上，只出现在任务成功率里。
+**优先级排序策略**——当窗口吃紧、必须取舍时，保留顺序为：① System Prompt 与当前任务定义（丢了任务就没了）；② 最近 N 轮完整消息（工作现场，模型正在依赖）；③ 决策与状态类信息（结论、承诺、约束、未决问题——单位 token 的信息价值最高）；④ 中期工具结果（已被消化成结论的，可降为摘要）；⑤ 过程细节（重试记录、被否决的尝试、原始数据转储——最先丢弃）。这个排序背后是一条经济学判断：**每个 token 有三重成本——计费成本（每轮重发都在付费）、延迟成本（输入越长首 token 越慢）、注意力成本（稀释关键信息）**。第三重最隐蔽也最贵：它不出现在账单上，只出现在任务成功率里。窗口吃紧还有一条结构性出路——**把重读取任务隔离到子 Agent**：子 Agent 在自己的上下文里翻文件、读日志，主上下文只接收结论摘要，探索过程的 token 从不进入主窗口（多 Agent 的上下文隔离机制见第 17 章）。
 
 ### 2.2 压缩与 Compaction：有损回收的工程学
 
@@ -160,7 +160,12 @@ class CompactionReport:
     """压缩对账单：进入轨迹与成本看板（参见第 14、16 章）"""
     before_chars: int
     after_chars: int
-    compact_cost_tokens: int         # 压缩调用自身花费（usage 累计）
+    compact_cost_input: int          # 压缩调用读入被压段的花费
+    compact_cost_output: int         # 摘要生成的花费
+
+    @property
+    def compact_cost_tokens(self) -> int:
+        return self.compact_cost_input + self.compact_cost_output
 
     @property
     def saved_tokens_per_turn(self) -> int:
@@ -218,8 +223,8 @@ class ContextCompactor:
         report = CompactionReport(
             before_chars=_chars_of(messages),
             after_chars=_chars_of(compacted),
-            compact_cost_tokens=reply["usage"]["input_tokens"]
-                                + reply["usage"]["output_tokens"])
+            compact_cost_input=reply["usage"]["input_tokens"],
+            compact_cost_output=reply["usage"]["output_tokens"])
         return compacted, report
 ```
 
@@ -230,7 +235,8 @@ class ContextCompactor:
 if self.compactor and self.compactor.should_compact(messages):
     messages, report = self.compactor.compact(messages)
     if report:
-        state.output_tokens += report.compact_cost_tokens   # 压缩自身计入预算
+        state.input_tokens += report.compact_cost_input     # 分类计价（附录 A.3）
+        state.output_tokens += report.compact_cost_output
         self._emit("compaction", state.turn,
                    saved_per_turn=report.saved_tokens_per_turn,
                    breakeven=round(report.breakeven_turns, 1))
@@ -247,6 +253,8 @@ if self.compactor and self.compactor.should_compact(messages):
 **模型视图有损，审计记录无损。** 压缩丢弃的只是**模型看到的视图**；完整原始历史必须在压缩前落盘（对象存储/轨迹库），供审计回放、事故取证与评测集构建使用（存储与回放机制参见第 12、14 章）。合规场景还有一条硬约束：若原文中含脱敏标记或数据分级标签，摘要必须继承这些标记——否则摘要成为数据分级的漏洞。
 
 **压缩与缓存的对冲关系。** 压缩改写了历史前缀，必然使提示缓存整段失效——压缩后第一轮是"全价轮"。因此压缩频率是缓存命中率与窗口占用的权衡：用**滞回设计**（触发水位 60k、一次压到 30k 以下）拉开两次压缩的间隔，避免"每几轮压一次、缓存永远不热"的抖动；并把"压缩次数/会话"作为观测指标——异常偏高通常说明工具层截断失守，是上游问题的下游症状。
+
+**供应商侧上下文编辑是补充不是替代。** 2025 年起 API 侧出现了自动化的上下文管理能力（如 Anthropic 的 context editing：接近窗口上限时自动清除较旧的工具结果）。它与本章的应用层压缩互补而非二选一：供应商侧只做"清除"——丢弃旧内容、守住不撞墙的底线，不会生成带任务状态的交接摘要，"未决问题与约束"这类关键状态仍需本章的结构化摘要保全；叠加使用时注意两点——清除同样改变前缀、影响缓存，对账口径要把两侧的动作都计入。
 
 **多轮压缩的复印件效应。** 超长会话会压缩多次，而"摘要的摘要"每一代都在损耗——第一代丢过程，第二代开始丢结论。工程对策：摘要注记标代数；关键状态（任务目标、硬约束）不参与再压缩，作为常驻段固定保留；超过两代时优先考虑把稳定状态外置到记忆系统而非继续压（参见第 10 章）。
 

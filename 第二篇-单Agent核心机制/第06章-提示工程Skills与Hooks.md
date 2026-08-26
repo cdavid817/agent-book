@@ -84,6 +84,8 @@ graph TB
 | **Stop** | 模型宣布本轮结束时 | 最终答复内容 | 校验产出，可打回继续 | "报告文件未生成→拒绝结束"（第 3 章 Verifier 的钩子化） |
 | **Notification** | 关键事件发生时 | 事件类型 + 详情 | 通知外部系统 | 熔断告警、审批请求推送 |
 
+这五个是本书运行时的核心集合；实际产品的钩子点通常更多——如 **UserPromptSubmit**（用户输入进入上下文前的预处理与注入检测）与 **PreCompact**（压缩触发前介入，正好用来护住第 5 章的摘要质量），机制与上表同构，不逐一展开。
+
 其中 **PreToolUse 是安全架构的支点**：它站在"模型意图"与"真实副作用"之间的必经之路上，是实施访问控制的**策略执行点（PEP，Policy Enforcement Point）**——第 13 章的权限体系（策略决策、最小权限、审批流）全部经由这个点落地执行，本章先把管线本身建好。
 
 ```mermaid
@@ -226,7 +228,9 @@ def _execute_one(self, t: dict) -> dict:
     if decision.action == "deny":
         return {"type": "tool_result", "tool_use_id": t["id"],
                 "content": f"[已被策略拦截] {decision.reason}", "is_error": True}
-    tool_input = decision.patched_input or t["input"]
+    # 判 None 而非用 or：空 dict 是合法的"清空参数"改写
+    tool_input = decision.patched_input if decision.patched_input is not None \
+        else t["input"]
     output = TOOLS_BY_NAME[t["name"]]["run"](tool_input)
     output = self.hooks.fire_post_tool(t["name"], tool_input, output)
     return {"type": "tool_result", "tool_use_id": t["id"], "content": output,
