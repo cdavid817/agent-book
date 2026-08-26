@@ -253,6 +253,15 @@ sources:
     expires_at: "2026-11-26"
     status: verified
     url: "https://agentcommunicationprotocol.dev/"
+  - id: C-27
+    title: "analysis_claude_code — Claude Code v1.0.33 反混淆产物的社区逆向分析（非官方；结论待确认且版本特定；上游仓库可能因 DMCA 下架）"
+    publisher: "shareAI-Lab (community)"
+    source_type: community
+    claim_scope: [appendix-d, ch25]
+    verified_at: "2026-08-26"
+    expires_at: "2026-11-26"
+    status: verified
+    url: "https://github.com/shareAI-lab/analysis_claude_code"
 
 # 协议版本一致性锚点：check_sources 校验 C-03.version 与第 8 章 PROTOCOL_VERSION 常量相等。
 version_anchors:
