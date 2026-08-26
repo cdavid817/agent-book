@@ -244,6 +244,15 @@ sources:
     expires_at: "2026-11-26"
     status: verified
     url: "https://www.anthropic.com/news/contextual-retrieval"
+  - id: C-26
+    title: "Agent Communication Protocol (ACP) — merged into A2A under the Linux Foundation"
+    publisher: "IBM BeeAI / Linux Foundation"
+    source_type: standard
+    claim_scope: [ch18, ch24]
+    verified_at: "2026-08-26"
+    expires_at: "2026-11-26"
+    status: verified
+    url: "https://agentcommunicationprotocol.dev/"
 
 # 协议版本一致性锚点：check_sources 校验 C-03.version 与第 8 章 PROTOCOL_VERSION 常量相等。
 version_anchors:

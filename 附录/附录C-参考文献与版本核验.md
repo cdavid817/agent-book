@@ -38,6 +38,7 @@
 | C-22 | 第 8 章 扩展供应链签名/SBOM/完整性等级 | OpenSSF, *SLSA — Supply-chain Levels for Software Artifacts*：https://slsa.dev/ | 2026-08-24 |
 | C-24 | 第 10 章 模型自管记忆先驱（MemGPT/Letta） | Packer et al., *MemGPT: Towards LLMs as Operating Systems*, arXiv 2023：https://arxiv.org/abs/2310.08560 | 2026-08-26 |
 | C-25 | 第 11 章 上下文检索（Contextual Retrieval）、top-20 检索失败率降幅 | Anthropic, *Introducing Contextual Retrieval*, 2024-09：https://www.anthropic.com/news/contextual-retrieval | 2026-08-26 |
+| C-26 | 第 18 章 ACP 谱系与 2025 年并入 A2A 的整合动态（第 24 章引用） | IBM BeeAI / Linux Foundation, *Agent Communication Protocol*：https://agentcommunicationprotocol.dev/ | 2026-08-26 |
 | C-06 | 附录 D 全部产品/框架的名称、归属与成熟度状态 | 各产品供应商官方页面与开源仓库（发行前逐项复核，名单半衰期 6–12 个月） | 2026-08-23 |
 | C-07 | 附录 D.7/D.8/D.9/D.10 社区与新兴项目（opencode / OhMyOpencode / Superpowers / codex / openclaw / DeepSeek Harness / Hermes Agent / Vibe Coding / D.10 分类速览全部条目 等） | 各项目开源仓库/官方页面；**标注"待确认"者发行前必须核实真实形态与存续，无法确证即删除**——不进发布稿 | 2026-08-23 |
 
@@ -66,6 +67,7 @@
 - 第 18 章：C-21（A2A 协议）
 - 第 10 章：C-24（MemGPT 自管记忆先驱）
 - 第 11 章：C-25（Contextual Retrieval）
+- 第 18/24 章：C-26（ACP 并入 A2A）
 - 第 8 章：C-03（MCP 规范）、C-22（SLSA 供应链）
 - 附录 D：C-06（D.1–D.6）、C-07（D.7/D.8/D.9/D.10 社区与新兴项目及分类速览，含"待确认"条目）
 - 第 16、20、24 章：按发布时的供应商/标准官方页面增补时效性条目
