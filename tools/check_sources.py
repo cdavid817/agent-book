@@ -48,8 +48,18 @@ def _chapter_count() -> int:
         return 25
 
 
+def _appendix_letters() -> set:
+    try:
+        import yaml
+        root = pathlib.Path(__file__).resolve().parents[1]
+        book = yaml.safe_load((root / "book.yml").read_text(encoding="utf-8"))
+        return {a["letter"].lower() for a in book.get("appendices", [])}
+    except Exception:
+        return set("abcdef")
+
+
 VALID_SCOPE = {f"ch{n:02d}" for n in range(1, _chapter_count() + 1)} | \
-              {f"appendix-{c}" for c in "abcdef"}
+              {f"appendix-{c}" for c in _appendix_letters()}
 
 
 def valid_date(s: str) -> bool:

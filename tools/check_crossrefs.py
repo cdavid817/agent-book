@@ -30,7 +30,18 @@ def _max_ch() -> int:
 
 
 MAX_CH = _max_ch()
-VALID_APP = set("ABCDEF")
+def _appendix_letters() -> set:
+    """附录字母以 book.yml 为单一来源, 不在此硬编码"""
+    try:
+        import yaml
+        root = Path(__file__).resolve().parents[1]
+        book = yaml.safe_load((root / "book.yml").read_text(encoding="utf-8"))
+        return {a["letter"] for a in book.get("appendices", [])}
+    except Exception:
+        return set("ABCDEF")
+
+
+VALID_APP = _appendix_letters()
 CHAP_RE = re.compile(r"第(\d+)章")
 
 

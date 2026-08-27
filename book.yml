@@ -254,3 +254,8 @@ appendices:
     title: 关键知识点·经典图版索引
     path: 附录/附录F-关键知识点经典图版索引.md
     status: reviewed
+  - id: appendix-g
+    letter: G
+    title: OpenTelemetry 详解
+    path: 附录/附录G-OpenTelemetry详解.md
+    status: draft

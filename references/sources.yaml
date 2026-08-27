@@ -262,6 +262,15 @@ sources:
     expires_at: "2026-11-26"
     status: verified
     url: "https://github.com/shareAI-lab/analysis_claude_code"
+  - id: C-28
+    title: "OpenTelemetry Specification & Documentation"
+    publisher: "OpenTelemetry / CNCF"
+    source_type: official-spec
+    claim_scope: [appendix-g, ch14]
+    verified_at: "2026-08-27"
+    expires_at: "2026-11-27"
+    status: verified
+    url: "https://opentelemetry.io/docs/specs/"
 
 # 协议版本一致性锚点：check_sources 校验 C-03.version 与第 8 章 PROTOCOL_VERSION 常量相等。
 version_anchors:
