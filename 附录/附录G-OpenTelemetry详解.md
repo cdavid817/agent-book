@@ -12,11 +12,49 @@ OpenTelemetry 由 OpenTracing 与 OpenCensus 两个前辈项目于 2019 年合�
 
 ## G.2 数据模型：三支柱的字段级认识
 
+先立一个总纲：三支柱的每条数据都是同一个三层结构——
+
+| 层级 | 回答的问题 | 典型字段 | 纪律 |
+|---|---|---|---|
+| **Resource** | 谁产生了数据 | `service.name`、`service.version`、部署环境 | 只放**进程级稳定信息**——用户 id、会话 id 等动态字段不进 Resource，放各信号的 Attribute |
+| **InstrumentationScope** | 哪个模块/埋点库产生 | 模块名、版本、Schema URL | 自动埋点库据此归属与升级 |
+| **Record** | 具体发生了什么 | Span / Metric DataPoint / LogRecord | 动态属性的家 |
+
+四类信号各司其职、不可互替——**混用职责是观测设计的头号误区**：
+
+| 信号 | 主要回答 | 不适合承担 |
+|---|---|---|
+| **Trace** | 这一次请求经历了什么 | 长期聚合趋势（那是 Metric 的活） |
+| **Metric** | 系统一段时间表现如何 | 单请求完整细节（高基数陷阱） |
+| **Log** | 某个时间点发生了什么 | 严格的分布式因果（那是 Trace 的活） |
+| **Baggage** | 哪些上下文要随行到下游 | 凭据、隐私、大文本（明文过每一跳） |
+
 **Trace / Span。** 一条 Trace 是一棵 Span 树，由同一个 `trace_id`（16 字节）串联；每个 Span 有 `span_id`（8 字节）与 `parent_span_id`。Span 的字段面：**name**（低基数操作名——第 14 章 `agent.turn` 命名纪律的出处）、**kind**（`INTERNAL` / `SERVER` / `CLIENT` / `PRODUCER` / `CONSUMER`——队列场景用后两者，第 21 章 MQ 集成的 Span 该标 `CONSUMER`）、**attributes**（键值对，语义约定的挂载点）、**events**（Span 内的时间点标记，如"重试第 2 次"）、**links**（跨 Trace 的弱关联——批处理任务关联多个来源 Trace 时用它，不伪造父子关系）、**status**（`OK` / `ERROR` + 描述）。
 
 **Metrics。** 六种仪表（instrument），按"同步/异步 × 语义"记：同步三种——`Counter`（只增，如 token 消耗）、`UpDownCounter`（可增减，如在途会话数）、`Histogram`（分布，如轮次/时延——第 14 章"长尾禁均值"的载体）；异步三种——`ObservableCounter` / `ObservableUpDownCounter` / `ObservableGauge`（回调式采样，适合"当前值"类读数如队列深度）。两个易错概念：**Gauge 记"此刻是多少"，Counter 记"累计发生了多少"**——选错仪表聚合就是错的；**时间性（temporality）** 分 delta（区间增量）与 cumulative（累计值），导出时由 SDK/后端协商，跨后端迁移时对不上号常出在这里。
 
-**Logs。** LogRecord = 时间戳 + severity + body + attributes + **trace 上下文字段**（`trace_id` / `span_id`）——最后一项是三支柱互通的关键：日志挂上 trace_id，排障就能从 Span 一键跳到当时的日志。第 14 章 GenAI 内容采集"以日志承载而非塞 Span 属性"的建议，机制上正是利用这条关联。
+Span 内部还有三种表达方式，选用有讲究：**Attribute**（整个操作的稳定属性——模型名、最终状态、重试次数）、**Event**（生命周期中的离散时间点——`tool.retry`、`permission.denied`、`context.compacted`）、**Link**（非父子的因果关联——批处理扇入、多 Agent 结果合并、跨会话重试链）。一条选用纪律：**同步调用用父子 Span，异步扇入与"一个任务对应多个上游"用 Link**——用父子表达扇入会伪造出不存在的调用层级。
+
+**Logs。** LogRecord = 时间戳 + severity + body + attributes + **trace 上下文字段**（`trace_id` / `span_id`）——最后一项是三支柱互通的关键：日志挂上 trace_id，排障就能从 Span 一键跳到当时的日志。既有日志框架（Python logging、Logback、Rust tracing 等）经 Bridge 或 Collector 接入即可，不必重写。第 14 章 GenAI 内容采集"以日志承载而非塞 Span 属性"的建议，机制上正是利用这条关联。
+
+三支柱串起来就是理想的排障动线（**Exemplar** 是 Metric 侧的关键机制：数据点上附带样本 trace_id，让"告警跳 Trace"一步到位）：
+
+```mermaid
+flowchart LR
+    A["Metric 告警<br/>P99 延迟升高"] -->|"Exemplar 定位"| B["具体 Trace"]
+    B -->|"找到慢 Span"| C["模型/工具调用"]
+    C -->|"按 trace_id/span_id 查询"| D["关联日志"]
+    D --> E["错误码 · 重试原因<br/>· 上游响应"]
+
+    classDef m fill:#DD6E42,stroke:#DD6E42,color:#fff
+    classDef t fill:#4F6D7A,stroke:#4F6D7A,color:#fff
+    classDef l fill:#C0D6DF,stroke:#4F6D7A,color:#1f2d33
+    class A m
+    class B,C t
+    class D,E l
+```
+
+*图 G-2：三支柱协同的排障动线——这张图回答"指标、追踪、日志在一次排障里如何接力"。Metric 发现问题、Trace 定位环节、Log 给出细节；Exemplar 与 trace_id 关联是两次跳转的机制保证（第 14 章 2.5 五步动线的信号层视角）。*
 
 **正文消费位置**：第 12 章（事件是 Span 原料）、第 14 章 2.1/2.2/2.6（四层树、指标口径、span 命名）、第 19 章（links 与 graph_run 归因）。
 
@@ -49,6 +87,8 @@ traceparent: 00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01
 
 Agent 场景的特殊之处：传播不只跨 HTTP——跨队列（消息属性带 traceparent，第 21 章）、跨挂起（interrupt 恢复后接回原 trace，第 18 章）、跨组织（A2A 委派，第 18 章 2.7）。**每引入一种新载体，先回答"traceparent 从哪进、从哪出"**——这是多 Agent 排障不退化成"各查各的日志"的前提（第 14 章 2.6）。
 
+**断链五大常见原因**（Trace 断成两截几乎总是其中之一）：异步任务未继承 Context（线程池/回调执行器丢上下文是重灾区）；消息生产者忘了 Inject；消费者忘了 Extract；Context attach 后未正确 detach（污染后续无关请求）；中间件（网关/代理）吞掉了 traceparent 头。排查口诀：**断在哪一跳，就查那一跳的注入与提取**。
+
 ## G.5 Collector：遥测的数据工程层
 
 Collector 是独立进程的遥测管道，配置由三类组件拼成流水线：**receiver**（收，OTLP/各协议）→ **processor**（加工）→ **exporter**（发，可多路）；另有 **connector**（把一条流水线的输出接成另一条的输入——如 spanmetrics：从 Trace 实时衍生 RED 指标）。一份最小配置骨架：
@@ -80,7 +120,11 @@ service:
       exporters: [otlp/backend]
 ```
 
-常用 processor 速查：`batch`（必备）、`memory_limiter`（必备，放最前）、`attributes` / `transform`（改删属性——脱敏与规范化）、`filter`（按条件丢弃）、`tail_sampling`（尾部采样，contrib 发行版）、`resource`（补资源属性）。**部署两档**：agent 模式（每节点边车，就近收取、本地打批）与 gateway 模式（集中集群，统一脱敏/采样/路由）——生产常见两级串联，敏感数据处理集中在 gateway（审计一个点，第 14 章图 3 的位置）。
+常用 processor 速查：`batch`（必备）、`memory_limiter`（必备，放最前）、`attributes` / `transform`（改删属性——脱敏与规范化）、`filter`（按条件丢弃）、`tail_sampling`（尾部采样，contrib 发行版）、`resource`（补资源属性）。另有两类配套组件：**connector**（流水线互接，如 spanmetrics 从 Trace 衍生指标）与 **extension**（健康检查、认证、`file_storage`——给导出队列加磁盘持久化，后端短暂不可用时不丢数据）。
+
+**部署按规模四档**：应用直连（SDK→后端，开发环境）；agent/边车（每节点就近收取打批）；gateway（集中集群，统一认证/脱敏/采样/多租户）；**agent + gateway 两级串联**（大型系统的常态——敏感数据处理集中在 gateway，审计一个点，第 14 章图 3 的位置）。尾部采样有个专属陷阱：**必须按 TraceId 一致性路由**——同一条 Trace 的 Span 分散到不同采样实例，采样决策就把 Trace 拆散了（负载均衡按请求轮询正是这么拆的）。
+
+两条运维纪律：**Collector 自身要被监控**——队列长度、拒绝数、导出失败是数据丢失的前兆，不监控它，丢数据无声无息（第 14 章"观测自身的成本"的邻居）；**遥测通道不是事务系统**——网络重试会产生重复、队列溢出会丢失，**订单、权限审计、任务状态、恢复证据等事实数据必须走事务数据库/审计存储**（第 20 章"同源分管"的另一面：观测库可容忍丢失，审计库不可以）。一句话立界碑：**业务数据库记录"事实是什么"，OTel 解释"事实是如何产生的"**。
 
 端到端信号流一图收束：
 
@@ -111,7 +155,24 @@ graph LR
 
 **语义约定（Semantic Conventions）** 规定属性怎么命名：通用域（`service.*`、`http.*`、`db.*`）多已 **stable**；**GenAI 域（`gen_ai.*`）处于 Development 阶段**——属性名相对稳定但未定稿，版本以 [C-04] 为准（第 14 章的 pin 纪律）。两条使用规则：自定义属性先查约定再造词（第 14 章"规范属性与自定义属性分开登记"）；SDK 与约定的版本经 **Schema URL** 声明，升级 semconv 时后端可据此做属性名迁移。
 
-## G.7 本书的 OTel 用件对照表
+## G.7 落地顺序与常见误区
+
+**落地顺序七步，"先回答问题，再做埋点"**：① 定义观测问题（为什么失败/哪里最慢/token 花在哪/为何重试/有无循环——第 14 章场景引入的三问就是范本）；② 建 Trace 主链（用户操作 → 编排 → Agent → 模型 → 工具/MCP/Shell → 持久化）；③ 接 Collector（otlp receiver + memory_limiter + 脱敏 + batch + 持久化队列）；④ 补核心 Metric（第 14 章 ★ 最小集）；⑤ 关联结构化 Log（统一带 trace_id/span_id）；⑥ 定采样策略（错误超时全保、普通成功概率采样）；⑦ 监控 Collector 自身。
+
+常见误区速查（每条都是真实事故形态）：
+
+| 误区 | 后果 | 正确姿势 |
+|---|---|---|
+| 把 OTel 当后端 | 接完仍无处查询 | OTel 只管产生/搬运，另配存储查询后端（G.1） |
+| 每个函数都建 Span | 噪声与成本失控 | 只覆盖业务阶段与外部调用（第 14 章 2.6 名字表即边界） |
+| 高基数 id 进 Metric 标签 | 时序爆炸、账单失控 | 动态 id 放 Span/Log，标签只用有界枚举（第 14 章 §4） |
+| 默认采集完整 Prompt | 隐私合规风险 | 默认 metadata_only，内容显式开启（第 14 章 2.6 三级） |
+| 尾部采样随机路由 | Trace 被拆散 | 按 TraceId 一致性路由（G.5） |
+| TraceId 当业务主键 | 采样/重发下无业务语义保证 | 业务用独立 OperationId 与幂等键（第 12 章） |
+| 遥测代替审计存储 | 重复或丢失的"证据" | 事实数据入事务/审计存储（G.5 界碑） |
+| 业务代码直接绑快速演进的语义字段 | semconv 升级即全库改名 | 内部 Telemetry 适配层隔离（第 14 章桥接器正是此层） |
+
+## G.8 本书的 OTel 用件对照表
 
 全书用到的 OTel 机制一表收束——也是"读完本附录回正文"的导航：
 

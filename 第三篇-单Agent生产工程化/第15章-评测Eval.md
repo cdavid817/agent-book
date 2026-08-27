@@ -95,11 +95,11 @@ graph LR
 
 平台层的选型逻辑不同：它们把第 14 章的 Trace 与本章的评测放在同一份数据上——线上轨迹一键转评测用例（2.4 节的回流闭环有现成载体），因此**选平台首先看与观测栈的一致性**，别让评测数据和 Trace 数据分家：
 
-| | LangSmith | Langfuse | Braintrust | Arize Phoenix |
-|---|---|---|---|---|
-| **定位** | LangChain 官方平台，trace/数据集/评测一体 | 开源可自托管的同类平台 | 评测优先的商业平台 | 开源观测+评测（OTel 原生） |
-| **强项** | 与 LangChain/LangGraph 生态无缝、人工标注队列 | 自托管（数据不出域）、Prompt 管理、成本追踪 | 逐用例 diff 与实验对比体验、playground 与 CI 集成 | OTel 语义（与第 14 章采集直接对接）、内置评估器 |
-| **注意** | 生态外使用集成成本上升 | 需自己运维 | 商业闭源 | 平台功能较商业产品轻 |
+| | LangSmith | Langfuse | Braintrust | Arize Phoenix | MLflow |
+|---|---|---|---|---|---|
+| **定位** | LangChain 官方平台，trace/数据集/评测一体 | 开源可自托管的同类平台 | 评测优先的商业平台 | 开源观测+评测（OTel 原生） | 经典 ML 实验跟踪平台扩入 LLM（tracing/评测/Prompt 管理） |
+| **强项** | 与 LangChain/LangGraph 生态无缝、人工标注队列 | 自托管（数据不出域）、Prompt 管理、成本追踪 | 逐用例 diff 与实验对比体验、playground 与 CI 集成 | OTel 语义（与第 14 章采集直接对接）、内置评估器 | 自托管最成熟；团队已有 MLflow（实验/模型注册）时零新增运维，传统 ML 与 LLM 同平台 |
+| **注意** | 生态外使用集成成本上升 | 需自己运维 | 商业闭源 | 平台功能较商业产品轻 | LLM 专项能力晚于原生平台，评测器生态较薄 |
 
 再往下一层是**模型级**评测基建：EleutherAI 的 **lm-evaluation-harness** 与斯坦福 **HELM** 面向基础模型能力（学术基准批量跑分），**OpenAI Evals** 介于两者之间——它们回答"模型本身行不行"，与本章"你的 Agent 系统行不行"是两个问题，别拿错工具。
 

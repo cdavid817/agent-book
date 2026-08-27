@@ -322,9 +322,10 @@
 > 定位：OTel 本身的机制兜底——第 14 章讲"Agent 怎么用"，本附录讲"OTel 是什么"。
 
 - G.1 是什么：观测标准化的收敛点（供应商中立、埋点写一次后端随便换）
-- G.2 数据模型：Trace/Span 字段面（kind/events/links/status）、Metrics 六仪表与时间性、Logs 与 trace 关联
+- G.2 数据模型：Resource/Scope/Record 三层、四信号职责边界、Span 字段面与 Attribute/Event/Link 选用、Metrics 六仪表与时间性、Exemplar 排障动线
 - G.3 API/SDK 分离与信号流水线：Provider/Sampler/Processor/Exporter、OTLP
 - G.4 上下文传播：traceparent 四段结构、tracestate、baggage、Propagator 与 Agent 场景的载体清单
 - G.5 Collector：receiver→processor→exporter 流水线、常用 processor 速查、agent/gateway 两档部署、最小配置骨架
 - G.6 语义约定与稳定性：通用域 stable、GenAI 域 Development、Schema URL
-- G.7 本书的 OTel 用件对照表（读完回正文的导航）
+- G.7 落地顺序七步与常见误区速查（遥测非事务系统、TraceId 非业务主键、适配层隔离语义漂移）
+- G.8 本书的 OTel 用件对照表（读完回正文的导航）
