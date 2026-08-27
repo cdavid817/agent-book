@@ -271,6 +271,22 @@ sources:
     expires_at: "2026-11-27"
     status: verified
     url: "https://opentelemetry.io/docs/specs/"
+  - id: C-29
+    title: "Efficient and Robust Approximate Nearest Neighbor Search Using Hierarchical Navigable Small World Graphs (HNSW)"
+    publisher: "Malkov & Yashunin (IEEE TPAMI 2018)"
+    source_type: paper
+    claim_scope: [appendix-f, ch11]
+    verified_at: "2026-08-27"
+    status: stable
+    url: "https://arxiv.org/abs/1603.09320"
+  - id: C-30
+    title: "Learning Transferable Visual Models From Natural Language Supervision (CLIP)"
+    publisher: "Radford et al. (ICML 2021)"
+    source_type: paper
+    claim_scope: [appendix-f, appendix-a]
+    verified_at: "2026-08-27"
+    status: stable
+    url: "https://arxiv.org/abs/2103.00020"
 
 # 协议版本一致性锚点：check_sources 校验 C-03.version 与第 8 章 PROTOCOL_VERSION 常量相等。
 version_anchors:

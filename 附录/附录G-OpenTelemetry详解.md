@@ -82,6 +82,29 @@ service:
 
 常用 processor 速查：`batch`（必备）、`memory_limiter`（必备，放最前）、`attributes` / `transform`（改删属性——脱敏与规范化）、`filter`（按条件丢弃）、`tail_sampling`（尾部采样，contrib 发行版）、`resource`（补资源属性）。**部署两档**：agent 模式（每节点边车，就近收取、本地打批）与 gateway 模式（集中集群，统一脱敏/采样/路由）——生产常见两级串联，敏感数据处理集中在 gateway（审计一个点，第 14 章图 3 的位置）。
 
+端到端信号流一图收束：
+
+```mermaid
+graph LR
+    subgraph APP["应用进程"]
+        CODE["业务/桥接器代码<br/>(只依赖 API, 零开销)"] --> SDK["SDK<br/>Sampler → BatchProcessor<br/>→ OTLP Exporter"]
+    end
+    SDK -->|"OTLP<br/>gRPC:4317 / HTTP:4318"| AG["Collector · agent 模式<br/>每节点边车: 就近收取/打批"]
+    AG -->|"OTLP"| GW["Collector · gateway 模式<br/>memory_limiter → tail_sampling<br/>→ 脱敏 → batch"]
+    GW --> T["追踪后端"]
+    GW --> M["指标后端"]
+    GW --> L["日志后端"]
+
+    classDef app fill:#C0D6DF,stroke:#4F6D7A,color:#1f2d33
+    classDef col fill:#4F6D7A,stroke:#4F6D7A,color:#fff
+    classDef be fill:#E8DAB2,stroke:#4F6D7A,color:#1f2d33
+    class CODE,SDK app
+    class AG,GW col
+    class T,M,L be
+```
+
+*图 G-1：从应用到后端的完整信号流——这张图回答"埋点数据一路经过谁、治理发生在哪"。API/SDK 分离让应用侧零负担，OTLP 统一线协议让后端可换，两级 Collector 把采样与脱敏收进集中治理点（官方架构原图见附录 F.4）。*
+
 一句话定位：**Collector 之于遥测，如同第 21 章的查询网关之于数仓**——所有出入流量的必经点，治理逻辑集中于此而不散在应用里。
 
 ## G.6 语义约定与稳定性
