@@ -153,7 +153,7 @@ graph LR
 
 ## G.6 语义约定与稳定性
 
-**语义约定（Semantic Conventions）** 规定属性怎么命名：通用域（`service.*`、`http.*`、`db.*`）多已 **stable**；**GenAI 域（`gen_ai.*`）处于 Development 阶段**——属性名相对稳定但未定稿，版本以 [C-04] 为准（第 14 章的 pin 纪律）。两条使用规则：自定义属性先查约定再造词（第 14 章"规范属性与自定义属性分开登记"）；SDK 与约定的版本经 **Schema URL** 声明，升级 semconv 时后端可据此做属性名迁移。
+**语义约定（Semantic Conventions）** 规定属性怎么命名：通用域（`service.*`、`http.*`、`db.*`）多已 **stable**；**GenAI 域（`gen_ai.*`）处于 Development 阶段**——属性名相对稳定但未定稿，版本以 [C-04] 为准（第 14 章的 pin 纪律）。两条使用规则：自定义属性先查约定再造词（第 14 章"规范属性与自定义属性分开登记"）；SDK 与约定的版本经 **Schema URL** 声明，升级 semconv 时后端可据此做属性名迁移。一个并行生态要认识：**OpenInference**（Arize Phoenix 谱系）——在 OTel 之上补 AI 语义（LLM/Retriever/Reranker/Tool/Agent 的 span 类型与属性），与官方 `gen_ai.*` 约定解决同一问题、尚未合流；两头都在演进，业务代码经内部适配层隔离（G.7 误区表最后一条），别直绑任何一家的字段。
 
 ## G.7 落地顺序与常见误区
 
