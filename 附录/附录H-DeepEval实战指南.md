@@ -1,209 +1,2857 @@
 # 附录 H：DeepEval 实战指南
 
-> 定位：**DeepEval 的上手工具书**。正文第 15 章讲评测方法论（五层指标体系、回流闭环、框架与平台选型），本附录讲"DeepEval 具体怎么用"——工作模型、数据模型、指标配置、RAG/Agent/多轮三条实战线、自定义扩展与 CI/CD 工程化，供选定 DeepEval 后照着落地。API 快照为 **DeepEval 4.2.0**（2026-08 验证），升级前先读 Release Notes（入口见 [C-31]）；RAG 指标的方法论口径见第 11 章 2.8，评测体系全貌见第 15 章。
+> 定位：**DeepEval 的完整实战教程**。正文第 15 章讲评测方法论（五层指标体系、回流闭环、框架与平台选型），本附录讲"DeepEval 具体怎么用"——从安装、数据模型、指标配置，到 RAG/Agent/多轮三条实战线、自定义扩展与 CI/CD 工程化，全文收录、按节查阅。API 快照为 **DeepEval Python 4.2.0**（2026-08-28 验证），升级前先读 Release Notes（文档与发布入口见 [C-31]）；RAG 指标的方法论口径见第 11 章 2.8，评测体系全貌见第 15 章。
 
 ---
 
-## H.1 工作模型：从 Golden 到质量门禁
+## H.1 DeepEval 是什么
 
-DeepEval 的心智模型是"**把 LLM 评测写成 pytest 单测**"。四个核心对象串成一条流水线：
+**DeepEval 是一个面向 LLM 应用的开源评估框架。** 它把 LLM、RAG、Agent、聊天机器人、工具调用和多模态系统的质量要求，转换为可重复执行、可评分、可设置阈值、可进入 CI/CD 的自动化测试。
+
+可以把它理解为：
 
 ```text
-Golden（题目：input + 期望，不含实际输出）
-    ↓ 喂给你的真实系统运行
-LLMTestCase（试卷：input + actual_output + 各类上下文）
-    ↓ 交给一组 Metric 打分
-Metric（阅卷：score ∈ [0,1] + reason，score ≥ threshold 才通过）
-    ↓ 汇入
-Quality Gate（deepeval test run 的返回码 → CI 阻断发布）
+Pytest 的测试组织能力
++
+LLM-as-a-Judge 的语义判断能力
++
+RAG / Agent / 对话系统的专用指标
++
+Trace / Span 级故障定位
++
+数据集、缓存、并发与回归测试能力
 ```
 
-评测有**三个粒度**，对应第 15 章"评什么"的三层：
+DeepEval 的主要能力包括：
 
-| 粒度 | 判断什么 | 载体 |
-|---|---|---|
-| 端到端（End-to-End） | 最终输出对不对 | `LLMTestCase` + 结果指标 |
-| 轨迹（Trajectory） | 执行过程走没走对（调了哪些工具、顺序） | `tools_called` / Trace + 轨迹指标 |
-| 组件级（Component-Level） | 哪个环节坏了（Retriever/Tool/LLM/子 Agent） | `@observe` Trace 上的 Span 指标 |
+- 使用 Pytest 风格编写 LLM 单元测试；
+- 使用 50 多种内置指标评估 LLM、RAG、Agent、对话、安全与多模态场景；
+- 支持端到端、Agent 轨迹级和内部组件级评估；
+- 支持 Golden、Dataset、合成数据和对话模拟；
+- 支持自定义 Judge 模型和本地模型；
+- 支持缓存、并发、失败重试、Flaky 标记与 CI/CD 门禁；
+- 支持本地运行，Confident AI 云平台属于可选能力，不是本地评估的必需条件。
 
-**先端到端、后组件级**是标准演进顺序：端到端告诉你"坏了"，组件级告诉你"坏在哪"——与第 14 章 Trace 的排障动线同构。
+截至 2026-08-28，DeepEval Python 最新正式发布为 **4.2.0**。4.2.0 统一了指标方向：**所有指标均为分数越高越好**。
 
-## H.2 数据模型速查
+---
 
-单轮用例 `LLMTestCase` 的字段面（不同指标要求的字段不同，缺了会报错或跳过）：
+## H.2 为什么 LLM 应用需要专门的评估框架
 
-| 字段 | 含义 | 谁需要 |
-|---|---|---|
-| `input` | 用户输入 | 几乎所有指标 |
-| `actual_output` | 系统实际输出 | 几乎所有指标 |
-| `expected_output` | 人工期望答案（Ground Truth） | Correctness 类、Contextual Recall |
-| `context` | **理想**的事实依据（静态 Ground Truth） | Hallucination |
-| `retrieval_context` | 检索器**实际**返回的内容 | RAG 五指标（Faithfulness 等） |
-| `tools_called` / `expected_tools` | 实际/期望的工具调用（`ToolCall` 列表） | Tool Correctness |
-| `token_cost` / `completion_time` | 成本与延迟 | 资源回归门禁 |
-
-最易混的一对：`context` 是"**应该**依据什么"（人工整理、静态），`retrieval_context` 是"**实际**检索到什么"（系统产出、随检索器变化）。RAG 评测用后者——评的就是检索器本身；混用会让 Faithfulness 失去归因意义。
-
-`Golden` 是"没跑之前的用例"（`input` + `expected_output` + 可选 `context`），`EvaluationDataset` 装一组 Golden，支持 JSONL 存取（`save_as`）与版本化——数据集进 Git、带版本或 Hash，是复现性的底座。
-
-## H.3 三种执行方式
-
-| 方式 | 形态 | 适用 |
-|---|---|---|
-| `assert_test(test_case, metrics)` | 写在 pytest 测试函数里，`deepeval test run tests/evals` 执行 | CI 门禁（返回码即闸门）|
-| `evaluate(test_cases, metrics, hyperparameters=...)` | 脚本/Notebook 里直接调 | 实验对比、批量跑分 |
-| `dataset.evals_iterator(metrics=...)` | 迭代 Golden、边跑系统边评 | 数据集驱动的回归 |
-
-`evaluate()` 与 `@deepeval.log_hyperparameters` 都能记录超参数（模型版本、prompt 版本、temperature、top_k）——把每次运行变成可对比的实验，这是 A/B 结论可信的前提（H.9）。
-
-## H.4 指标：配置、G-Eval 与 DAG
-
-**通用配置**（所有内置指标共享）：
-
-- `threshold`：通过线，默认 0.5——**不要凭感觉设**，用 H.9 的校准流程定；
-- `strict_mode=True`：二值化（满分才过），适合硬约束；
-- `include_reason`：输出打分理由，诊断必备（稳定后可选择性关闭省成本）；
-- `flaky`（重试）与 `verbose_mode`（打印 Judge 中间过程）辅助排障。
-
-4.2.0 起所有指标统一**分数越高越好**——从旧版本升级需重跑校准集、复查阈值方向（H.10）。
-
-**G-Eval**：用自然语言写评分标准即成指标，是业务定制的第一选择。两种写法：`criteria`（一句话标准，由框架自动展开评分步骤）或 `evaluation_steps`（显式列步骤，更可控、波动更小）。原则：**一个 G-Eval 只评一个维度**——把"正确、简洁、礼貌"塞进一条 criteria，分数波动大且无法归因。
+传统程序通常可以做确定性断言：
 
 ```python
-from deepeval.metrics import GEval
-from deepeval.test_case import LLMTestCaseParams
+assert calculate(2, 3) == 5
+```
 
-correctness = GEval(
-    name="Business Correctness",
-    evaluation_steps=[
-        "检查 actual_output 的事实是否与 expected_output 一致",
-        "遗漏关键条件或做出额外承诺都应扣分",
-        "措辞与句式差异不扣分",
+但 LLM 输出具有以下特点：
+
+1. **表达非唯一**：同一事实可以有多种正确表述；
+2. **运行非确定**：相同输入可能产生略有差异的答案；
+3. **质量维度多**：正确不等于相关，相关不等于忠实，忠实不等于有帮助；
+4. **系统链路复杂**：RAG 的问题可能来自检索、重排、Prompt 或生成；
+5. **Agent 不只输出文本**：还包括计划、工具选择、参数、步骤、重试和子 Agent；
+6. **字符串比较不足**：无法判断语义等价、事实支持、业务规则和任务完成度。
+
+例如：
+
+```text
+期望答案：购买后 30 天内可以申请退款。
+实际答案：订单完成后的一个月内可以发起全额退款。
+```
+
+字符串不同，但语义可能正确。DeepEval 会将这种判断封装为 Metric，并输出：
+
+```text
+score   = 0.93
+success = True
+reason  = "回答正确覆盖了退款期限，且未引入额外条件。"
+```
+
+因此，LLM 测试的基本形式从布尔比较变成：
+
+```text
+测试用例 + 评估指标 + 阈值 + 评分理由
+```
+
+---
+
+## H.3 DeepEval 的整体工作模型
+
+```mermaid
+flowchart LR
+    A[Golden<br/>待执行评估样本] -->|调用应用| B[LLM / RAG / Agent]
+    B -->|产生实际结果| C[LLMTestCase]
+    B -->|可选：产生执行链路| D[Trace]
+    D --> E[Span: LLM]
+    D --> F[Span: Retriever]
+    D --> G[Span: Tool]
+    D --> H[Span: Sub-Agent]
+
+    C --> I[Metric]
+    D --> I
+    E --> I
+    F --> I
+    G --> I
+    H --> I
+
+    I --> J[Score]
+    I --> K[Reason]
+    J --> L{Score >= Threshold?}
+    L -->|是| M[通过]
+    L -->|否| N[失败 / 阻断发布]
+```
+
+### H.3.1 四个关键概念
+
+| 概念 | 作用 | 典型内容 |
+|---|---|---|
+| `Golden` | 应用执行前的评估输入模板 | 输入、期望输出、理想上下文、预期工具 |
+| `LLMTestCase` | 应用执行后的完整评估单元 | 输入、实际输出、检索结果、真实工具调用 |
+| `Metric` | 质量判定器 | 相关性、忠实度、任务完成度、工具正确性 |
+| `Trace / Span` | Agent 或复杂系统的执行过程 | 规划、LLM、Retriever、Tool、子 Agent |
+
+### H.3.2 三种评估粒度
+
+| 粒度 | 评估对象 | 适用问题 |
+|---|---|---|
+| 端到端评估 | 输入与最终输出 | “系统最终回答是否合格？” |
+| 轨迹级评估 | Agent 的完整有序执行链 | “Agent 是否完成任务、路径是否高效？” |
+| 组件级评估 | 某一个 Retriever、Tool、LLM 或子 Agent Span | “到底是哪个组件导致失败？” |
+
+### H.3.3 单轮与多轮
+
+| 类型 | 测试用例 | 典型场景 |
+|---|---|---|
+| 单轮 | `LLMTestCase` | QA、RAG、摘要、分类、Agent 单任务 |
+| 多轮 | `ConversationalTestCase` | 客服机器人、销售助手、对话式工作流 |
+
+> 当前 4.2.0 中，多轮对话评估不支持 Tracing；多轮场景应以 `ConversationalTestCase` 的端到端评估为主。Trace / Span 组件级评估用于单轮 LLM、RAG 与 Agent 执行链路。
+
+---
+
+## H.4 环境准备与安装
+
+### H.4.1 推荐环境
+
+DeepEval 4.2.0 的官方 Python 版本要求为 **Python 3.9 及以上、低于 Python 4**。本教程建议使用：
+
+```text
+Python 3.11 或 3.12
+独立虚拟环境
+DeepEval 4.2.0
+```
+
+使用 `venv`：
+
+```bash
+python -m venv .venv
+
+# Linux / macOS
+source .venv/bin/activate
+
+# Windows PowerShell
+.venv\Scripts\Activate.ps1
+```
+
+安装固定版本：
+
+```bash
+pip install "deepeval==4.2.0"
+```
+
+需要本地 Trace TUI 时：
+
+```bash
+pip install "deepeval[inspect]==4.2.0"
+```
+
+开发阶段也可以安装最新版：
+
+```bash
+pip install -U deepeval
+```
+
+生产项目更建议固定版本，并在升级前执行完整基准集。
+
+### H.4.2 配置 Judge 模型密钥
+
+大量指标属于 LLM-as-a-Judge，需要一个评估模型。使用默认 OpenAI Judge 时：
+
+```bash
+# Linux / macOS
+export OPENAI_API_KEY="your-api-key"
+
+# Windows PowerShell
+$env:OPENAI_API_KEY="your-api-key"
+```
+
+也可以使用 `.env`：
+
+```dotenv
+OPENAI_API_KEY=your-api-key
+
+# 可选：上传测试报告到 Confident AI
+# CONFIDENT_API_KEY=confident_xxx
+```
+
+不要把 `.env` 提交到 Git：
+
+```gitignore
+.env
+.venv/
+__pycache__/
+.pytest_cache/
+.deepeval/
+```
+
+### H.4.3 验证安装
+
+```bash
+deepeval --help
+python -c "import deepeval; print('DeepEval import OK')"
+```
+
+排查当前配置来源：
+
+```bash
+deepeval diagnose
+```
+
+---
+
+## H.5 五分钟完成第一个评估
+
+创建 `test_first_eval.py`：
+
+```python
+from deepeval import assert_test
+from deepeval.metrics import GEval
+from deepeval.test_case import LLMTestCase, SingleTurnParams
+
+
+def test_refund_answer() -> None:
+    test_case = LLMTestCase(
+        input="退款期限是多少？",
+        actual_output="用户可以在购买后的 30 天内申请全额退款。",
+        expected_output="购买后 30 天内可以申请全额退款。",
+    )
+
+    correctness = GEval(
+        name="正确性",
+        criteria=(
+            "判断实际回答是否与期望回答在事实和业务含义上保持一致。"
+            "允许不同措辞，但不得增加、遗漏或篡改关键条件。"
+        ),
+        evaluation_params=[
+            SingleTurnParams.INPUT,
+            SingleTurnParams.ACTUAL_OUTPUT,
+            SingleTurnParams.EXPECTED_OUTPUT,
+        ],
+        threshold=0.8,
+    )
+
+    assert_test(
+        test_case=test_case,
+        metrics=[correctness],
+    )
+```
+
+运行：
+
+```bash
+deepeval test run test_first_eval.py
+```
+
+DeepEval 会：
+
+1. 收集 Pytest 测试；
+2. 调用 Judge 模型；
+3. 计算指标分数；
+4. 将分数与 `threshold=0.8` 比较；
+5. 输出评分理由；
+6. 低于阈值时让测试失败并返回非零退出码。
+
+也可以直接运行某个测试：
+
+```bash
+deepeval test run test_first_eval.py::test_refund_answer
+```
+
+---
+
+## H.6 核心数据模型
+
+### H.6.1 `LLMTestCase`
+
+单轮评估使用 `LLMTestCase`。DeepEval 4.x 的核心字段包括：
+
+| 字段 | 含义 | 常见用途 |
+|---|---|---|
+| `input` | 用户输入或当前组件输入 | 所有单轮测试 |
+| `actual_output` | 应用真实输出 | 生成质量、端到端评估 |
+| `expected_output` | 理想输出 | 正确性、Contextual Recall / Precision |
+| `context` | 静态理想事实依据 | Hallucination、理想知识上下文 |
+| `retrieval_context` | 运行时真实检索结果 | RAG Retriever / Generator 评估 |
+| `tools_called` | Agent 实际调用的工具 | Tool Correctness、Argument Correctness |
+| `expected_tools` | 理想情况下应调用的工具 | 工具选择对比 |
+| `token_cost` | Token 或成本信息 | 成本分析 |
+| `completion_time` | 完成耗时 | 性能分析 |
+
+示例：
+
+```python
+from deepeval.test_case import LLMTestCase, ToolCall
+
+case = LLMTestCase(
+    input="订单不合适时如何退款？",
+    actual_output="可以在购买后的 30 天内申请退款。",
+    expected_output="购买后 30 天内可申请全额退款。",
+    context=[
+        "退款政策规定，购买后 30 天内可以申请全额退款。"
     ],
-    evaluation_params=[
-        LLMTestCaseParams.INPUT,
-        LLMTestCaseParams.ACTUAL_OUTPUT,
-        LLMTestCaseParams.EXPECTED_OUTPUT,
+    retrieval_context=[
+        "退款政策：购买之日起 30 天内支持全额退款。"
     ],
-    threshold=0.7,
+    tools_called=[
+        ToolCall(
+            name="search_policy",
+            input_parameters={"query": "退款期限"},
+            output="购买后 30 天内支持全额退款。",
+        )
+    ],
+    expected_tools=[
+        ToolCall(
+            name="search_policy",
+            input_parameters={"query": "退款期限"},
+        )
+    ],
+    token_cost=0.0021,
+    completion_time=1.42,
 )
 ```
 
-**DAG Metric**：把评分写成决策树（先判断格式→再按分支评内容），每个节点是确定性判断或小的 LLM 判断。比单条 G-Eval 更可控、可解释，适合"有明确规则骨架 + 少量语义判断"的场景。
+#### `context` 与 `retrieval_context` 的区别
 
-**选择决策**：有人工参考答案→ Reference-based（Correctness G-Eval）；没有→ Referenceless（Answer Relevancy、Faithfulness）；硬约束（必含字段、禁用词、JSON 合法）→ 确定性规则/自定义 Metric，**不要浪费 Judge 调用**。
-
-## H.5 RAG 评测实战
-
-五个内置指标与必要字段（方法论口径与组合诊断详见第 11 章 2.8——那边讲"指标组合说明什么"，这里讲"怎么跑出来"）：
-
-| 指标 | 评谁 | 必要字段 |
-|---|---|---|
-| Answer Relevancy | 生成器：答得切不切题 | `input` + `actual_output` |
-| Faithfulness | 生成器：有没有超出检索内容编造 | + `retrieval_context` |
-| Contextual Relevancy | 检索器：召回的内容和问题相关吗 | `input` + `retrieval_context` |
-| Contextual Recall | 检索器：该召回的召回全了吗 | + `expected_output` |
-| Contextual Precision | 检索器：相关内容排得靠前吗 | + `expected_output` |
-
-**分开评 Retriever 与 Generator** 是 RAG 评测的第一纪律：Faithfulness 高 + Contextual Recall 低 = 检索没召回、生成器只是"忠实于残缺的上下文"——单看端到端分数会把检索问题误诊为生成问题。
-
-组件级归因用 `@observe` 把指标挂到具体组件上：
-
-```python
-from deepeval.tracing import observe, update_current_span
-
-@observe(metrics=[contextual_relevancy])
-def retriever(query: str) -> list[str]:
-    chunks = search(query)
-    update_current_span(test_case=LLMTestCase(input=query, retrieval_context=chunks))
-    return chunks
-
-@observe(metrics=[answer_relevancy, faithfulness])
-def generator(query: str, chunks: list[str]) -> str: ...
-```
-
-跑一次真实调用，Retriever 和 Generator 各自拿到自己的分——第 11 章"组合诊断表"里的每个象限从此有了自动化的取数来源。
-
-## H.6 Agent 与多轮对话
-
-**Agent 评测**在结果之外加轨迹：Task Completion（任务完成没有）、Tool Correctness（该调的工具调了吗——可配置严格度：只看工具名 / 加参数 / 加顺序）、Argument Correctness、Step/Plan 类指标。用例里给 `tools_called` 与 `expected_tools`（`ToolCall(name=..., input_parameters=...)`），或直接在 `@observe` Trace 上评。实践组合：**确定性断言管硬约束**（禁止调用危险工具、必须先查权限）+ **语义指标管质量**（任务完成度）——与第 15 章"Guard 管下限、Eval 管上限"同构。
-
-**多轮对话**用 `ConversationalTestCase`（`turns=[Turn(role, content), ...]` + `scenario` / `expected_outcome` / `chatbot_role`），配套指标如 Role Adherence（人设守没守住）、Conversation Completeness。`ConversationSimulator` 能按 Persona 自动生成多轮对话压测你的回调（`model_callback`）——把"人肉聊十轮找问题"变成批量回归。
-
-## H.7 自定义：Judge 与 Metric
-
-**自定义 Judge**（用国产模型、本地模型或企业网关做裁判）：继承 `DeepEvalBaseLLM`，实现 `load_model` / `generate` / `a_generate` / `get_model_name`，然后传给任意指标的 `model=` 参数。注意 `a_generate` 必须真异步，否则并发评测会假死（H.10）。数据安全考量见 H.9——Judge 在哪跑，数据就流向哪。
-
-**自定义 Metric**（确定性规则进评测体系）：继承 `BaseMetric`，`measure()` 里设 `self.score` / `self.success` / `self.reason`，实现 `is_successful()`：
-
-```python
-from deepeval.metrics import BaseMetric
-
-class RequiredTermsMetric(BaseMetric):
-    def __init__(self, required_terms: list[str], threshold: float = 1.0):
-        self.required_terms, self.threshold = required_terms, threshold
-
-    def measure(self, test_case) -> float:
-        hits = [t for t in self.required_terms if t in test_case.actual_output]
-        self.score = len(hits) / len(self.required_terms)
-        self.success = self.score >= self.threshold
-        self.reason = f"命中 {hits}，缺失 {set(self.required_terms) - set(hits)}"
-        return self.score
-
-    def is_successful(self) -> bool:
-        return self.success
-```
-
-零 Judge 调用、零波动——**先跑便宜的确定性规则，失败就不再调昂贵 Judge**，是成本优化的第一杠杆（H.9）。
-
-## H.8 数据集分层与 Synthesizer
-
-数据集按用途分层（对应 CI/CD 分层门禁，H.9）：
+这是最容易混淆的一组字段：
 
 ```text
-smoke（10～30 条，PR 必跑）→ regression（历史线上失败回流）
-→ edge_cases（边界/无答案）→ adversarial（对抗与安全）
-→ production_samples（线上抽样）→ human_gold（人工精标，校准用）
+context
+= 评估集预先定义的理想事实依据
+= 静态 Ground Truth
+
+retrieval_context
+= RAG 在本次运行中真实召回的内容
+= 动态 Runtime Result
 ```
 
-Golden 设计原则：期望里写**必须正确的事实、必须覆盖的条件、不能做的额外承诺**，不规定精确措辞——否则评的是复述而不是质量。历史线上失败**必须**回流进 regression（第 15 章回流闭环的落点）。
+例如：
 
-`Synthesizer` 四个入口批量造 Golden：`generate_goldens_from_docs`（从文档，RAG 冷启动首选）、`from_contexts`、`from_goldens`（扩增）、`from_scratch`。合成数据解决"冷启动没题库"，但高风险样本必须人工审核后才能进门禁。
+```python
+LLMTestCase(
+    input="退款期限是多少？",
+    actual_output="退款期限是 30 天。",
+    expected_output="购买后 30 天内可退款。",
+    context=["购买后 30 天内可退款。"],
+    retrieval_context=[
+        "购买后 30 天内可退款。",
+        "会员积分每月结算一次。",
+    ],
+)
+```
 
-## H.9 工程化：CLI、CI/CD、校准、成本与安全
+这里第二条召回内容与问题无关，可能降低 Contextual Relevancy；但第一条足以支持答案，因此 Faithfulness 仍可能较高。
 
-**CLI 速查**（`deepeval test run tests/evals` 之上）：`-n 4` 多进程并行、`-c` 缓存、`-r 3` 重复跑（测波动）、`-i` 忽略执行错误、`-s` 缺字段跳过、`-d failing` 只看失败、`-id "rag-pr-184"` 运行标识（带上 PR/Commit 号）、`-m "smoke and not slow"` 按 pytest marker 过滤。`deepeval diagnose` 查配置、`deepeval inspect` 看 Trace。
+### H.6.2 `ToolCall`
 
-**分层门禁**（成本与速度的平衡）：
+```python
+from deepeval.test_case import ToolCall
 
-| 触发 | 跑什么 | 预算 |
-|---|---|---|
-| PR | smoke 10～30 条 + 确定性规则 | 5～10 分钟内 |
-| main | regression 100～500 条、完整 Trace 指标 | 半小时级 |
-| Nightly | 大型数据集、重复跑、Judge 一致性、成本/延迟趋势 | 不限 |
-| Release | 高风险全量 + 对抗集 + 人工抽检 | 人工参与 |
+call = ToolCall(
+    name="get_weather",
+    description="查询指定城市天气",
+    reasoning="用户询问实时天气，必须调用天气工具。",
+    input_parameters={"city": "Singapore"},
+    output={"temperature": 30, "condition": "rain"},
+)
+```
 
-**阈值校准**：收集代表性样本（明显过/明显败/边界/高风险/轻微措辞问题）→ 双人标注 → 跑候选 Judge 对比人工标签 → 分析误报漏报 → 定阈值 → 独立验证集复验 → 进 CI。评 Judge 本身看与人工的一致率、F1、**严重错误漏报率**（高风险场景优先优化这个，不是整体准确率）与重复方差。**失败了不许降阈值**——看 reason、定位到 Span、修系统、同数据集同阈值重跑；只有人工校准证明阈值不合理才调，并记录原因。
+常用字段：
 
-**成本模型**：`用例数 × 指标数 × 每指标 Judge 调用次数 × 重复次数`——500 条 × 4 指标 × 2 次调用 × 3 重复 ≈ 1.2 万次模型调用。优化按序：PR 只跑 smoke → 确定性规则前置短路 → 缓存 → 只对关键 Span 上组件指标 → 大回归集放 Nightly → 低风险样本用便宜 Judge、失败样本才用强 Judge 复核。
-
-**数据安全**：LLM-as-a-Judge 会把输入、输出、检索上下文、工具参数、对话历史发给 Judge 的模型提供方——上线前脱敏 PII、删密钥、敏感业务走企业网关或本地 Judge（H.7），并为评测日志设保留期限。**复现性**至少记录：DeepEval 版本、Judge/Generator 模型版本、Prompt 版本、Metric 配置与阈值、数据集 Hash、采样参数、Commit SHA。
-
-## H.10 排查速查
-
-| 症状 | 大概率原因与动作 |
+| 字段 | 说明 |
 |---|---|
-| 评测卡 0% / 极慢 | Judge 额度/限流；降并发（`AsyncConfig(max_concurrent=3, throttle_value=1)`）、跑 `deepeval diagnose`；自定义 Judge 的 `a_generate` 是否真异步 |
-| 分数波动大 | Judge 温度/滚动别名模型；criteria 太主观或混维度→拆分/换 `evaluation_steps`/换 DAG；边界样本→`-r 3` 看方差 |
-| Faithfulness 高但答案错 | 它只看与 `retrieval_context` 是否一致——检索内容本身错/过期。补 Contextual Recall/Precision 与带参考的 Correctness |
-| Answer Relevancy 高但编造 | 它只看切题不看事实。必须与 Faithfulness 组合，有参考再加 Correctness |
-| Contextual Relevancy 低但答案对 | 召回大量噪声、生成器侥幸忽略，或模型靠自身知识——当前能过、成本与稳定性差，优化 Retriever |
-| 升级后分数方向异常 | 4.2.0 统一"越高越好"；重跑校准集、复查所有阈值与自定义 Metric 的 `is_successful()` |
+| `name` | 工具名称，必填 |
+| `description` | 工具用途 |
+| `reasoning` | 为什么调用该工具 |
+| `input_parameters` | 调用参数 |
+| `output` | 工具返回值 |
+| `type` | Function 或 MCP 工具类型 |
 
-最后两条边界认知：DeepEval **不替代**传统测试（单测/集成/权限/负载照写），完整体系是"确定性测试 + LLM 语义评估 + 人工评审 + 生产监控"四层；本地跑完全可行，云平台（Confident AI）只在团队共享报告、长期趋势、集中数据集管理时才必要——自托管路线的替代是第 15 章的"框架产分、平台收分"（DeepEval 算分回写 Langfuse/Phoenix 等平台）。
+### H.6.3 `Golden`
 
-**落地顺序**（照抄可用）：10～30 条 smoke Golden → 2～3 个系统专用指标 + 1 个业务 G-Eval → 接 `deepeval test run` 进 CI → RAG/Agent 加 `@observe` 组件级 → 最后建阈值校准、回归分层与线上失败回流。
+`Golden` 是“运行应用之前”的测试模板，通常没有 `actual_output`：
+
+```python
+from deepeval.dataset import Golden
+
+sample = Golden(
+    input="退款期限是多少？",
+    expected_output="购买后 30 天内可以申请退款。",
+    context=["退款政策：购买后 30 天内支持全额退款。"],
+)
+```
+
+Golden 与 Test Case 的关系：
+
+```text
+Golden
+  输入、期望结果、理想上下文
+        │
+        │ 调用真实应用
+        ▼
+LLMTestCase
+  输入、实际输出、真实检索结果、真实工具调用
+```
+
+### H.6.4 `EvaluationDataset`
+
+`EvaluationDataset` 用于集中管理一组 Golden 或 Test Case，并支持保存、加载、批量执行和回归测试：
+
+```python
+from deepeval.dataset import EvaluationDataset, Golden
+
+
+dataset = EvaluationDataset(
+    goldens=[
+        Golden(
+            input="退款期限是多少？",
+            expected_output="购买后 30 天内可以退款。",
+        ),
+        Golden(
+            input="退款是否收手续费？",
+            expected_output="符合政策的退款不收取额外手续费。",
+        ),
+    ]
+)
+```
+
+一个 `EvaluationDataset` 要么是单轮数据集，要么是多轮数据集，不应混合两种 Golden 类型。
 
 ---
 
-> **使用提示**：与其他附录的分工——A 讲模型机制、B 讲方法论、C 记来源、D 列产品、E 辨异同、F 索引图版、G 详解 OTel、**H 上手 DeepEval**。第 15 章是"评什么、为什么评"，本附录是"用 DeepEval 怎么评"；第 11 章 2.8 的 RAG 指标组合诊断在 H.5 有自动化取数方案。API 快照为 4.2.0，动手前对照 [C-31] 核验当前版本。
+## H.7 三种评估执行方式
+
+### H.7.1 直接调用 `metric.measure()`
+
+适合快速调试单个指标：
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.test_case import LLMTestCase
+
+case = LLMTestCase(
+    input="退款期限是多少？",
+    actual_output="购买后 30 天内可以退款。",
+)
+
+metric = AnswerRelevancyMetric(threshold=0.8)
+metric.measure(case)
+
+print("score:", metric.score)
+print("reason:", metric.reason)
+print("success:", metric.is_successful())
+```
+
+适用：
+
+- Notebook 实验；
+- 指标 Prompt 调试；
+- 自定义 Judge 接入测试；
+- 查看 `verbose_mode` 中间过程。
+
+不适合作为完整评估流水线，因为不会自动获得全部缓存、并发、统一报告和 Pytest 门禁能力。
+
+### H.7.2 使用 `evaluate()`
+
+适合脚本、Notebook、离线批处理：
+
+```python
+from deepeval import evaluate
+from deepeval.metrics import AnswerRelevancyMetric, FaithfulnessMetric
+from deepeval.test_case import LLMTestCase
+
+cases = [
+    LLMTestCase(
+        input="退款期限是多少？",
+        actual_output="购买后 30 天内可以退款。",
+        retrieval_context=["退款政策：购买后 30 天内支持退款。"],
+    )
+]
+
+result = evaluate(
+    test_cases=cases,
+    metrics=[
+        AnswerRelevancyMetric(threshold=0.75),
+        FaithfulnessMetric(threshold=0.85),
+    ],
+    identifier="refund-rag-baseline",
+    hyperparameters={
+        "generator": "production-model",
+        "prompt_version": "refund-v3",
+        "chunk_size": 500,
+    },
+)
+
+print(result)
+```
+
+特点：
+
+- 结果可以在 Python 代码中继续处理；
+- 默认支持异步并发；
+- 支持缓存、显示、错误和并发配置；
+- 不像 `assert_test()` 那样天然用于测试失败门禁。
+
+### H.7.3 使用 `assert_test()` + `deepeval test run`
+
+适合单元测试和 CI/CD：
+
+```python
+from deepeval import assert_test
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.test_case import LLMTestCase
+
+
+def test_answer_relevancy() -> None:
+    case = LLMTestCase(
+        input="退款期限是多少？",
+        actual_output="购买后的 30 天内可以申请退款。",
+    )
+
+    assert_test(
+        test_case=case,
+        metrics=[AnswerRelevancyMetric(threshold=0.8)],
+    )
+```
+
+执行：
+
+```bash
+deepeval test run tests/evals
+```
+
+低于阈值时测试失败，进而阻断 Pull Request 或发布流水线。
+
+### 三种方式选择
+
+| 需求 | 推荐方式 |
+|---|---|
+| 临时查看一个指标 | `metric.measure()` |
+| Notebook / 实验脚本 / 批处理 | `evaluate()` |
+| 回归测试 / CI/CD 门禁 | `assert_test()` + `deepeval test run` |
+| Tracing 驱动的 Agent 批量评估 | `EvaluationDataset.evals_iterator()` |
+
+---
+
+## H.8 Metric 的通用配置与语义
+
+DeepEval 4.2.0 统一了常规数值型指标的方向：
+
+```text
+0 <= score <= 1
+score 越高越好
+score >= threshold 时通过
+```
+
+比较型的 Arena 评估不一定提供可独立解释的单项标量分数，因此应按对应指标的文档解释结果。升级自旧版本时，要重新核查已有阈值和报表逻辑，不能沿用“部分指标越低越好”的旧假设。
+
+常见参数：
+
+| 参数 | 作用 |
+|---|---|
+| `threshold` | 最低通过分数，默认通常为 0.5 |
+| `model` | Judge 模型名称或 `DeepEvalBaseLLM` 实例 |
+| `include_reason` | 是否生成评分理由 |
+| `strict_mode` | 是否要求完美得分；通常会把结果二值化 |
+| `async_mode` | 指标内部是否异步执行 |
+| `verbose_mode` | 是否输出评分中间过程 |
+| `flaky` | 失败时是否不决定测试用例最终成败 |
+
+对于支持该配置的指标，`threshold=None` 可用于**仅记录分数、不执行通过/失败门禁**。由于不同指标的构造参数并不完全一致，使用前应检查对应 Metric 的签名与版本文档。
+
+示例：
+
+```python
+from deepeval.metrics import FaithfulnessMetric
+
+metric = FaithfulnessMetric(
+    threshold=0.85,
+    include_reason=True,
+    strict_mode=False,
+    async_mode=True,
+    verbose_mode=False,
+    flaky=False,
+)
+```
+
+### H.8.1 `strict_mode`
+
+普通模式：
+
+```text
+score = 0.88
+threshold = 0.80
+结果 = 通过
+```
+
+严格模式通常要求完美结果：
+
+```text
+score = 1.0  -> 通过
+score < 1.0  -> 失败
+```
+
+适用于：
+
+- JSON Schema 必须完全正确；
+- 安全规则零容忍；
+- 工具名称与参数必须精确匹配；
+- 合规字段不得缺失。
+
+不适合主观写作质量，因为会显著增加 Flaky。
+
+### H.8.2 `flaky`
+
+LLM 评估存在随机性，边界样本可能在阈值附近抖动。可把测试用例或单个 Metric 标记为 Flaky：
+
+```python
+case = LLMTestCase(
+    input="...",
+    actual_output="...",
+    flaky=True,
+)
+```
+
+或：
+
+```python
+metric = AnswerRelevancyMetric(
+    threshold=0.8,
+    flaky=True,
+)
+```
+
+Flaky 只应作为临时治理手段，不能替代：
+
+- 调整 Judge Prompt；
+- 增加重复运行；
+- 重新校准阈值；
+- 修正含糊 Golden；
+- 使用更稳定的 Judge。
+
+### H.8.3 `verbose_mode`
+
+```python
+metric = FaithfulnessMetric(verbose_mode=True)
+metric.measure(case)
+```
+
+用于查看：
+
+- 从输出中抽取了哪些 Claim；
+- Judge 如何判断每条 Claim；
+- 哪些语句被认定为无关或不忠实；
+- 为什么得分与人工直觉不一致。
+
+---
+
+## H.9 如何选择评估指标
+
+不要“指标越多越好”。通常一个测试套件使用 **2～5 个关键指标**更有效：
+
+```text
+2～3 个系统专用指标
++
+1～2 个业务自定义指标
+```
+
+### H.9.1 指标选择决策表
+
+| 系统 | 首选指标 | 解决的问题 |
+|---|---|---|
+| 普通 QA | `GEval`、`AnswerRelevancyMetric` | 是否正确、是否回答问题 |
+| RAG Generator | `AnswerRelevancyMetric`、`FaithfulnessMetric` | 是否相关、是否忠实于召回内容 |
+| RAG Retriever | `ContextualRelevancyMetric`、`ContextualPrecisionMetric`、`ContextualRecallMetric` | 是否召回正确、排序合理、覆盖充分 |
+| Agent 总体 | `TaskCompletionMetric` | 是否完成任务 |
+| Agent 执行路径 | `StepEfficiencyMetric`、`PlanAdherenceMetric`、`PlanQualityMetric` | 是否绕路、是否遵循计划、计划是否合理 |
+| 工具调用 | `ToolCorrectnessMetric`、`ArgumentCorrectnessMetric` | 工具和参数是否正确 |
+| 多轮客服 | `TurnRelevancyMetric`、`KnowledgeRetentionMetric`、`ConversationCompletenessMetric` | 是否保持上下文、是否完整解决问题 |
+| 角色型机器人 | `RoleAdherenceMetric` | 是否始终遵循角色 |
+| JSON 输出 | `JsonCorrectnessMetric` 或确定性 Schema 校验 | 结构是否符合契约 |
+| 安全 | Bias、Toxicity、PII、Misuse 等安全指标 | 是否存在风险输出 |
+
+### H.9.2 Reference-based 与 Referenceless
+
+```text
+Reference-based
+需要 expected_output、context 或 expected_tools 等参考信息
+适合离线测试和 CI/CD
+
+Referenceless
+只依赖 input、actual_output、retrieval_context 或 Trace
+适合没有人工标签的线上样本
+```
+
+线上生产流量通常没有 `expected_output`，因此需要优先选择 Referenceless 指标，例如：
+
+- Answer Relevancy；
+- Faithfulness；
+- Task Completion；
+- Step Efficiency；
+- 部分安全指标。
+
+---
+
+## H.10 G-Eval：定义业务专属指标
+
+`GEval` 是最通用的自定义指标。它适合：
+
+- 正确性；
+- 有用性；
+- 专业性；
+- 信息完整性；
+- 风格一致性；
+- 业务规则遵循；
+- 输出是否适合目标用户。
+
+### H.10.1 使用 `criteria`
+
+```python
+from deepeval.metrics import GEval
+from deepeval.test_case import SingleTurnParams
+
+helpfulness = GEval(
+    name="帮助性",
+    criteria=(
+        "判断实际回答是否直接解决用户问题，是否包含可执行信息，"
+        "是否避免空泛表述、无关背景和未经请求的扩展。"
+    ),
+    evaluation_params=[
+        SingleTurnParams.INPUT,
+        SingleTurnParams.ACTUAL_OUTPUT,
+    ],
+    threshold=0.8,
+)
+```
+
+### H.10.2 使用 `evaluation_steps`
+
+对于高风险或复杂业务，显式步骤通常比一句宽泛 Criteria 更稳定：
+
+```python
+from deepeval.metrics import GEval
+from deepeval.test_case import SingleTurnParams
+
+policy_compliance = GEval(
+    name="退款政策合规性",
+    evaluation_steps=[
+        "从 expected_output 中提取退款期限、费用和前置条件。",
+        "从 actual_output 中提取对应业务声明。",
+        "逐项比较是否存在遗漏、冲突或额外承诺。",
+        "若回答引入参考答案中不存在的承诺，应显著扣分。",
+        "根据事实一致性和关键条件完整性给出最终分数。",
+    ],
+    evaluation_params=[
+        SingleTurnParams.ACTUAL_OUTPUT,
+        SingleTurnParams.EXPECTED_OUTPUT,
+    ],
+    threshold=0.85,
+)
+```
+
+### H.10.3 编写 G-Eval 的原则
+
+差的 Criteria：
+
+```text
+判断回答好不好。
+```
+
+较好的 Criteria：
+
+```text
+判断回答是否准确覆盖退款期限、适用范围和费用规则；
+允许措辞不同，但不允许遗漏限制条件、增加未经依据的承诺，
+也不允许把“可申请”表述为“必定成功”。
+```
+
+建议：
+
+1. 一个 Metric 只判断一个清晰维度；
+2. 明确允许什么、不允许什么；
+3. 明确严重错误如何扣分；
+4. 不要让一个指标同时评估正确性、风格、安全和性能；
+5. 使用人工标注样本校验 Judge 与人的一致性。
+
+---
+
+## H.11 DAG Metric：构建结构化判定流程
+
+`DAGMetric` 适合把复杂规则拆为可控的判定图：
+
+```text
+先检查 JSON 是否有效
+    ├─ 否 -> 0 分
+    └─ 是 -> 检查必填字段
+              ├─ 缺失 -> 0.3 分
+              └─ 完整 -> 检查事实正确性
+                         ├─ 有严重错误 -> 0.5 分
+                         └─ 无错误 -> 1.0 分
+```
+
+与 G-Eval 的差异：
+
+| 维度 | G-Eval | DAG Metric |
+|---|---|---|
+| 定义方式 | 自然语言 Criteria / Steps | 显式节点、分支和终点分值 |
+| 适合场景 | 主观质量、难枚举标准 | 条件规则、分级门禁、业务流程 |
+| 分数控制 | 由 Judge 综合给出 | 终点分数由开发者映射 |
+| 建设成本 | 较低 | 较高 |
+| 可解释性 | 依赖 Judge 理由 | 判定路径更明确 |
+
+选择建议：
+
+```text
+“回答是否专业、清晰、有帮助” -> G-Eval
+“格式错误直接 0 分；缺字段 0.3；事实错 0.5” -> DAG
+```
+
+DAG 仍可能在部分分支中使用 LLM 判断，所以它不是完全无随机性；它的优势在于**判定结构与分数映射可控**。
+
+---
+
+## H.12 RAG 评估完整教程
+
+### H.12.1 RAG 评估不能只看最终答案
+
+```mermaid
+flowchart LR
+    A[用户问题] --> B[Retriever]
+    B --> C[召回 Chunk]
+    C --> D[Reranker]
+    D --> E[排序后的 Context]
+    E --> F[Generator]
+    F --> G[最终回答]
+
+    B --> H[Contextual Recall]
+    D --> I[Contextual Precision]
+    E --> J[Contextual Relevancy]
+    F --> K[Answer Relevancy]
+    F --> L[Faithfulness]
+```
+
+最终答案失败可能有四种不同根因：
+
+1. 没召回关键事实；
+2. 召回了，但排序太差；
+3. Context 中噪声太多；
+4. Context 正确，但 Generator 编造或跑题。
+
+因此应分开评估 Retriever 与 Generator。
+
+### H.12.2 五个核心 RAG 指标
+
+| 指标 | 主要比较对象 | 必要字段 | 定位 |
+|---|---|---|---|
+| `AnswerRelevancyMetric` | `input` ↔ `actual_output` | `input`、`actual_output` | 回答是否切题 |
+| `FaithfulnessMetric` | `actual_output` ↔ `retrieval_context` | `input`、`actual_output`、`retrieval_context` | 回答是否被召回内容支持 |
+| `ContextualRelevancyMetric` | `input` ↔ `retrieval_context` | `input`、`actual_output`、`retrieval_context` | 召回内容是否相关 |
+| `ContextualPrecisionMetric` | 相关 Chunk 的排序位置 | `input`、`actual_output`、`expected_output`、`retrieval_context` | 排序 / Reranker 质量 |
+| `ContextualRecallMetric` | `expected_output` 中的事实是否可由召回内容支持 | `input`、`actual_output`、`expected_output`、`retrieval_context` | 关键事实是否召全 |
+
+### H.12.3 端到端 RAG 测试
+
+```python
+from deepeval import assert_test
+from deepeval.metrics import (
+    AnswerRelevancyMetric,
+    FaithfulnessMetric,
+    ContextualPrecisionMetric,
+    ContextualRecallMetric,
+    ContextualRelevancyMetric,
+)
+from deepeval.test_case import LLMTestCase
+
+
+def test_refund_rag() -> None:
+    case = LLMTestCase(
+        input="退款期限以及是否收手续费？",
+        actual_output=(
+            "符合退款条件的订单可以在购买后的 30 天内申请全额退款，"
+            "不额外收取手续费。"
+        ),
+        expected_output=(
+            "购买后 30 天内可以申请全额退款，且不收取额外手续费。"
+        ),
+        retrieval_context=[
+            "退款政策：购买之日起 30 天内可以申请全额退款。",
+            "符合退款政策的申请不收取额外手续费。",
+            "会员积分将在每月最后一个工作日结算。",
+        ],
+    )
+
+    metrics = [
+        AnswerRelevancyMetric(threshold=0.8),
+        FaithfulnessMetric(threshold=0.9),
+        ContextualRelevancyMetric(threshold=0.7),
+        ContextualPrecisionMetric(threshold=0.75),
+        ContextualRecallMetric(threshold=0.85),
+    ]
+
+    assert_test(test_case=case, metrics=metrics)
+```
+
+运行：
+
+```bash
+deepeval test run test_rag.py -v
+```
+
+### H.12.4 如何解释组合分数
+
+#### 情况 A
+
+```text
+Answer Relevancy = 0.95
+Faithfulness     = 0.42
+```
+
+说明回答很切题，但包含大量无法从召回内容中支持的声明。优先检查：
+
+- Prompt 是否要求“仅依据上下文回答”；
+- 模型是否在 Context 不足时仍强行回答；
+- 是否需要添加“无法确定”的拒答策略；
+- Context 是否在进入模型前被截断。
+
+#### 情况 B
+
+```text
+Contextual Recall    = 0.38
+Contextual Relevancy = 0.90
+```
+
+说明召回内容大多相关，但缺少关键事实。优先检查：
+
+- `top_k` 是否过小；
+- Query Rewrite 是否丢失限制条件；
+- 文档切分是否把相关事实拆散；
+- Metadata Filter 是否过严；
+- 索引是否未更新。
+
+#### 情况 C
+
+```text
+Contextual Recall    = 0.92
+Contextual Precision = 0.41
+```
+
+说明关键内容已召回，但排序差、噪声靠前。优先检查：
+
+- Reranker；
+- 相关性打分；
+- 混合检索权重；
+- Chunk 去重；
+- 相同来源文档的聚合策略。
+
+#### 情况 D
+
+```text
+Faithfulness = 0.94
+Answer Relevancy = 0.46
+```
+
+说明回答忠实于 Context，但没有直接回答问题，可能在复述文档或输出无关背景。优先检查 Generator Prompt，而不是 Retriever。
+
+### H.12.5 组件级 RAG 评估
+
+对 Generator Span 单独评估：
+
+```python
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.evaluate import AsyncConfig
+from deepeval.metrics import AnswerRelevancyMetric, FaithfulnessMetric
+from deepeval.test_case import LLMTestCase
+from deepeval.tracing import observe, update_current_span, update_current_trace
+
+
+@observe()
+def rag_app(query: str) -> str:
+    chunks = retrieve(query)
+    answer = generate(query, chunks)
+    update_current_trace(input=query, output=answer)
+    return answer
+
+
+@observe()
+def retrieve(query: str) -> list[str]:
+    return [
+        "退款政策：购买后 30 天内支持全额退款。",
+        "符合条件的退款不收取手续费。",
+    ]
+
+
+@observe(
+    metrics=[
+        AnswerRelevancyMetric(threshold=0.8),
+        FaithfulnessMetric(threshold=0.9),
+    ]
+)
+def generate(query: str, chunks: list[str]) -> str:
+    # 替换为真实模型调用
+    answer = "购买后 30 天内可申请退款，且不收取手续费。"
+
+    update_current_span(
+        test_case=LLMTestCase(
+            input=query,
+            actual_output=answer,
+            retrieval_context=chunks,
+        )
+    )
+    return answer
+
+
+dataset = EvaluationDataset(
+    goldens=[Golden(input="退款期限和手续费规则是什么？")]
+)
+
+for golden in dataset.evals_iterator(
+    async_config=AsyncConfig(run_async=False)
+):
+    rag_app(golden.input)
+```
+
+这样可以直接把失败定位到 `generate` Span，而不是只知道整个 RAG 应用失败。
+
+### H.12.6 RAG 数据集建议
+
+至少覆盖：
+
+| 分类 | 示例 |
+|---|---|
+| 标准问题 | 单文档可直接回答 |
+| 跨 Chunk 问题 | 需要合并两段或多段事实 |
+| 限定条件 | 时间、地区、产品版本、用户类型 |
+| 无答案问题 | 知识库中不存在答案 |
+| 冲突文档 | 新旧政策同时存在 |
+| 噪声检索 | 大量相似但无关内容 |
+| 长尾表达 | 缩写、错别字、口语、同义词 |
+| Prompt Injection | 文档中包含恶意指令 |
+| 时效性 | 过期文档与当前文档并存 |
+
+---
+
+## H.13 Agent 评估完整教程
+
+Agent 的质量不能只看最终文本。完整评估至少包含：
+
+```text
+任务是否完成
+计划是否合理
+是否遵循计划
+工具是否选对
+参数是否正确
+步骤是否高效
+是否出现重复或循环
+失败后是否正确恢复
+```
+
+### H.13.1 Agent 指标
+
+| 指标 | 评估问题 | 粒度 |
+|---|---|---|
+| `TaskCompletionMetric` | 是否完成用户目标 | 完整 Trace |
+| `StepEfficiencyMetric` | 是否存在多余、重复和绕路步骤 | 完整 Trace |
+| `PlanQualityMetric` | 计划是否合理、完整、可执行 | 完整 Trace |
+| `PlanAdherenceMetric` | 实际执行是否遵循计划 | 完整 Trace |
+| `ToolCorrectnessMetric` | 是否选择正确工具 | Test Case / 组件 |
+| `ArgumentCorrectnessMetric` | 工具参数是否正确 | Test Case / 组件 |
+
+### H.13.2 最小 Agent 轨迹评估
+
+```python
+import pytest
+
+from deepeval import assert_test
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import TaskCompletionMetric
+from deepeval.tracing import observe, update_current_trace
+
+
+dataset = EvaluationDataset(
+    goldens=[
+        Golden(input="计算 12 乘以 8"),
+        Golden(input="计算 15 乘以 4"),
+    ]
+)
+
+
+@observe()
+def math_agent(query: str) -> str:
+    # 替换为真实 Agent 执行
+    if "12" in query and "8" in query:
+        answer = "12 乘以 8 等于 96。"
+    else:
+        answer = "15 乘以 4 等于 60。"
+
+    update_current_trace(
+        input=query,
+        output=answer,
+    )
+    return answer
+
+
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_math_agent(golden: Golden) -> None:
+    math_agent(golden.input)
+
+    assert_test(
+        golden=golden,
+        metrics=[TaskCompletionMetric(threshold=0.8)],
+    )
+```
+
+执行：
+
+```bash
+deepeval test run test_agent.py
+```
+
+### H.13.3 同时评估完成度、效率和计划
+
+```python
+from deepeval.metrics import (
+    PlanAdherenceMetric,
+    PlanQualityMetric,
+    StepEfficiencyMetric,
+    TaskCompletionMetric,
+)
+
+trajectory_metrics = [
+    TaskCompletionMetric(threshold=0.85),
+    StepEfficiencyMetric(threshold=0.75),
+    PlanQualityMetric(threshold=0.75),
+    PlanAdherenceMetric(threshold=0.8),
+]
+```
+
+分数解释：
+
+```text
+Task Completion 高 + Step Efficiency 低
+= 做成了，但绕路、重复调用或重试过多
+
+Plan Quality 高 + Plan Adherence 低
+= 计划合理，但执行阶段偏离计划
+
+Plan Quality 低 + Task Completion 高
+= 可能偶然成功，流程不稳定，不适合复杂任务
+```
+
+### H.13.4 工具调用正确性
+
+```python
+from deepeval import assert_test
+from deepeval.metrics import ToolCorrectnessMetric
+from deepeval.test_case import LLMTestCase, ToolCall, ToolCallParams
+
+
+def test_weather_tool_selection() -> None:
+    case = LLMTestCase(
+        input="查询新加坡今天的天气。",
+        actual_output="新加坡今天有阵雨，气温约 30°C。",
+        tools_called=[
+            ToolCall(
+                name="get_weather",
+                input_parameters={"city": "Singapore"},
+                output={"condition": "showers", "temperature": 30},
+            )
+        ],
+        expected_tools=[
+            ToolCall(
+                name="get_weather",
+                input_parameters={"city": "Singapore"},
+            )
+        ],
+    )
+
+    assert_test(
+        test_case=case,
+        metrics=[
+            ToolCorrectnessMetric(
+                threshold=0.9,
+                evaluation_params=[ToolCallParams.INPUT_PARAMETERS],
+                should_exact_match=True,
+            )
+        ],
+    )
+```
+
+根据业务需要调整严格度：
+
+```text
+只关心工具名称       -> 默认设置
+校验输入参数         -> evaluation_params=[ToolCallParams.INPUT_PARAMETERS]
+校验工具输出         -> evaluation_params=[ToolCallParams.OUTPUT]
+关心工具调用顺序     -> should_consider_ordering=True
+要求调用列表完全一致 -> should_exact_match=True
+```
+
+`should_exact_match=True` 主要约束工具名称、类型和调用列表；只有把输入参数或输出加入 `evaluation_params`，这些字段才会参与严格匹配。对于没有 `expected_tools` 的线上样本，可使用 `ArgumentCorrectnessMetric`，让 Judge 根据用户输入判断实际工具参数是否合理；需要确定性参数比对时，仍应使用 `ToolCorrectnessMetric` 加 `ToolCallParams.INPUT_PARAMETERS`。
+
+### H.13.5 工具评估应结合确定性规则
+
+不要只使用 LLM Judge。推荐组合：
+
+```text
+确定性断言
+- 工具是否在 Allowlist
+- 参数是否通过 JSON Schema
+- 路径是否越权
+- 调用次数是否超过预算
+- 是否存在重复幂等调用
+- 是否触发超时
+
+语义评估
+- 当前任务是否应该调用该工具
+- 参数在业务语义上是否正确
+- 调用顺序是否合理
+- 工具输出是否被正确使用
+```
+
+示例：
+
+```python
+assert call.name in ALLOWED_TOOLS
+assert validate_schema(call.input_parameters)
+assert total_tool_calls <= 8
+
+assert_test(
+    test_case=case,
+    metrics=[ToolCorrectnessMetric(threshold=0.9)],
+)
+```
+
+---
+
+## H.14 Tracing、轨迹级与组件级评估
+
+### H.14.1 Trace 与 Span
+
+```mermaid
+flowchart TB
+    A[Trace: 完成用户任务] --> B[Span: 规划]
+    A --> C[Span: Retriever]
+    A --> D[Span: Tool Call]
+    A --> E[Span: LLM Generation]
+    A --> F[Span: Sub-Agent]
+```
+
+- **Trace**：一次完整 Agent 或复杂工作流运行；
+- **Span**：Trace 中的一个局部执行单元；
+- **轨迹指标**：读取完整有序 Trace；
+- **组件指标**：只读取某个 Span 对应的 `LLMTestCase`。
+
+### H.14.2 手工埋点
+
+顶层函数：
+
+```python
+from deepeval.tracing import observe, update_current_trace
+
+
+@observe()
+def agent(query: str) -> str:
+    answer = run_workflow(query)
+    update_current_trace(input=query, output=answer)
+    return answer
+```
+
+内部组件：
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.test_case import LLMTestCase
+from deepeval.tracing import observe, update_current_span
+
+
+@observe(metrics=[AnswerRelevancyMetric(threshold=0.8)])
+def generate_answer(query: str) -> str:
+    output = call_model(query)
+
+    update_current_span(
+        test_case=LLMTestCase(
+            input=query,
+            actual_output=output,
+        )
+    )
+    return output
+```
+
+### H.14.3 同时运行 Trace 与 Span 指标
+
+```python
+for golden in dataset.evals_iterator(
+    metrics=[
+        TaskCompletionMetric(threshold=0.85),
+        StepEfficiencyMetric(threshold=0.75),
+    ]
+):
+    agent(golden.input)
+```
+
+同时，内部 `@observe(metrics=[...])` Span 会执行自己的组件指标。
+
+最终得到：
+
+```text
+Trace
+├── Task Completion: 0.91
+├── Step Efficiency: 0.72
+├── Retriever Span
+│   └── Contextual Relevancy: 0.88
+├── Tool Span
+│   └── Tool Correctness: 1.00
+└── Generator Span
+    ├── Answer Relevancy: 0.94
+    └── Faithfulness: 0.63
+```
+
+这样可以直接判断：任务完成，但 Generator 出现不忠实声明。
+
+### H.14.4 异步 Agent
+
+```python
+import asyncio
+
+from deepeval.metrics import TaskCompletionMetric
+from deepeval.tracing import observe, update_current_trace
+
+
+@observe()
+async def async_agent(query: str) -> str:
+    answer = await call_agent(query)
+    update_current_trace(input=query, output=answer)
+    return answer
+
+
+async def main() -> None:
+    for golden in dataset.evals_iterator(
+        metrics=[TaskCompletionMetric(threshold=0.8)]
+    ):
+        task = asyncio.create_task(async_agent(golden.input))
+        dataset.evaluate(task)
+
+
+asyncio.run(main())
+```
+
+### H.14.5 本地查看 Trace
+
+安装扩展：
+
+```bash
+pip install "deepeval[inspect]==4.2.0"
+```
+
+运行评估后：
+
+```bash
+deepeval inspect
+```
+
+适用于查看：
+
+- Trace 树；
+- Span 输入输出；
+- 工具调用；
+- Retriever Context；
+- 每个 Metric 的 Score 与 Reason。
+
+---
+
+## H.15 多轮对话评估
+
+多轮评估关注整个对话，而不是单次回答。
+
+### H.15.1 手工创建对话测试用例
+
+```python
+from deepeval import evaluate
+from deepeval.metrics import (
+    ConversationCompletenessMetric,
+    KnowledgeRetentionMetric,
+    RoleAdherenceMetric,
+    TurnRelevancyMetric,
+)
+from deepeval.test_case import ConversationalTestCase, Turn
+
+
+conversation = ConversationalTestCase(
+    turns=[
+        Turn(role="user", content="我需要退回刚买的鞋。"),
+        Turn(role="assistant", content="可以，请提供订单号。"),
+        Turn(role="user", content="订单号是 A-1024。"),
+        Turn(role="assistant", content="已确认 A-1024，购买时间在 30 天内，可以申请退款。"),
+        Turn(role="user", content="会收手续费吗？"),
+        Turn(role="assistant", content="符合退款政策的申请不收取额外手续费。"),
+    ],
+    scenario="用户申请退鞋并确认手续费规则",
+    expected_outcome="完成退款资格确认并准确说明手续费规则",
+    chatbot_role="严谨、简洁的电商退款客服，不承诺超出政策的结果",
+)
+
+
+evaluate(
+    test_cases=[conversation],
+    metrics=[
+        TurnRelevancyMetric(threshold=0.8),
+        KnowledgeRetentionMetric(threshold=0.8),
+        ConversationCompletenessMetric(threshold=0.8),
+        RoleAdherenceMetric(threshold=0.8),
+    ],
+)
+```
+
+### H.15.2 常见多轮指标
+
+| 指标 | 关注点 |
+|---|---|
+| `TurnRelevancyMetric` | 每个回复是否与当前对话相关 |
+| `KnowledgeRetentionMetric` | 是否记住前文提供的信息 |
+| `ConversationCompletenessMetric` | 是否完整解决用户目标 |
+| `RoleAdherenceMetric` | 是否持续遵循设定角色 |
+| `ConversationalGEval` | 自定义整体对话标准 |
+
+### H.15.3 使用 `ConversationSimulator`
+
+先定义 Golden：
+
+```python
+from deepeval.dataset import ConversationalGolden, EvaluationDataset, Persona
+
+
+dataset = EvaluationDataset(
+    goldens=[
+        ConversationalGolden(
+            scenario="用户希望退回一双尺码不合适的鞋。",
+            expected_outcome="确认订单与退款资格，并说明下一步操作。",
+            persona=Persona(
+                characteristics="用户不熟悉退款流程，表达较简短。"
+            ),
+        )
+    ]
+)
+```
+
+定义应用回调：
+
+```python
+from typing import List
+from deepeval.test_case import Turn
+
+
+async def model_callback(
+    input: str,
+    turns: List[Turn],
+    thread_id: str,
+) -> Turn:
+    response = await your_chatbot(
+        current_input=input,
+        history=turns,
+        thread_id=thread_id,
+    )
+    return Turn(role="assistant", content=response)
+```
+
+执行模拟：
+
+```python
+from deepeval.simulator import ConversationSimulator
+
+
+simulator = ConversationSimulator(
+    model_callback=model_callback,
+    max_concurrent=3,
+)
+
+conversations = simulator.simulate(
+    conversational_goldens=dataset.goldens,
+    max_user_simulations=8,
+)
+```
+
+再使用多轮 Metric 评估：
+
+```python
+from deepeval import evaluate
+from deepeval.metrics import TurnRelevancyMetric
+
+
+evaluate(
+    test_cases=conversations,
+    metrics=[TurnRelevancyMetric(threshold=0.8)],
+)
+```
+
+> 对话模拟模型与评估 Judge 是两个独立角色。应分别记录模型名称、Prompt 和版本，避免实验结果不可复现。
+
+---
+
+## H.16 数据集与 Golden 管理
+
+### H.16.1 创建数据集
+
+```python
+from deepeval.dataset import EvaluationDataset, Golden
+
+
+dataset = EvaluationDataset(
+    goldens=[
+        Golden(
+            input="退款期限是多少？",
+            expected_output="购买后 30 天内可以申请退款。",
+        ),
+        Golden(
+            input="退款是否收手续费？",
+            expected_output="符合条件时不收取额外手续费。",
+        ),
+    ]
+)
+```
+
+动态添加：
+
+```python
+dataset.add_golden(
+    Golden(
+        input="超过 30 天还能退款吗？",
+        expected_output="超过常规退款期限后需要按例外流程审核。",
+    )
+)
+```
+
+### H.16.2 Golden 转 Test Case
+
+```python
+from deepeval.test_case import LLMTestCase
+
+
+for golden in dataset.goldens:
+    app_result = run_application(golden.input)
+
+    dataset.add_test_case(
+        LLMTestCase(
+            input=golden.input,
+            actual_output=app_result.output,
+            expected_output=golden.expected_output,
+            context=golden.context,
+            retrieval_context=app_result.retrieval_context,
+            tools_called=app_result.tools_called,
+        )
+    )
+```
+
+### H.16.3 保存数据集
+
+```python
+dataset.save_as(
+    file_type="jsonl",
+    directory="./tests/evals/datasets",
+    file_name="refund_regression",
+    include_test_cases=False,
+)
+```
+
+支持常见格式：
+
+```text
+CSV
+JSON
+JSONL
+```
+
+JSONL 更适合版本控制和追加：
+
+```json
+{"input":"退款期限是多少？","expected_output":"购买后 30 天内可以申请退款。"}
+{"input":"退款是否收手续费？","expected_output":"符合条件时不收取额外手续费。"}
+```
+
+### H.16.4 加载数据集
+
+```python
+from deepeval.dataset import EvaluationDataset
+
+
+dataset = EvaluationDataset()
+
+dataset.add_goldens_from_json_file(
+    file_path="tests/evals/datasets/refund_regression.json"
+)
+```
+
+JSONL 数据集：
+
+```python
+dataset.add_goldens_from_jsonl_file(
+    file_path="tests/evals/datasets/refund_regression.jsonl"
+)
+```
+
+对于大型数据集，可优先使用 JSONL，并按 Marker、目录或数据切片分批运行。
+
+### H.16.5 数据集分层
+
+推荐分为：
+
+```text
+smoke
+  10～30 条，PR 必跑，覆盖最关键能力
+
+regression
+  历史线上问题、已修复 Bug、关键业务路径
+
+edge_cases
+  空输入、长输入、歧义、冲突、异常工具返回
+
+adversarial
+  Prompt Injection、越权、恶意参数、安全攻击
+
+production_samples
+  线上抽样的代表性失败或高价值 Trace
+
+human_gold
+  专家标注、用于校准 Judge 与阈值的高质量样本
+```
+
+### H.16.6 Golden 设计原则
+
+一条好 Golden 应满足：
+
+- 目标单一，能够对应明确质量维度；
+- 输入接近真实用户表达；
+- 期望输出不应过度规定措辞；
+- 关键事实和限制条件清晰；
+- 边界条件可判定；
+- 不包含互相矛盾的标签；
+- 能解释“为什么该样本重要”。
+
+不推荐：
+
+```text
+输入：介绍一下退款。
+期望：回答得好一点。
+```
+
+推荐：
+
+```text
+输入：我购买 20 天后发现尺码不合适，可以退款吗？会收手续费吗？
+期望事实：30 天内可申请退款；符合政策时不收额外手续费。
+严重错误：把 30 天写成 7 天；承诺退款一定成功；遗漏手续费规则。
+```
+
+---
+
+## H.17 合成评估数据
+
+当没有现成评估集时，可使用 Golden Synthesizer 生成单轮或多轮 Golden。单轮生成主要有四种入口：
+
+| 方法 | 适用输入 |
+|---|---|
+| `generate_goldens_from_docs()` | 直接从知识库文档抽取 Context 并生成样本 |
+| `generate_goldens_from_contexts()` | 已完成切分或检索，希望自行控制 Context |
+| `generate_goldens_from_goldens()` | 基于已有 Golden 扩写表达和难度 |
+| `generate_goldens_from_scratch()` | 没有文档，按任务与风格配置从零生成 |
+
+多轮版本使用对应的 `generate_conversational_goldens_*()` 方法。
+
+从文档生成时，需要额外安装文档解析、切分与向量存储依赖：
+
+```bash
+pip install chromadb langchain-core langchain-community langchain-text-splitters
+```
+
+完整示例：
+
+```python
+from deepeval.synthesizer import Synthesizer
+
+
+synthesizer = Synthesizer(
+    async_mode=True,
+    max_concurrent=10,
+    cost_tracking=True,
+)
+
+goldens = synthesizer.generate_goldens_from_docs(
+    document_paths=[
+        "docs/refund_policy.md",
+        "docs/shipping_policy.pdf",
+    ],
+    include_expected_output=True,
+)
+
+print(f"生成 {len(goldens)} 条 Golden")
+print(goldens[0])
+```
+
+也可以直接使用已经准备好的 Context：
+
+```python
+goldens = synthesizer.generate_goldens_from_contexts(
+    contexts=[
+        [
+            "购买后 30 天内可以申请全额退款。",
+            "符合退款政策的申请不收取额外手续费。",
+        ],
+        [
+            "标准配送通常需要 3 至 5 个工作日。",
+        ],
+    ],
+    include_expected_output=True,
+    max_goldens_per_context=2,
+)
+```
+
+生成后必须进行人工审核，不应直接把合成标签作为高风险业务的最终 Ground Truth。
+
+保存：
+
+```python
+synthesizer.save_as(
+    file_type="json",
+    directory="./tests/evals/synthetic",
+    file_name="refund_synthetic",
+)
+```
+
+### 合成数据的正确定位
+
+```text
+适合：
+- 冷启动
+- 扩充表达方式
+- 生成边界问题
+- 构造长尾场景
+- 创建初始 Smoke Set
+
+不适合直接替代：
+- 专家 Ground Truth
+- 合规判定
+- 医疗、金融、法律高风险标签
+- 最终发布门禁的全部依据
+```
+
+推荐流程：
+
+```mermaid
+flowchart LR
+    A[文档 / 业务规则] --> B[合成 Golden]
+    B --> C[自动去重与过滤]
+    C --> D[人工审核]
+    D --> E[标注风险等级]
+    E --> F[加入正式评估集]
+    F --> G[线上失败持续回流]
+```
+
+---
+
+## H.18 接入自定义 Judge 模型
+
+DeepEval 支持继承 `DeepEvalBaseLLM` 接入任意模型，包括：
+
+- 云模型；
+- 企业内部模型网关；
+- Azure / Bedrock / Vertex AI；
+- LangChain Chat Model；
+- 本地 Ollama；
+- Hugging Face 模型；
+- 其他兼容文本生成接口。
+
+### H.18.1 自定义模型接口
+
+```python
+from typing import Any
+
+from deepeval.models.base_model import DeepEvalBaseLLM
+
+
+class CustomJudge(DeepEvalBaseLLM):
+    def __init__(self, client: Any, model_name: str) -> None:
+        self.client = client
+        self.model_name = model_name
+
+    def load_model(self) -> Any:
+        return self.client
+
+    def generate(self, prompt: str) -> str:
+        client = self.load_model()
+        response = client.generate(
+            model=self.model_name,
+            prompt=prompt,
+        )
+        return response.text
+
+    async def a_generate(self, prompt: str) -> str:
+        client = self.load_model()
+        response = await client.agenerate(
+            model=self.model_name,
+            prompt=prompt,
+        )
+        return response.text
+
+    def get_model_name(self) -> str:
+        return f"CustomJudge:{self.model_name}"
+```
+
+使用：
+
+```python
+judge = CustomJudge(
+    client=your_model_client,
+    model_name="judge-model-v1",
+)
+
+metric = GEval(
+    name="正确性",
+    criteria="判断实际输出是否正确。",
+    evaluation_params=[
+        SingleTurnParams.ACTUAL_OUTPUT,
+        SingleTurnParams.EXPECTED_OUTPUT,
+    ],
+    model=judge,
+)
+```
+
+### H.18.2 接口要求
+
+自定义 Judge 通常需要实现：
+
+```text
+load_model()
+generate(prompt: str) -> str
+a_generate(prompt: str) -> str
+get_model_name() -> str
+```
+
+其中：
+
+- `generate` 用于同步评估；
+- `a_generate` 用于默认异步并发评估；
+- 若 `a_generate` 内部仍调用同步接口，会阻塞事件循环并降低吞吐；
+- Judge 输出必须能够遵循 DeepEval 所需的结构化格式。
+
+### H.18.3 Judge 选择原则
+
+Judge 模型应具备：
+
+- 稳定的指令遵循；
+- 稳定的 JSON 输出能力；
+- 足够长的上下文窗口；
+- 对目标语言和业务领域有可靠理解；
+- 温度较低；
+- 可固定模型版本；
+- 成本和延迟可接受。
+
+避免让被评估模型和 Judge 完全相同且无交叉验证，否则可能出现共同偏差。
+
+---
+
+## H.19 开发自定义 Metric
+
+当内置指标与 G-Eval 都不适合时，可以继承 `BaseMetric`。
+
+以下示例是一个完全确定性的“关键术语覆盖率”指标。
+
+```python
+from __future__ import annotations
+
+from typing import Iterable
+
+from deepeval.metrics import BaseMetric
+from deepeval.test_case import LLMTestCase
+
+
+class RequiredTermsMetric(BaseMetric):
+    def __init__(
+        self,
+        required_terms: Iterable[str],
+        threshold: float = 1.0,
+    ) -> None:
+        self.required_terms = tuple(required_terms)
+        self.threshold = threshold
+        self.score = 0.0
+        self.reason = None
+        self.success = False
+        self.error = None
+
+    def measure(self, test_case: LLMTestCase) -> float:
+        try:
+            output = (test_case.actual_output or "").lower()
+            matched = [
+                term for term in self.required_terms
+                if term.lower() in output
+            ]
+
+            total = len(self.required_terms)
+            self.score = len(matched) / total if total else 1.0
+            self.reason = (
+                f"命中 {len(matched)}/{total} 个必需术语：{matched}"
+            )
+            self.success = self.score >= self.threshold
+            return self.score
+        except Exception as exc:
+            self.error = str(exc)
+            self.success = False
+            raise
+
+    async def a_measure(self, test_case: LLMTestCase) -> float:
+        return self.measure(test_case)
+
+    def is_successful(self) -> bool:
+        if self.error is not None:
+            self.success = False
+        else:
+            self.success = self.score >= self.threshold
+        return self.success
+
+    @property
+    def __name__(self) -> str:
+        return "Required Terms"
+```
+
+使用：
+
+```python
+case = LLMTestCase(
+    input="说明退款政策。",
+    actual_output="购买后 30 天内可申请全额退款，且不收手续费。",
+)
+
+metric = RequiredTermsMetric(
+    required_terms=["30 天", "全额退款", "不收手续费"],
+    threshold=1.0,
+)
+
+assert_test(test_case=case, metrics=[metric])
+```
+
+### H.19.1 自定义 Metric 的实现要求
+
+通常需要：
+
+1. 继承 `BaseMetric`；
+2. 初始化 `threshold`；
+3. 在 `measure()` 中设置 `self.score`；
+4. 设置 `self.success`；
+5. 可选设置 `self.reason`；
+6. 实现 `a_measure()`；
+7. 实现 `is_successful()`；
+8. 给 Metric 提供稳定名称。
+
+多轮指标应继承 `BaseConversationalMetric`，并接收 `ConversationalTestCase`。
+
+### H.19.2 何时使用确定性 Metric
+
+适合：
+
+- JSON Schema；
+- 正则格式；
+- 必填字段；
+- 枚举值；
+- 工具调用次数；
+- Token / 成本 / 延迟预算；
+- 关键词黑白名单；
+- 权限与路径检查；
+- 精确业务状态机。
+
+最佳组合：
+
+```text
+确定性 Metric
+负责硬约束、格式、预算和安全边界
+
+LLM Judge Metric
+负责语义、正确性、相关性和任务完成度
+```
+
+---
+
+## H.20 并发、缓存、错误处理与稳定性
+
+### H.20.1 `AsyncConfig`
+
+默认情况下，`evaluate()` 会并发运行指标。可限制并发：
+
+```python
+from deepeval import evaluate
+from deepeval.evaluate import AsyncConfig
+
+
+evaluate(
+    test_cases=cases,
+    metrics=metrics,
+    async_config=AsyncConfig(
+        run_async=True,
+        max_concurrent=5,
+        throttle_value=0.5,
+    ),
+)
+```
+
+顺序执行：
+
+```python
+AsyncConfig(run_async=False)
+```
+
+适合：
+
+- Judge API 限流严格；
+- Notebook 事件循环冲突；
+- 调试单个失败样本；
+- 自定义模型没有真正异步接口。
+
+### H.20.2 CLI 并行
+
+```bash
+deepeval test run tests/evals -n 4
+```
+
+这里使用多进程并行测试。不要同时把：
+
+```text
+Pytest 进程数
+× 每进程 Metric 并发
+× Judge SDK 自身并发
+```
+
+全部设置过高，否则容易触发 Rate Limit、超时和成本突增。
+
+### H.20.3 缓存
+
+```bash
+deepeval test run tests/evals -c
+```
+
+缓存键会考虑 Test Case 内容和 Metric 配置。只有二者未变化时才复用结果。
+
+适合：
+
+- 大型回归集；
+- 失败发生在运行后段；
+- 重复调试少量样本；
+- 降低 Judge 成本。
+
+不应在以下场景盲目使用缓存：
+
+- 验证 Judge 稳定性；
+- 更换未被配置标识捕获的模型后端；
+- 评估线上动态输出；
+- 测试随机性与重复运行分布。
+
+### H.20.4 忽略单个错误
+
+```bash
+deepeval test run tests/evals -i
+```
+
+适合：
+
+- 某些 Judge 返回非法 JSON；
+- 希望完成整批测试后统一查看错误；
+- 大规模探索性评估。
+
+正式质量门禁不应长期使用 `-i` 掩盖系统性错误。
+
+### H.20.5 缺少参数时跳过
+
+```bash
+deepeval test run tests/evals -s
+```
+
+例如部分样本没有 `retrieval_context`，而评估集中同时存在 RAG 与非 RAG 用例。
+
+更好的长期方案是：
+
+- 分离数据集；
+- 按 Pytest Marker 分类；
+- 明确每类 Metric 的字段契约；
+- 在构建 Test Case 时进行 Schema 校验。
+
+### H.20.6 重复运行
+
+```bash
+deepeval test run tests/evals -r 3
+```
+
+用于观察：
+
+- Judge 波动；
+- 生成模型随机性；
+- 阈值附近的 Flaky；
+- 某次模型升级后的稳定性。
+
+建议记录：
+
+```text
+均值
+中位数
+最小值
+标准差
+通过率
+```
+
+而不是只看单次分数。
+
+### H.20.7 重试环境变量
+
+DeepEval 4.x 支持通过环境变量调整重试和超时。常见配置：
+
+```dotenv
+DEEPEVAL_RETRY_MAX_ATTEMPTS=3
+DEEPEVAL_RETRY_INITIAL_SECONDS=1
+DEEPEVAL_RETRY_EXP_BASE=2
+DEEPEVAL_RETRY_JITTER=1
+DEEPEVAL_RETRY_CAP_SECONDS=8
+```
+
+超时相关配置应谨慎修改。禁用所有超时可能导致 CI 永久挂起，优先设置明确的单次调用和单任务预算。
+
+---
+
+## H.21 CLI 命令与常用参数
+
+### H.21.1 运行测试
+
+```bash
+# 单文件
+deepeval test run tests/evals/test_rag.py
+
+# 整个目录
+deepeval test run tests/evals
+
+# 单个测试
+deepeval test run tests/evals/test_rag.py::test_refund_rag
+```
+
+### H.21.2 常用参数
+
+| 参数 | 作用 |
+|---|---|
+| `-v` / `--verbose` | 详细输出和 Metric 中间过程 |
+| `-x` / `--exit-on-first-failure` | 首次失败即停止 |
+| `-n N` / `--num-processes N` | 多进程并行 |
+| `-r N` / `--repeat N` | 每个测试重复 N 次 |
+| `-c` / `--use-cache` | 使用缓存 |
+| `-i` / `--ignore-errors` | 忽略评估执行错误并继续 |
+| `-s` / `--skip-on-missing-params` | 缺少必要字段时跳过 |
+| `-d failing` | 只显示失败结果 |
+| `-id NAME` | 设置测试运行标识 |
+| `-m EXPR` | 使用 Pytest Marker 过滤 |
+| `-o` / `--official` | 在 Confident AI 中标记官方基准运行 |
+
+组合示例：
+
+```bash
+deepeval test run tests/evals \
+  -n 2 \
+  -c \
+  -d failing \
+  -id "rag-pr-184"
+```
+
+传递额外 Pytest 参数：
+
+```bash
+deepeval test run tests/evals \
+  --mark "not slow" \
+  --exit-on-first-failure \
+  -- --tb=short
+```
+
+### H.21.3 Trace 查看
+
+```bash
+deepeval inspect
+```
+
+### H.21.4 配置诊断
+
+```bash
+deepeval diagnose
+```
+
+### H.21.5 记录超参数
+
+在 `evaluate()` 中：
+
+```python
+evaluate(
+    test_cases=cases,
+    metrics=metrics,
+    hyperparameters={
+        "model": "generator-v4",
+        "prompt_version": "2026-08-28",
+        "temperature": 0.1,
+        "top_k": 8,
+    },
+)
+```
+
+在 Pytest 中：
+
+```python
+import deepeval
+
+
+@deepeval.log_hyperparameters
+def hyperparameters() -> dict[str, str | int | float]:
+    return {
+        "model": "generator-v4",
+        "prompt_version": "2026-08-28",
+        "temperature": 0.1,
+        "top_k": 8,
+    }
+```
+
+---
+
+## H.22 CI/CD 质量门禁
+
+### H.22.1 GitHub Actions 示例
+
+`.github/workflows/deepeval.yml`：
+
+```yaml
+name: DeepEval Quality Gate
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  deepeval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run DeepEval smoke suite
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          deepeval test run tests/evals/smoke \
+            --display failing \
+            --identifier "pr-${{ github.event.pull_request.number || github.run_id }}"
+```
+
+`requirements.txt`：
+
+```text
+deepeval==4.2.0
+pytest>=8,<9
+```
+
+### H.22.2 分层门禁
+
+推荐：
+
+```text
+Pull Request
+- 10～30 条 Smoke
+- 关键确定性规则
+- 低并发
+- 5～10 分钟内完成
+
+Main Branch
+- 100～500 条 Regression
+- 多模型 / 多 Prompt 对比
+- 完整 Trace 指标
+
+Nightly
+- 大型数据集
+- 重复运行
+- Judge 一致性检查
+- 成本和延迟趋势
+
+Release
+- 高风险业务全量集
+- 安全与对抗集
+- 人工抽检
+- 与官方基准版本对比
+```
+
+### H.22.3 不要用降低阈值“修复”失败
+
+错误做法：
+
+```text
+Faithfulness 0.62，阈值 0.8
+-> 把阈值改成 0.6
+```
+
+正确流程：
+
+```text
+查看 Reason
+-> 确认是应用问题还是评估问题
+-> 定位 Retriever / Prompt / Tool / Agent Span
+-> 修复系统
+-> 使用同一数据集和同一阈值重新运行
+```
+
+只有在人工校准证明阈值不合理时，才应调整阈值，并记录变更原因。
+
+---
+
+## H.23 阈值校准与评估实验设计
+
+### H.23.1 阈值不能凭感觉设置
+
+推荐流程：
+
+```mermaid
+flowchart LR
+    A[收集代表性样本] --> B[人工双人或多人标注]
+    B --> C[运行候选 Judge 与 Metric]
+    C --> D[比较机器分数与人工标签]
+    D --> E[分析误报 / 漏报]
+    E --> F[选择阈值]
+    F --> G[在独立验证集复验]
+    G --> H[进入 CI/CD]
+```
+
+### H.23.2 校准集组成
+
+需要同时包含：
+
+- 明显通过样本；
+- 明显失败样本；
+- 阈值边界样本；
+- 高风险严重错误；
+- 只存在轻微措辞问题的样本；
+- 不同语言、长度和表达风格。
+
+### H.23.3 评估 Judge 本身
+
+可计算：
+
+```text
+与人工标签的一致率
+Precision
+Recall
+F1
+严重错误漏报率
+重复运行方差
+不同 Judge 之间的一致性
+```
+
+高风险场景优先优化“严重错误漏报率”，而不是只追求整体准确率。
+
+### H.23.4 A/B 实验
+
+比较两个 Prompt 或模型时：
+
+1. 使用完全相同的数据集；
+2. 使用相同 Judge、Metric 和阈值；
+3. 固定或记录生成参数；
+4. 避免一次运行就下结论；
+5. 关注每个样本的配对差值，而不只看整体均值；
+6. 单独统计严重回归；
+7. 保存运行标识和超参数。
+
+例如：
+
+```text
+Prompt A 平均分：0.84
+Prompt B 平均分：0.86
+```
+
+不能立即得出 B 更好，还应检查：
+
+```text
+B 是否让 3 条高风险样本从通过变为失败？
+提升是否只来自容易样本？
+成本是否增加 80%？
+延迟是否超出 SLA？
+波动是否显著增大？
+```
+
+---
+
+## H.24 成本、性能与数据安全
+
+### H.24.1 评估成本模型
+
+粗略成本由以下因素共同决定：
+
+```text
+测试用例数量
+× Metric 数量
+× 每个 Metric 的 Judge 调用次数
+× 重复运行次数
+× 输入 / 输出 Token
+```
+
+例如：
+
+```text
+500 条用例
+× 4 个指标
+× 每指标约 2 次 Judge 调用
+× 3 次重复
+= 约 12,000 次模型调用
+```
+
+### H.24.2 成本优化
+
+按优先级：
+
+1. PR 只运行 Smoke Set；
+2. 先执行确定性规则，失败则不再调用昂贵 Judge；
+3. 使用缓存；
+4. 只对关键 Span 执行组件指标；
+5. 将大型回归集放到 Nightly；
+6. 限制 Context 长度，但不要破坏评估有效性；
+7. 选择性关闭 `include_reason`，仅用于非常稳定且无需诊断的指标；
+8. 对低风险样本使用较低成本 Judge；
+9. 对失败样本再使用高能力 Judge 复核。
+
+### H.24.3 数据安全
+
+虽然 DeepEval 可以本地运行，但 LLM-as-a-Judge 可能把以下数据发送到模型提供方：
+
+- 用户输入；
+- 实际输出；
+- 期望输出；
+- 检索上下文；
+- 工具参数和工具结果；
+- 对话历史；
+- Trace 中的中间信息。
+
+上线前应：
+
+- 脱敏 PII；
+- 删除密钥、Token、Cookie；
+- 不发送受限源代码或商业机密；
+- 确认模型提供方的数据保留政策；
+- 对敏感业务使用企业网关或本地 Judge；
+- 为评估日志设置保留期限；
+- 对测试报告实施访问控制。
+
+### H.24.4 复现性
+
+至少记录：
+
+```text
+DeepEval 版本
+Judge 模型与版本
+Generator 模型与版本
+Prompt 版本 / Hash
+Metric 配置
+阈值
+数据集版本 / Hash
+温度与采样参数
+Retriever 配置
+Tool Schema 版本
+代码 Commit SHA
+运行时间与环境
+```
+
+---
+
+## H.25 推荐项目结构
+
+```text
+project/
+├── src/
+│   ├── app.py
+│   ├── rag.py
+│   └── agent.py
+├── tests/
+│   └── evals/
+│       ├── conftest.py
+│       ├── smoke/
+│       │   ├── test_answer_quality.py
+│       │   ├── test_rag.py
+│       │   └── test_agent.py
+│       ├── regression/
+│       │   ├── test_historical_failures.py
+│       │   └── test_edge_cases.py
+│       ├── safety/
+│       │   └── test_adversarial.py
+│       ├── metrics/
+│       │   ├── business_correctness.py
+│       │   └── required_terms.py
+│       └── datasets/
+│           ├── smoke.jsonl
+│           ├── regression.jsonl
+│           └── adversarial.jsonl
+├── .github/
+│   └── workflows/
+│       └── deepeval.yml
+├── .env.example
+├── .gitignore
+├── requirements.txt
+└── pyproject.toml
+```
+
+### `conftest.py` 示例
+
+```python
+import os
+
+import pytest
+
+
+@pytest.fixture(scope="session", autouse=True)
+def validate_eval_environment() -> None:
+    if not os.getenv("OPENAI_API_KEY"):
+        pytest.fail("缺少 OPENAI_API_KEY，无法运行 LLM Judge 指标。")
+```
+
+### Pytest Marker
+
+`pyproject.toml`：
+
+```toml
+[tool.pytest.ini_options]
+markers = [
+  "smoke: PR 必跑的快速评估",
+  "slow: 大型或高成本评估",
+  "rag: RAG 评估",
+  "agent: Agent 评估",
+  "safety: 安全与对抗评估",
+]
+```
+
+测试中：
+
+```python
+import pytest
+
+
+@pytest.mark.smoke
+@pytest.mark.rag
+def test_refund_rag() -> None:
+    ...
+```
+
+执行：
+
+```bash
+deepeval test run tests/evals -m "smoke and not slow"
+```
+
+---
+
+## H.26 常见问题与排查方法
+
+### H.26.1 评估一直停在 0% 或运行很慢
+
+优先检查：
+
+1. Judge API 额度是否不足；
+2. 是否触发 Rate Limit；
+3. 并发是否过高；
+4. 自定义 `a_generate()` 是否实际阻塞；
+5. Judge 是否无法输出合法 JSON；
+6. 输入 Context 是否过长；
+7. 网络代理是否影响请求。
+
+处理：
+
+```python
+from deepeval.evaluate import AsyncConfig
+
+config = AsyncConfig(
+    max_concurrent=3,
+    throttle_value=1,
+)
+```
+
+并运行：
+
+```bash
+deepeval diagnose
+```
+
+### H.26.2 分数波动很大
+
+检查：
+
+- Judge 温度；
+- Judge 模型是否使用滚动别名；
+- Criteria 是否过于主观；
+- 一条 Metric 是否混合太多维度；
+- 样本是否处于阈值边界；
+- 是否需要 DAG 或确定性规则；
+- 是否需要 `-r 3` 重复评估。
+
+### H.26.3 Faithfulness 高，但回答明显错误
+
+Faithfulness 只判断是否与 `retrieval_context` 一致。如果检索内容本身错误或过期，回答仍可能忠实。
+
+需要额外使用：
+
+- Contextual Recall / Precision；
+- 带人工参考的 Correctness GEval；
+- 文档时效性和来源验证；
+- 静态 `context` Ground Truth。
+
+### H.26.4 Answer Relevancy 高，但回答编造事实
+
+Answer Relevancy 只关注是否切题，不保证事实正确。组合使用：
+
+```text
+Answer Relevancy + Faithfulness
+```
+
+有人工标准答案时再加：
+
+```text
+Correctness GEval
+```
+
+### H.26.5 Contextual Relevancy 低，但答案仍正确
+
+可能是：
+
+- 召回了正确内容，同时也召回大量噪声；
+- Generator 忽略噪声后仍正确回答；
+- 模型依赖自身知识而不是 Context。
+
+这意味着当前样本可能暂时成功，但系统成本和稳定性较差，应优化 Retriever。
+
+### H.26.6 `expected_output` 应该写多详细
+
+应包含：
+
+- 必须正确的事实；
+- 必须覆盖的关键条件；
+- 不能做出的额外承诺；
+- 必须保留的不确定性。
+
+不必规定：
+
+- 精确措辞；
+- 固定句式；
+- 无关的写作风格。
+
+除非当前 Metric 明确评估格式或语气。
+
+### H.26.7 可以只使用 G-Eval 吗
+
+可以启动，但不建议长期只使用 G-Eval。
+
+推荐：
+
+```text
+系统专用指标
+RAG -> Faithfulness / Contextual Metrics
+Agent -> Task Completion / Tool Metrics
+对话 -> Multi-turn Metrics
+
++
+业务专用 GEval
+```
+
+系统专用指标有更清晰的评分目标，故障定位通常更直接。
+
+### H.26.8 可以用 DeepEval 代替传统测试吗
+
+不能。DeepEval 应与以下测试共存：
+
+- 单元测试；
+- 集成测试；
+- Schema 测试；
+- 权限测试；
+- 安全测试；
+- 负载测试；
+- 超时与取消测试；
+- 数据迁移测试。
+
+完整质量体系：
+
+```text
+传统确定性测试
++
+LLM 语义评估
++
+人工评审
++
+生产监控
+```
+
+### H.26.9 是否必须使用 Confident AI
+
+不是。DeepEval 可在本地运行。只有以下能力通常需要云平台：
+
+- 团队共享报告；
+- 长期回归趋势；
+- 集中管理数据集；
+- 线上 Trace 监控；
+- 官方基准运行和团队协作。
+
+### H.26.10 升级 DeepEval 后分数方向异常
+
+DeepEval 4.2.0 已统一为“越高越好”。从旧版本升级时应：
+
+1. 查看 Release Notes；
+2. 固定旧版运行一次基准；
+3. 升级后重新运行校准集；
+4. 检查所有 Metric 阈值；
+5. 检查自定义 Metric 的 `is_successful()`；
+6. 不直接把新旧版本分数作为同一时间序列比较。
+
+---
+
+## H.27 落地检查清单
+
+### 环境
+
+- [ ] 使用独立虚拟环境；
+- [ ] 固定 DeepEval 版本；
+- [ ] Judge 密钥通过 Secret 管理；
+- [ ] `.env`、`.deepeval` 未提交到 Git；
+- [ ] CI 配置明确超时。
+
+### 数据集
+
+- [ ] 有 10～30 条 Smoke Golden；
+- [ ] 历史线上失败已进入 Regression Set；
+- [ ] 有边界和无答案样本；
+- [ ] Golden 不依赖精确措辞；
+- [ ] 高风险样本经过人工审核；
+- [ ] 数据集具备版本或 Hash。
+
+### Metric
+
+- [ ] 每个 Metric 只评估清晰维度；
+- [ ] RAG 分开评估 Retriever 与 Generator；
+- [ ] Agent 同时覆盖任务完成与工具调用；
+- [ ] 硬约束使用确定性规则；
+- [ ] 阈值经过人工校准；
+- [ ] Judge 模型和 Prompt 可追踪。
+
+### 执行
+
+- [ ] PR 运行 Smoke；
+- [ ] Nightly 运行完整 Regression；
+- [ ] 使用缓存降低重复成本；
+- [ ] 并发不超过 Provider 配额；
+- [ ] 对边界用例执行重复测试；
+- [ ] 不通过降低阈值掩盖回归。
+
+### Agent / Tracing
+
+- [ ] 顶层 Agent 使用 `@observe()`；
+- [ ] 使用 `update_current_trace()` 设置 Trace 输入输出；
+- [ ] 关键组件使用 `update_current_span()`；
+- [ ] Retriever、Tool、Generator 和子 Agent 可单独定位；
+- [ ] Trace 中不记录密钥与敏感数据。
+
+### CI/CD
+
+- [ ] `deepeval test run` 返回码进入质量门禁；
+- [ ] 失败结果只显示必要信息；
+- [ ] 运行标识包含 PR / Commit 信息；
+- [ ] Judge 额度不足时能明确失败；
+- [ ] 高成本全量测试不阻塞普通开发循环。
+
+---
+
+## H.28 参考资料
+
+以下内容以 DeepEval 官方文档和官方 GitHub 仓库为主要依据：
+
+1. [DeepEval Introduction](https://deepeval.com/docs/introduction)
+2. [DeepEval 5-min Quickstart](https://deepeval.com/docs/getting-started)
+3. [GitHub Releases](https://github.com/confident-ai/deepeval/releases)
+4. [Single-Turn Test Case](https://deepeval.com/docs/evaluation-test-cases)
+5. [Datasets](https://deepeval.com/docs/evaluation-datasets)
+6. [Metrics Introduction](https://deepeval.com/docs/metrics-introduction)
+7. [G-Eval](https://deepeval.com/docs/metrics-llm-evals)
+8. [DAG Metric](https://deepeval.com/docs/metrics-dag)
+9. [RAG Quickstart](https://deepeval.com/docs/getting-started-rag)
+10. [AI Agent Evaluation Quickstart](https://deepeval.com/docs/getting-started-agents)
+11. [Trajectory-Based Evaluation](https://deepeval.com/docs/evaluation-trajectory-based-llm-evals)
+12. [Component-Level Evaluation](https://deepeval.com/docs/evaluation-component-level-llm-evals)
+13. [Multi-Turn End-to-End Evaluation](https://deepeval.com/docs/evaluation-end-to-end-multi-turn)
+14. [Unit Testing in CI/CD](https://deepeval.com/docs/evaluation-unit-testing-in-ci-cd)
+15. [Flags and Configs](https://deepeval.com/docs/evaluation-flags-and-configs)
+16. [CLI Reference](https://deepeval.com/docs/command-line-interface)
+17. [Environment Variables](https://deepeval.com/docs/environment-variables)
+18. [Custom Metrics](https://deepeval.com/docs/metrics-custom)
+19. [Golden Synthesizer](https://deepeval.com/docs/golden-synthesizer)
+20. [Generate Goldens From Documents](https://deepeval.com/docs/synthesizer-generate-from-docs)
+21. [Conversation Simulator](https://deepeval.com/docs/conversation-simulator)
+22. [Conversation Simulator Model Callback](https://deepeval.com/docs/conversation-simulator-model-callback)
+23. [Role Adherence Metric](https://deepeval.com/docs/metrics-role-adherence)
+24. [Tool Correctness Metric](https://deepeval.com/docs/metrics-tool-correctness)
+
+---
+
+## 结论
+
+DeepEval 的正确用法不是“给输出打一个总分”，而是建立一套分层质量体系：
+
+```text
+Golden / Dataset
+    ↓
+运行真实 LLM、RAG 或 Agent
+    ↓
+端到端 Metric 判断最终结果
+    ↓
+Trajectory Metric 判断完整执行过程
+    ↓
+Component Metric 定位 Retriever、Tool、LLM 或子 Agent
+    ↓
+阈值与确定性规则形成 CI/CD Quality Gate
+    ↓
+线上失败持续回流到 Regression Dataset
+```
+
+最稳妥的落地顺序是：
+
+```text
+1. 先建立 10～30 条高质量 Smoke Golden
+2. 使用 2～3 个系统专用指标
+3. 增加 1 个业务 GEval
+4. 接入 deepeval test run
+5. 再为 RAG / Agent 增加 Tracing 和组件级指标
+6. 最后建设阈值校准、回归分层和线上失败回流
+```
+
+这样可以把主观的“模型感觉变好了”，转化为可复现、可解释、可回归、可阻断发布的工程质量信号。
+
+---
+
+> **使用提示**：与其他附录的分工——A 讲模型机制、B 讲方法论、C 记来源、D 列产品、E 辨异同、F 索引图版、G 详解 OTel、**H 上手 DeepEval**。第 15 章是"评什么、为什么评"，本附录是"用 DeepEval 怎么评"；第 11 章 2.8 的 RAG 指标组合诊断在 H.12/H.14 有自动化取数方案。API 快照为 4.2.0，动手前对照 [C-31] 核验当前版本。

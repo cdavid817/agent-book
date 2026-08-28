@@ -332,15 +332,12 @@
 
 ## 附录 H：DeepEval 实战指南
 
-> 定位：DeepEval 上手工具书——第 15 章讲评测方法论，本附录讲"用 DeepEval 怎么评"（API 快照 4.2.0）。
+> 定位：DeepEval 完整实战教程（全文收录）——第 15 章讲评测方法论，本附录讲"用 DeepEval 怎么评"（API 快照 4.2.0）。
 
-- H.1 工作模型：Golden → LLMTestCase → Metric → 质量门禁，三个评测粒度（端到端/轨迹/组件级）
-- H.2 数据模型速查：LLMTestCase 字段面、context 与 retrieval_context 之辨、Golden 与数据集
-- H.3 三种执行方式：assert_test（CI 门禁）、evaluate()（实验对比）、evals_iterator（数据集驱动）
-- H.4 指标：通用配置（threshold/strict_mode/include_reason）、G-Eval 两种写法、DAG Metric、选择决策
-- H.5 RAG 评测实战：五指标与必要字段、检索/生成分离归因、@observe 组件级取数
-- H.6 Agent 与多轮：轨迹与工具正确性、ConversationalTestCase、ConversationSimulator
-- H.7 自定义：DeepEvalBaseLLM 自定义 Judge、BaseMetric 确定性规则
-- H.8 数据集分层（smoke→human_gold 六层）与 Synthesizer 四入口
-- H.9 工程化：CLI 速查、CI/CD 分层门禁、阈值校准流程、成本模型与优化、数据安全、复现性
-- H.10 排查速查（指标盲区组合诊断）与落地顺序
+- H.1–H.5 入门：是什么、为何需要专门评估框架、整体工作模型（Golden→LLMTestCase→Metric、三粒度）、安装与密钥、五分钟第一个评估
+- H.6–H.9 基础件：核心数据模型（LLMTestCase/ToolCall/Golden/Dataset、context 与 retrieval_context 之辨）、三种执行方式、Metric 通用配置、指标选择决策
+- H.10–H.11 定制指标：G-Eval（criteria/evaluation_steps）、DAG Metric
+- H.12–H.15 三条实战线：RAG（五指标+组合分数四情况+组件级）、Agent（轨迹/工具正确性/确定性规则）、Tracing（@observe/Span 指标）、多轮对话（ConversationalTestCase/Simulator）
+- H.16–H.19 数据与扩展：数据集与 Golden 管理（六层分层）、Synthesizer 合成数据、自定义 Judge（DeepEvalBaseLLM）、自定义 Metric（BaseMetric）
+- H.20–H.25 工程化：并发/缓存/错误处理、CLI 参数、CI/CD 质量门禁（GitHub Actions+分层门禁）、阈值校准与 A/B 实验、成本/性能/数据安全、推荐项目结构
+- H.26–H.28 收尾：常见问题排查、落地检查清单、参考资料
