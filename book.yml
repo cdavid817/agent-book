@@ -264,3 +264,8 @@ appendices:
     title: DeepEval 实战指南
     path: 附录/附录H-DeepEval实战指南.md
     status: draft
+  - id: appendix-i
+    letter: I
+    title: 评测与观测平台详解与选型
+    path: 附录/附录I-评测与观测平台详解与选型.md
+    status: draft

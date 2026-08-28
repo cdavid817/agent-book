@@ -297,6 +297,15 @@ sources:
     expires_at: "2026-11-28"
     status: verified
     url: "https://deepeval.com/docs/introduction"
+  - id: C-32
+    title: "DeepEval / Ragas / Arize Phoenix / Langfuse / MLflow 官方文档与仓库"
+    publisher: "Confident AI / Exploding Gradients / Arize AI / Langfuse / Databricks(LF AI)"
+    source_type: vendor-doc
+    claim_scope: [appendix-i, ch15]
+    verified_at: "2026-08-28"
+    expires_at: "2026-11-28"
+    status: verified
+    url: "https://docs.ragas.io/"
 
 # 协议版本一致性锚点：check_sources 校验 C-03.version 与第 8 章 PROTOCOL_VERSION 常量相等。
 version_anchors:

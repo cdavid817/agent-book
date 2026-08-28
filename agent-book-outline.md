@@ -325,10 +325,11 @@
 - G.2 数据模型：Resource/Scope/Record 三层、四信号职责边界、Span 字段面与 Attribute/Event/Link 选用、Metrics 六仪表与时间性、Exemplar 排障动线
 - G.3 API/SDK 分离与信号流水线：Provider/Sampler/Processor/Exporter、OTLP
 - G.4 上下文传播：traceparent 四段结构、tracestate、baggage、Propagator 与 Agent 场景的载体清单
-- G.5 Collector：receiver→processor→exporter 流水线、常用 processor 速查、agent/gateway 两档部署、最小配置骨架
-- G.6 语义约定与稳定性：通用域 stable、GenAI 域 Development、Schema URL
-- G.7 落地顺序七步与常见误区速查（遥测非事务系统、TraceId 非业务主键、适配层隔离语义漂移）
-- G.8 本书的 OTel 用件对照表（读完回正文的导航）
+- G.5 Collector：receiver→processor→exporter 流水线（图 G-5）、五类组件、部署四档、Head/Tail 采样对比、含持久化队列的配置骨架、端到端信号流（图 G-6）
+- G.6 GenAI 与多 Agent 系统的落地方式：完整执行链（图 G-7）、Agent 平台 Span 设计表、核心指标十域、内容采集三级、Telemetry Adapter、桌面应用六条纪律
+- G.7 语义约定与稳定性：通用域 stable、GenAI 域 Development、Schema URL、OpenInference 并行生态
+- G.8 落地顺序七步与常见误区速查（遥测非事务系统、TraceId 非业务主键、适配层隔离语义漂移）
+- G.9 本书的 OTel 用件对照表（读完回正文的导航）
 
 ## 附录 H：DeepEval 实战指南
 
@@ -341,3 +342,13 @@
 - H.16–H.19 数据与扩展：数据集与 Golden 管理（六层分层）、Synthesizer 合成数据、自定义 Judge（DeepEvalBaseLLM）、自定义 Metric（BaseMetric）
 - H.20–H.25 工程化：并发/缓存/错误处理、CLI 参数、CI/CD 质量门禁（GitHub Actions+分层门禁）、阈值校准与 A/B 实验、成本/性能/数据安全、推荐项目结构
 - H.26–H.28 收尾：常见问题排查、落地检查清单、参考资料
+
+## 附录 I：评测与观测平台详解与选型
+
+> 定位：DeepEval/Ragas/Arize Phoenix/Langfuse/MLflow 完整调研报告（全文收录，信息基准 2026-08-27）——第 15 章是选型地图，本附录是逐项地形志。
+
+- I.1–I.2 结论先行与质量闭环定位：指标/测试执行层 vs 数据/可观测/工程平台层
+- I.3–I.7 逐项详解：DeepEval（测试框架）、Ragas（RAG 指标与合成数据）、Arize Phoenix（可观测与实验工作台）、Langfuse（工程运营平台）、MLflow（统一 ML/LLM 平台）——各自的定位、数据模型、能力、优劣与适用场景
+- I.8–I.10 横向对比（能力/许可证/核心差异）、典型场景选型、推荐组合方案（轻量/生产级/企业统一平台）
+- I.11–I.12 通用落地架构建议（推荐架构、DDD/Ports & Adapters、Span 类型、四工具职责）与统一评测模型设计（Case/Run/Result）
+- I.13–I.16 分阶段实施路线、风险与治理原则、最终建议、官方资料
