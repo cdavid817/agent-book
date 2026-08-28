@@ -329,3 +329,18 @@
 - G.6 语义约定与稳定性：通用域 stable、GenAI 域 Development、Schema URL
 - G.7 落地顺序七步与常见误区速查（遥测非事务系统、TraceId 非业务主键、适配层隔离语义漂移）
 - G.8 本书的 OTel 用件对照表（读完回正文的导航）
+
+## 附录 H：DeepEval 实战指南
+
+> 定位：DeepEval 上手工具书——第 15 章讲评测方法论，本附录讲"用 DeepEval 怎么评"（API 快照 4.2.0）。
+
+- H.1 工作模型：Golden → LLMTestCase → Metric → 质量门禁，三个评测粒度（端到端/轨迹/组件级）
+- H.2 数据模型速查：LLMTestCase 字段面、context 与 retrieval_context 之辨、Golden 与数据集
+- H.3 三种执行方式：assert_test（CI 门禁）、evaluate()（实验对比）、evals_iterator（数据集驱动）
+- H.4 指标：通用配置（threshold/strict_mode/include_reason）、G-Eval 两种写法、DAG Metric、选择决策
+- H.5 RAG 评测实战：五指标与必要字段、检索/生成分离归因、@observe 组件级取数
+- H.6 Agent 与多轮：轨迹与工具正确性、ConversationalTestCase、ConversationSimulator
+- H.7 自定义：DeepEvalBaseLLM 自定义 Judge、BaseMetric 确定性规则
+- H.8 数据集分层（smoke→human_gold 六层）与 Synthesizer 四入口
+- H.9 工程化：CLI 速查、CI/CD 分层门禁、阈值校准流程、成本模型与优化、数据安全、复现性
+- H.10 排查速查（指标盲区组合诊断）与落地顺序

@@ -259,3 +259,8 @@ appendices:
     title: OpenTelemetry 详解
     path: 附录/附录G-OpenTelemetry详解.md
     status: draft
+  - id: appendix-h
+    letter: H
+    title: DeepEval 实战指南
+    path: 附录/附录H-DeepEval实战指南.md
+    status: draft

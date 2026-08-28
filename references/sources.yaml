@@ -287,6 +287,16 @@ sources:
     verified_at: "2026-08-27"
     status: stable
     url: "https://arxiv.org/abs/2103.00020"
+  - id: C-31
+    title: "DeepEval Documentation & GitHub Releases"
+    publisher: "Confident AI"
+    source_type: vendor-doc
+    version: "4.2.0"
+    claim_scope: [appendix-h, ch15]
+    verified_at: "2026-08-28"
+    expires_at: "2026-11-28"
+    status: verified
+    url: "https://deepeval.com/docs/introduction"
 
 # 协议版本一致性锚点：check_sources 校验 C-03.version 与第 8 章 PROTOCOL_VERSION 常量相等。
 version_anchors:

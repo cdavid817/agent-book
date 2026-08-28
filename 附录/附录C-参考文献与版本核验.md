@@ -43,6 +43,7 @@
 | C-28 | 附录 G OpenTelemetry 详解（规范/文档/Collector） | OpenTelemetry, *Specification & Docs*：https://opentelemetry.io/docs/specs/ | 2026-08-27 |
 | C-29 | 附录 F HNSW 分层图索引原图（第 11 章 2.7 叙述） | Malkov & Yashunin, *Efficient and Robust Approximate Nearest Neighbor Search Using HNSW Graphs*, IEEE TPAMI 2018：https://arxiv.org/abs/1603.09320 | 2026-08-27 |
 | C-30 | 附录 F CLIP 对比预训练原图（附录 A.8 叙述） | Radford et al., *Learning Transferable Visual Models From Natural Language Supervision*, ICML 2021：https://arxiv.org/abs/2103.00020 | 2026-08-27 |
+| C-31 | 附录 H DeepEval 实战指南全部 API 形态（第 15 章框架表引用）；**版本特定（4.2.0），升级前先读 Release Notes** | Confident AI, *DeepEval Documentation & Releases*：https://deepeval.com/docs/introduction | 2026-08-28 |
 | C-06 | 附录 D 全部产品/框架的名称、归属与成熟度状态 | 各产品供应商官方页面与开源仓库（发行前逐项复核，名单半衰期 6–12 个月） | 2026-08-23 |
 | C-07 | 附录 D.7/D.8/D.9/D.10 社区与新兴项目（opencode / OhMyOpencode / Superpowers / codex / openclaw / DeepSeek Harness / Hermes Agent / Vibe Coding / D.10 分类速览全部条目 等） | 各项目开源仓库/官方页面；**标注"待确认"者发行前必须核实真实形态与存续，无法确证即删除**——不进发布稿 | 2026-08-23 |
 
@@ -75,6 +76,7 @@
 - 附录 D / 第 25 章：C-27（Claude Code 逆向分析，非官方待确认）
 - 附录 G：C-28（OpenTelemetry 规范与文档）
 - 附录 F 新增图版：C-29（HNSW）、C-30（CLIP）
+- 附录 H / 第 15 章：C-31（DeepEval 文档，版本特定 4.2.0）
 - 第 8 章：C-03（MCP 规范）、C-22（SLSA 供应链）
 - 附录 D：C-06（D.1–D.6）、C-07（D.7/D.8/D.9/D.10 社区与新兴项目及分类速览，含"待确认"条目）
 - 第 16、20、24 章：按发布时的供应商/标准官方页面增补时效性条目

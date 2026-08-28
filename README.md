@@ -89,6 +89,7 @@
 | [附录 E：易混概念辨析速查](附录/附录E-易混概念辨析速查.md) | 跨章近亲概念横向对比——信息进出上下文（压缩/记忆/RAG/截断）、输出把关（Verifier/反思/Reviewer/Eval/Guard）、定制三手段、有界性机制总表、检索路线；"X 和 Y 有什么区别"先查这里 |
 | [附录 F：关键知识点·经典图版索引](附录/附录F-关键知识点经典图版索引.md) | 为各关键机制索引经典论文原图（图号+出处+链接）并标注书中已有的自绘等价图；版权红线：查阅/授权/重绘，不直接复制原图 |
 | [附录 G：OpenTelemetry 详解](附录/附录G-OpenTelemetry详解.md) | OTel 机制兜底——三支柱数据模型、API/SDK 流水线、traceparent/baggage 传播、Collector 管线与配置、语义约定稳定级、全书用件对照表；第 14 章讲用法、本附录讲原理 |
+| [附录 H：DeepEval 实战指南](附录/附录H-DeepEval实战指南.md) | DeepEval 上手工具书——Golden→TestCase→Metric 工作模型、G-Eval/DAG、RAG/Agent/多轮三条实战线、自定义 Judge 与 Metric、CI/CD 分层门禁与阈值校准；第 15 章讲方法论、本附录讲落地（API 快照 4.2.0） |
 
 ---
 
