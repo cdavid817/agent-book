@@ -1,6 +1,6 @@
 # 附录 M：主流 Coding Agent 系统全景
 
-> 定位：**Coding Agent 赛道的全景调研报告**（全文收录，信息基准 2026-08-30，各产品官方入口见 [C-36]）。附录 D 是全品类产品速览与"坐标系定位法"，本附录只深潜 Coding Agent 一个赛道——商业/开源/国内/云端异步/多 Agent 工厂/审查 Agent/应用构建平台七类盘点，加上能力九维度、互操作标准（MCP/ACP/AGENTS.md）、评测体系与选型建议。第六篇（第 23–25 章）讲这一赛道的机制原理，附录 J/K/L 是其中三个系统的源码级解剖，本附录是"市场这一层"的地图。名单与格局会过期，四层分类与九维度框架不过期。
+> 定位：**Coding Agent 赛道的全景调研报告·增强版**（全文收录，信息基准 2026-08-30，各产品官方入口见 [C-36]）。附录 D 是全品类产品速览与"坐标系定位法"，本附录只深潜 Coding Agent 一个赛道——商业/开源/国内/云端异步/多 Agent 工厂/审查 Agent/应用构建平台七类盘点，能力九维度，加上增强版六个专题：与通用平台 Agent 的关系与区别、代码理解（仓库认知建立）、LSP/AST/Symbol Index/Repo Map 详解、代码检索与上下文工程、沙箱与执行隔离、权限审批与安全治理，收尾于互操作标准（MCP/ACP/AGENTS.md）、评测体系与选型建议。第六篇（第 23–25 章）讲这一赛道的机制原理（技术专题与第 23 章 2.5/2.6 两节互为印证），附录 J/K/L 是其中三个系统的源码级解剖，本附录是"市场与技术专题"这一层的地图。名单与格局会过期，四层分类与九维度框架不过期。
 
 ---
 
@@ -19,7 +19,7 @@ CodingAgent 已经从“代码补全工具”演化为能够在真实工程环�
 
 因此，今天讨论 CodingAgent，不能只比较底层模型。更准确的表达是：
 
-> **CodingAgent = 模型 + Agent Harness + 上下文引擎 + 工具系统 + 执行环境 + 验证系统 + 记忆与技能 + 安全治理 + 控制面**
+> **CodingAgent = 模型 + Agent Harness + 代码智能与上下文引擎 + 工具系统 + 执行环境 + 验证系统 + 记忆与技能 + 安全治理 + 控制面**
 
 Claude Code、Codex、Copilot、Cursor 等正在补齐本地执行闭环；Antigravity、Devin Desktop、VS Code 和 GitLab Duo 则明显向多 Agent 控制台发展。
 
@@ -453,7 +453,7 @@ Claude Code、Cursor、Antigravity、Amp、GitLab Duo 和 Qwen Code 都已支持
 - 按需加载与上下文压缩。
 - 子 Agent 探索后返回结构化摘要。
 
-代码库越大，Context Engine 对结果的影响越大。
+代码库越大，Context Engine 对结果的影响越大。代码理解、索引与检索的完整设计见第十三至第十五章。
 
 ### M.11.2 Agent Harness
 
@@ -505,6 +505,8 @@ SWE-agent 等研究系统的一个重要价值，就是把 Agent-Computer Interf
 成熟系统通常还会把网络访问、Secret、文件范围和审批策略分开管理，而不是只有一个“允许全部操作”的开关。Codex 的沙箱和审批分层、Cursor Cloud Agents 的隔离 VM，以及 Antigravity 的隔离工作树都体现了这一方向。
 
 参考：[Codex Sandboxing](https://developers.openai.com/codex/sandboxing)
+
+沙箱层级、隔离维度与执行生命周期见第十六章。
 
 ### M.11.5 Verification
 
@@ -565,6 +567,8 @@ Claude Code、Cursor、Codex、Kiro、Qwen Code 和 VS Code 都在逐步采用�
 - 数据保留与模型训练策略。
 - Agent 生成代码的责任归属和追踪。
 
+权限、审批、策略和沙箱之间的边界见第十六、十七章。
+
 ### M.11.9 可观测性与评估
 
 至少应记录：
@@ -582,9 +586,1669 @@ Claude Code、Cursor、Codex、Kiro、Qwen Code 和 VS Code 都在逐步采用�
 
 ---
 
-## M.12 CodingAgent 互操作标准
 
-### M.12.1 MCP
+## M.12 CodingAgent 与通用平台 Agent 的关系和区别
+
+“平台 Agent”在行业中经常有两种含义，必须先拆开：
+
+1. **通用平台 Agent**：面向客服、运营、数据分析、办公自动化、业务流程等场景构建的 Agent。
+2. **Agent Platform**：用于开发、托管、编排、评估和治理 Agent 的基础设施或云平台。
+3. **CodingAgent**：面向软件工程任务垂直优化的 Agent，代码仓库既是知识源，也是可被修改的工作对象。
+4. **CodingAgent Platform**：统一管理 CodingAgent、工作区、沙箱、权限、任务、验证和交付产物的平台。
+
+因此，CodingAgent 并不是与通用 Agent 完全不同的物种，而是通用 Agent 架构在软件工程领域的深度垂直化。
+
+### M.12.1 共同底座与代码专用层
+
+```mermaid
+flowchart TB
+    subgraph COMMON[通用 Agent 公共底座]
+        M[模型与推理]
+        LOOP[Agent Loop]
+        TOOL[工具调用]
+        MEM[Session / Memory]
+        ORCH[编排与状态机]
+        GUARD[Guardrails / Policy]
+        OBS[Trace / Evaluation]
+    end
+
+    subgraph CODING[软件工程专用能力]
+        REPO[代码仓库与 Git]
+        SEARCH[代码检索与索引]
+        INTEL[LSP / AST / Symbol Graph]
+        SHELL[Shell / PTY / 构建工具]
+        EDIT[Patch / Diff / AST Edit]
+        ENV[Worktree / Container / VM]
+        VERIFY[编译 / 测试 / Lint / 安全扫描]
+        DELIVERY[Commit / PR / Review / Release]
+    end
+
+    COMMON -->|垂直化扩展| CODING
+```
+
+通用 Agent 的核心是“通过工具完成业务动作”；CodingAgent 的核心则是：
+
+> **在可隔离、可验证、可回滚的软件工程环境中，对一个持续变化的代码库实施受控变更。**
+
+### M.12.2 CodingAgent 与通用平台 Agent 对比
+
+| 维度 | CodingAgent | 通用平台 Agent |
+|---|---|---|
+| 主要目标 | 修改、验证并交付软件 | 完成业务流程、问答、分析或操作 |
+| 核心状态 | 仓库 Revision、工作树、构建产物、测试状态 | 会话、业务对象、知识库、工作流状态 |
+| 主要工具 | 文件、Patch、Git、Shell、LSP、编译器、测试框架 | API、数据库、搜索、CRM、工单、办公系统 |
+| 典型输入 | Issue、Spec、代码、错误日志、PR 评论 | 用户问题、业务事件、文档、结构化数据 |
+| 典型输出 | Diff、Commit、Branch、PR、测试证据 | 文本答复、业务记录、审批结果、外部系统动作 |
+| 任务验证 | 编译、类型检查、测试、Lint、运行时验证、Review | 业务规则、字段校验、事实核验、流程终态 |
+| 环境需求 | 真实或可复现的开发环境 | 通常是 API 连接器和托管运行时 |
+| 上下文结构 | 文件、符号、调用关系、依赖、Git 历史 | 对话、知识文档、实体、业务数据库 |
+| 权限重点 | 文件写入、命令执行、网络、Secret、Git 与部署 | 数据访问、业务 API、身份委托、审批 |
+| 失败模式 | 编译失败、回归、环境污染、错误修改、依赖破坏 | 错误调用 API、事实错误、流程中断、越权操作 |
+| 时间尺度 | 秒级交互到数小时异步开发 | 毫秒级问答到长流程自动化 |
+| 人工介入点 | Plan、危险命令、Diff、PR、上线 | 高风险业务动作、审批、异常分支 |
+| 典型评测 | SWE-bench、Terminal-Bench、内部 Issue 回放 | 任务完成率、工具成功率、事实正确率、业务 KPI |
+
+### M.12.3 CodingAgent 与 Code Interpreter 的区别
+
+Code Interpreter 可以执行代码，但它通常不是完整 CodingAgent。
+
+| 能力 | Code Interpreter | CodingAgent |
+|---|---|---|
+| 主要用途 | 数据计算、文件处理、临时代码执行 | 修改真实软件项目 |
+| 工作对象 | 临时脚本、上传文件、Notebook 状态 | 多目录代码库、Git Revision、构建系统 |
+| 代码理解 | 通常基于已提供文件 | 主动检索整个仓库并分析跨文件关系 |
+| 版本控制 | 通常不是核心能力 | Branch、Commit、Diff、PR 是核心对象 |
+| 语义能力 | 不一定连接 LSP 或符号索引 | 常结合 LSP、AST、Symbol Index |
+| 验证闭环 | 运行脚本并查看结果 | 编译、测试、Lint、E2E、Review、回归 |
+| 交付物 | 图表、数据文件、计算结果 | 可审查、可合并的软件变更 |
+
+### M.12.4 CodingAgent 与 Computer-Use Agent 的区别
+
+Computer-Use Agent 主要通过鼠标、键盘和视觉界面操作软件；CodingAgent 主要通过结构化代码工具、Shell 和 Git 操作工程。
+
+两者正在融合：
+
+- CodingAgent 使用浏览器 Agent 验证 Web UI。
+- Computer-Use Agent 调用 CodingAgent 修复其发现的问题。
+- CodingAgent 通过截图、DOM、可访问性树和浏览器日志形成验收证据。
+- 通用平台 Agent 可以把 CodingAgent 当作一个专门处理代码任务的 Worker。
+
+但浏览器可以“看到页面”不等于理解代码；能够修改代码也不等于已经验证真实用户路径。
+
+### M.12.5 主流通用 Agent 开发与运行平台
+
+| 平台或框架 | 主要定位 | 与 CodingAgent 的关系 |
+|---|---|---|
+| **OpenAI Agents SDK** | 管理 Agent Turn、工具执行、Guardrails、Handoff、Session 和 Tracing，也支持可恢复状态及沙箱型 Agent | 可用于构建上层任务编排、Reviewer、发布或运维 Agent；代码执行层仍需仓库、Shell、索引和验证工具 |
+| **Google ADK** | 面向 Agent 构建、运行、评估和部署，支持图工作流、多 Agent 协作、Session、State 与 Memory | 可以编排需求、开发、测试等多个专职 Agent，也可将 CodingAgent 包装成子 Agent 或远程 Agent |
+| **LangGraph** | 强调持久化状态、Durable Execution、Streaming、Human-in-the-loop 和图式编排 | 适合实现长任务状态机、审批节点、故障恢复和多 Agent 工作流，但代码智能与沙箱需要外接 |
+| **Amazon Bedrock AgentCore** | 提供托管 Runtime、Memory、Gateway、Identity、Browser、Code Interpreter 和 Observability | 可承载企业 CodingAgent 服务及其工具，但仍需补充 Git 工作区、编译测试和代码索引 |
+| **Microsoft Foundry Agent Service** | 统一管理 Agent、模型、工具、托管运行时、RBAC、网络、策略、Tracing 和 Evaluation | 可作为企业 Agent 控制面；CodingAgent 可以通过 Hosted Agent、MCP 或专用执行环境接入 |
+
+参考资料：
+
+- [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/)
+- [Google Agent Development Kit](https://google.github.io/adk-docs/)
+- [LangGraph Overview](https://docs.langchain.com/oss/python/langgraph/overview)
+- [Amazon Bedrock AgentCore](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/what-is-bedrock-agentcore.html)
+- [Microsoft Foundry](https://learn.microsoft.com/en-us/azure/foundry/what-is-foundry)
+
+### M.12.6 三种组合方式
+
+#### 方式一：CodingAgent 作为通用平台 Agent 的工具
+
+```mermaid
+flowchart LR
+    BIZ[业务 Agent] -->|生成技术任务| CA[CodingAgent]
+    CA -->|返回 Diff、测试和 PR| BIZ
+    BIZ -->|提交审批| HUMAN[人工负责人]
+```
+
+适合由产品、工单、告警或安全 Agent 自动触发代码修改。
+
+#### 方式二：通用 Agent 平台作为 CodingAgent 控制面
+
+```mermaid
+flowchart TB
+    UI[任务入口] --> WF[通用 Agent 工作流]
+    WF --> PLAN[需求与计划节点]
+    WF --> CODE[编码节点]
+    WF --> TEST[验证节点]
+    WF --> REVIEW[审查节点]
+
+    CODE --> SANDBOX[专用代码沙箱]
+    TEST --> SANDBOX
+    SANDBOX --> GIT[Git / PR]
+```
+
+平台负责任务状态、持久化、审批和可观测；专用执行层负责代码理解和工程操作。
+
+#### 方式三：CodingAgent 平台反向接入业务 Agent
+
+CodingAgent 控制面管理多个代码执行器，同时通过 MCP、A2A、HTTP 或消息队列调用需求分析、知识查询、安全审查、发布审批等外部 Agent。
+
+### M.12.7 选型判断
+
+以下情况更适合直接使用通用 Agent 平台：
+
+- 核心动作是调用业务 API，而不是修改代码。
+- 需要大量审批、流程编排、会话状态和企业身份治理。
+- 代码执行只是一个受限工具。
+- 主要交付物是业务结果，而不是 Git 变更。
+
+以下情况需要专用 CodingAgent：
+
+- 任务涉及多个文件和跨模块影响分析。
+- 需要真实构建、测试、调试和环境复现。
+- 需要 Git Worktree、Branch、Commit 和 PR。
+- 需要 LSP、AST、Symbol Index、Repo Map 等代码智能。
+- 需要对任意 Shell 命令、依赖安装和网络访问实施隔离。
+- 最终结果必须能被工程师审查、回滚和追责。
+
+---
+
+## M.13 代码理解：CodingAgent 如何建立仓库认知
+
+代码理解不是一次向量检索，也不是把整个仓库发送给模型。成熟 CodingAgent 会把多种证据组合成一个随任务变化的“仓库认知模型”。
+
+### M.13.1 代码理解的七层证据
+
+| 层次 | 主要信息 | 常用机制 | 能回答的问题 |
+|---|---|---|---|
+| 仓库拓扑层 | 目录、模块、Manifest、构建入口 | 文件树、Glob、配置解析 | 项目由哪些子系统组成 |
+| 词法层 | 字符串、标识符、错误码、配置键 | Grep、Ripgrep、BM25 | 某个名字在哪里出现 |
+| 语法层 | 类、函数、Import、调用表达式、控制结构 | AST、CST、Tree-sitter | 文件内部结构是什么 |
+| 符号语义层 | Definition、Reference、Type、Implementation | LSP、编译器、SCIP | 一个符号真正指向哪里 |
+| 依赖图层 | 文件、包、模块、调用、继承关系 | Import Graph、Call Graph | 修改会影响哪些模块 |
+| 动态行为层 | 实际调用、测试覆盖、错误栈、运行时状态 | Test、Trace、Profiler、日志 | 代码运行时怎样表现 |
+| 历史与规范层 | 变更原因、所有者、约定、历史缺陷 | Git、PR、Issue、Rules | 为什么这样设计、应该怎样改 |
+
+只使用其中一层会产生明显盲区：
+
+- Grep 能找到同名文本，但不理解别名、重载和动态绑定。
+- AST 能理解语法结构，但通常不知道跨模块真实类型。
+- LSP 能提供语义导航，但依赖正确的项目配置和语言服务器状态。
+- 向量检索能找到概念相似内容，但不能保证符号解析准确。
+- Git 历史能解释设计原因，但不代表当前实现仍然一致。
+- 测试可以证明某些行为，却无法覆盖所有隐含约束。
+
+### M.13.2 代码理解参考架构
+
+```mermaid
+flowchart TB
+    TASK[Issue / Spec / 错误日志] --> QP[任务理解与查询规划]
+
+    QP --> TOPO[仓库拓扑扫描]
+    QP --> LEX[词法检索]
+    QP --> STRUCT[AST / Tree-sitter]
+    QP --> SEM[LSP / Symbol Index]
+    QP --> VEC[语义向量检索]
+    QP --> HIST[Git / PR / Issue]
+    QP --> DYN[测试 / Trace / 日志]
+
+    TOPO --> CAND[候选文件与符号集合]
+    LEX --> CAND
+    STRUCT --> CAND
+    SEM --> CAND
+    VEC --> CAND
+    HIST --> CAND
+    DYN --> CAND
+
+    CAND --> EXPAND[调用链与依赖扩展]
+    EXPAND --> RANK[相关性与风险重排]
+    RANK --> PACK[上下文打包]
+    PACK --> MODEL[模型形成修改假设]
+    MODEL --> VERIFY[编译、测试与运行验证]
+    VERIFY -->|证据不足| QP
+    VERIFY -->|验证通过| CHANGE[生成可审查变更]
+```
+
+### M.13.3 CodingAgent 必须回答的六类问题
+
+1. **定位问题**：相关代码在哪些文件和符号中？
+2. **结构问题**：模块、类、函数、接口和数据结构如何组织？
+3. **关系问题**：谁调用它、它调用谁、由谁实现、有哪些引用？
+4. **行为问题**：运行时实际走哪条路径，失败条件是什么？
+5. **影响问题**：修改会影响哪些调用方、测试、配置和数据迁移？
+6. **规范问题**：仓库已经采用什么模式，新增代码应放在哪里？
+
+这六类问题对应不同工具。让模型只使用 `grep` 回答全部问题，会把“找到文本”误当成“理解程序”。
+
+### M.13.4 仓库初始化与增量更新
+
+一个可靠的代码理解服务通常需要两个阶段。
+
+#### 冷启动阶段
+
+- 识别语言、包管理器、构建系统和 Monorepo 工具。
+- 读取顶层 README、AGENTS.md、构建脚本和主要 Manifest。
+- 构建文件清单，过滤二进制、Vendor、生成目录和缓存。
+- 为支持的语言初始化 Parser 和 Language Server。
+- 生成 Symbol Index、Import Graph 和基础 Repo Map。
+- 记录当前 Git Revision、配置摘要和索引版本。
+
+#### 增量阶段
+
+- 监听文件变更、Git Checkout、依赖更新和配置变化。
+- 只重新解析受影响文件。
+- 根据 Import、Reference 和 Build Graph 扩散失效范围。
+- 更新向量、符号、依赖和 Repo Map 分片。
+- 对当前会话的未提交修改维护 Overlay Index。
+- 在返回结果时标记索引对应的 Revision，避免读取陈旧结果。
+
+### M.13.5 基于任务的理解循环
+
+```mermaid
+sequenceDiagram
+    participant U as 用户任务
+    participant A as Agent
+    participant R as 检索器
+    participant I as 代码智能服务
+    participant E as 执行环境
+    participant V as 验证器
+
+    U->>A: 修复问题或实现需求
+    A->>R: 搜索错误、概念和相关文件
+    R-->>A: 候选文件与片段
+    A->>I: 查询定义、引用、实现和调用关系
+    I-->>A: 符号图与精确位置
+    A->>E: 读取关键代码并形成假设
+    E-->>A: 文件内容、配置和命令结果
+    A->>V: 运行诊断、测试或最小复现
+    V-->>A: 成功或失败证据
+    alt 证据不足或假设错误
+        A->>R: 基于新错误继续检索
+    else 已建立足够理解
+        A->>E: 生成最小化修改
+    end
+```
+
+成熟 Agent 的检索是迭代式的，而不是“开始前检索一次，之后只依赖模型记忆”。
+
+### M.13.6 静态理解与动态理解应互相校验
+
+静态信息可以告诉 Agent：
+
+- 某函数有哪些调用方。
+- 某接口有哪些实现。
+- 某配置项在哪里读取。
+- 某类型怎样定义。
+
+动态信息可以告诉 Agent：
+
+- 实际运行时选择了哪个实现。
+- 哪个分支真正触发错误。
+- 哪些测试覆盖该路径。
+- 性能热点和竞态出现在哪里。
+- 环境变量、Feature Flag 和依赖版本怎样改变行为。
+
+最佳实践是：
+
+> **静态分析负责缩小范围，动态执行负责验证假设。**
+
+### M.13.7 代码理解的置信度与来源
+
+每个进入上下文的证据最好带有：
+
+```text
+repository
+revision
+path
+line_range
+symbol_id
+language
+retrieval_method
+index_version
+freshness
+confidence
+```
+
+这样可以避免模型把以下内容混为一谈：
+
+- 当前分支和旧分支代码。
+- 已提交文件和工作区 Overlay。
+- 真实定义和仅仅同名的文本。
+- 运行时证据和静态推断。
+- 生成文件和源文件。
+- 第三方依赖和本仓库实现。
+
+### M.13.8 常见失败模式
+
+| 失败模式 | 直接后果 | 改进方式 |
+|---|---|---|
+| 只读取入口文件 | 忽略跨模块约束 | Definition/Reference 与依赖扩展 |
+| 全仓库向量检索 | 召回大量概念相似但不可修改的代码 | 混合检索和结构化重排 |
+| 索引未绑定 Revision | Agent 根据旧代码生成补丁 | Revision-aware Index |
+| 语言服务器未正确初始化 | Definition、Diagnostic 不可信 | 复用真实构建配置并做健康检查 |
+| 只看生产代码 | 修改后缺少可验证标准 | 同时检索测试、Fixture 和 CI |
+| 只看当前代码 | 重复历史上已经失败的方案 | 检索 Git Blame、PR 和 ADR |
+| 一次性塞入大量文件 | Token 浪费和 Lost-in-the-middle | 分层摘要、按需展开和上下文预算 |
+| 把模型结论当作事实 | 错误调用链和影响分析 | 要求工具证据与验证闭环 |
+
+---
+
+## M.14 LSP、AST、Symbol Index 与 Repo Map 详解
+
+这几个概念都服务于代码理解，但解决的问题不同：
+
+- **AST / CST**：描述单个文件或代码片段的语法结构。
+- **LSP**：以在线请求方式提供项目级语言语义能力。
+- **Symbol Index**：把符号、定义、引用和关系持久化，供快速查询。
+- **Repo Map**：在有限 Token 内给模型提供仓库级结构摘要。
+- **代码搜索**：根据用户任务快速找到可能相关的文本、文件和符号。
+
+### M.14.1 LSP：在线语义服务
+
+Language Server Protocol 定义了编辑器或其他客户端与 Language Server 之间的标准通信方式。对于 CodingAgent，客户端不一定是 IDE，也可以是 Agent Harness 中的代码智能服务。
+
+```mermaid
+flowchart LR
+    AGENT[CodingAgent] --> ADAPTER[LSP Client Adapter]
+    ADAPTER <-->|JSON-RPC| SERVER[Language Server]
+    SERVER --> PROJECT[源码、依赖与构建配置]
+    SERVER --> CACHE[语义模型与增量缓存]
+```
+
+#### 对 CodingAgent 最有价值的 LSP 能力
+
+| LSP 能力 | 典型方法 | Agent 用途 |
+|---|---|---|
+| 文档符号 | `textDocument/documentSymbol` | 获取文件中的类、函数、方法和层级 |
+| 工作区符号 | `workspace/symbol` | 按名称搜索项目级符号 |
+| 定义与声明 | `textDocument/definition`、`declaration` | 找到符号真实来源 |
+| 类型定义 | `textDocument/typeDefinition` | 从变量或表达式跳转到类型 |
+| 实现 | `textDocument/implementation` | 找到接口、抽象类或 Trait 的实现 |
+| 引用 | `textDocument/references` | 做调用方定位和影响分析 |
+| 调用层级 | `textDocument/prepareCallHierarchy`、`callHierarchy/incomingCalls`、`callHierarchy/outgoingCalls` | 构建局部调用图 |
+| 类型层级 | `textDocument/prepareTypeHierarchy`、`typeHierarchy/supertypes`、`typeHierarchy/subtypes` | 分析继承和实现关系 |
+| Hover 与签名 | `hover`、`signatureHelp` | 获取类型、文档和函数签名 |
+| 诊断 | `textDocument/publishDiagnostics`、`textDocument/diagnostic`、`workspace/diagnostic` | 获取编译、类型和语义错误 |
+| 重命名 | `prepareRename`、`rename` | 执行语义级重构 |
+| Code Action | `textDocument/codeAction` | 获取 Quick Fix、Import 和重构建议 |
+
+并非每个 Language Server 都实现全部能力，因此 Agent 需要先做 Capability Negotiation。
+
+#### LSP 生命周期
+
+```mermaid
+sequenceDiagram
+    participant A as Agent Harness
+    participant C as LSP Client
+    participant S as Language Server
+    participant F as 文件系统
+
+    A->>C: 创建语言服务会话
+    C->>S: initialize(workspace, capabilities)
+    S-->>C: serverCapabilities
+    C->>S: initialized
+    C->>S: didOpen / didChange
+    S->>F: 读取源码、依赖和配置
+    S-->>C: diagnostics
+    A->>C: 查询 Definition / References
+    C->>S: JSON-RPC 请求
+    S-->>C: 精确符号位置
+    C-->>A: 标准化结果
+    A->>C: 关闭会话
+    C->>S: shutdown / exit
+```
+
+#### CodingAgent 集成 LSP 的工程难点
+
+- 不同 Language Server 的启动参数、安装方式和配置不同。
+- C/C++ 依赖 `compile_commands.json`，Java 依赖构建模型，Rust、Go、TypeScript 也有各自工作区规则。
+- Monorepo 可能需要多个 Root、多个 Server 或按 Package 分片。
+- Agent 修改文件后必须发送 `didChange` 或刷新磁盘状态。
+- 未保存 Overlay 与磁盘文件可能产生两个不同语义视图。
+- Language Server 可能崩溃、卡住、耗尽内存或长时间索引。
+- 诊断到达是异步的，不能把“暂时没有诊断”直接视为成功。
+- Generated Code、Macro、Template、条件编译和动态语言会降低精度。
+- Server 版本、编译器版本和项目依赖必须与真实开发环境一致。
+
+#### LSP 的边界
+
+LSP 很强，但它不是完整代码理解系统：
+
+- 它通常回答精确语义查询，不负责自然语言检索。
+- 它依赖语言服务器已经成功加载项目。
+- 它不天然提供跨仓库历史、业务语义和运行时行为。
+- 每次在线查询都有延迟，超大型仓库需要持久化索引辅助。
+- 某些语言服务器只覆盖当前 Workspace，不适合跨仓库导航。
+
+参考：[Language Server Protocol 3.17 Specification](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/)
+
+### M.14.2 AST、CST 与 Tree-sitter
+
+#### AST 与 CST 的区别
+
+| 概念 | 关注点 | 是否保留括号、分隔符等语法细节 | 典型用途 |
+|---|---|---|---|
+| **CST：Concrete Syntax Tree** | 完整语法结构 | 通常保留 | 编辑器、高亮、格式、增量解析 |
+| **AST：Abstract Syntax Tree** | 抽象程序结构 | 通常省略部分语法细节 | 编译、静态分析、代码生成 |
+
+Tree-sitter 官方定义是增量解析库，并构建 **Concrete Syntax Tree**。工程实践中经常把 Tree-sitter 的解析树笼统称为 AST，但做系统设计时应区分两者。
+
+#### Tree-sitter 对 CodingAgent 的价值
+
+- 多语言解析接口相对统一。
+- 可在文件修改后增量更新语法树。
+- 能容忍部分不完整或暂时有语法错误的代码。
+- 可以通过 Query 捕获函数、类、Import、调用和标识符。
+- 适合构建代码 Chunk、Repo Map、结构化搜索和编辑前校验。
+- 不需要启动完整编译器，冷启动通常比 Language Server 更轻。
+
+```mermaid
+flowchart LR
+    SRC[源文件] --> PARSER[Tree-sitter Parser]
+    PARSER --> CST[CST]
+    CST --> QUERY[Query / Capture]
+    QUERY --> SYMBOL[定义与引用候选]
+    QUERY --> CHUNK[结构化代码片段]
+    QUERY --> GRAPH[Import / 调用候选图]
+```
+
+#### Tree-sitter 的限制
+
+- 语法正确不等于类型正确。
+- 通常无法精确解析跨模块类型、重载和动态分派。
+- 不知道构建系统最终选择了哪些 Feature、宏或条件分支。
+- Query 需要按语言维护，Grammar 质量也有差异。
+- 从调用表达式提取出的边通常只是候选边，不一定是真实语义调用。
+
+因此，Tree-sitter 适合作为“快速、广覆盖的结构层”，LSP 或编译器适合作为“较慢、较精确的语义层”。
+
+参考：[Tree-sitter Introduction](https://tree-sitter.github.io/tree-sitter/)
+
+### M.14.3 Symbol Index：持久化代码语义
+
+Symbol Index 把语言分析结果从“临时在线查询”变成“可持久化、可版本化、可快速检索的数据”。
+
+一个常见的符号记录包含：
+
+```text
+symbol_id
+display_name
+fully_qualified_name
+kind
+language
+definition_locations
+declaration_locations
+reference_locations
+implementation_locations
+container_symbol
+documentation
+signature
+relationships
+repository
+revision
+indexer_version
+```
+
+#### 常见 Symbol Index 类型
+
+| 类型 | 代表机制 | 优点 | 局限 |
+|---|---|---|---|
+| 轻量标签索引 | Universal Ctags | 快、语言覆盖广、部署简单 | 类型与跨文件语义较弱 |
+| 在线语义索引 | Language Server 内部索引 | 与当前编辑状态一致、语义较精确 | 难持久化和跨仓库复用 |
+| 标准离线索引 | SCIP、LSIF | 可持久化、可上传、可跨工具消费 | 需要语言专用 Indexer |
+| 编译器索引 | Clangd Index、rust-analyzer 等 | 最接近真实类型系统 | 强依赖语言和构建配置 |
+| 自建图索引 | Symbol Graph / Call Graph | 适合影响分析和 Agent 查询 | 数据模型和增量一致性复杂 |
+
+SCIP 是语言无关的代码索引协议，可以描述 Definition、Reference、Implementation 等代码导航信息。LSIF 也用于把 Language Server 能力预计算为离线索引，但两者的数据模型和生态不同。
+
+参考资料：
+
+- [SCIP Code Intelligence Protocol](https://github.com/scip-code/scip)
+- [LSIF Specification](https://microsoft.github.io/language-server-protocol/specifications/lsif/0.5.0/specification/)
+- [Universal Ctags](https://docs.ctags.io/en/latest/man/ctags.1.html)
+
+#### 在线 LSP 与离线 Symbol Index 的关系
+
+```mermaid
+flowchart TB
+    SRC[代码与依赖] --> INDEXER[语言专用 Indexer]
+    SRC --> LS[Language Server]
+
+    INDEXER --> PERSIST[SCIP / LSIF / 自定义索引]
+    LS --> LIVE[当前工作区实时语义]
+
+    PERSIST --> QUERY[统一 Symbol Query Service]
+    LIVE --> QUERY
+    OVERLAY[未提交修改 Overlay] --> QUERY
+
+    QUERY --> AGENT[CodingAgent]
+```
+
+推荐做法不是二选一，而是：
+
+- 用离线索引覆盖仓库基线和跨仓库导航。
+- 用 LSP 覆盖当前工作区与未提交修改。
+- 用 Overlay 合并会话内变更。
+- 查询结果必须标记 Revision、来源和新鲜度。
+
+### M.14.4 Repo Map：面向模型的仓库压缩表示
+
+Repo Map 不是完整索引，而是把仓库的重要结构压缩到有限 Token 中。典型内容包括：
+
+- 文件路径。
+- 关键类、函数、方法和类型。
+- 函数签名与少量关键代码行。
+- 模块之间的 Import 或引用关系。
+- 与当前任务高度相关的符号。
+
+Aider 的 Repo Map 会生成仓库中重要类和函数的紧凑地图，并使用依赖图上的图排序算法，在给定 Token Budget 内选择最重要的部分。
+
+#### Repo Map 生成流程
+
+```mermaid
+flowchart LR
+    FILES[仓库文件] --> PARSE[Tree-sitter 解析]
+    PARSE --> TAGS[定义与引用标签]
+    TAGS --> GRAPH[文件与符号关系图]
+    GRAPH --> RANK[图排序与任务相关性]
+    RANK --> BUDGET[Token Budget 选择]
+    BUDGET --> MAP[紧凑 Repo Map]
+    MAP --> LLM[模型上下文]
+```
+
+#### Repo Map 的优势
+
+- 在模型读取具体文件前提供全局结构感。
+- 帮助模型发现应该继续展开哪些文件。
+- 比完整仓库内容节省大量 Token。
+- 对没有完整 LSP 支持的语言也能提供基础结构。
+- 可作为会话初始上下文或检索路由提示。
+
+#### Repo Map 的局限
+
+- 它是有损摘要，不应作为最终事实来源。
+- 排名高的符号未必与当前任务相关。
+- 动态调用、反射和配置驱动关系难以表达。
+- 大型 Monorepo 需要分层 Map，而不是一张全局平面图。
+- Map 过旧会误导 Agent，必须绑定 Revision。
+- 把 Repo Map 固定塞入每轮上下文可能造成重复 Token 消耗。
+
+参考资料：
+
+- [Aider Repository Map](https://aider.chat/docs/repomap.html)
+- [Building a Better Repository Map with Tree-sitter](https://aider.chat/2023/10/22/repomap.html)
+
+### M.14.5 各类代码智能能力对比
+
+| 能力 | 精确文本匹配 | 语法结构 | 类型语义 | 跨文件关系 | 自然语言召回 | 更新成本 | 最适合 |
+|---|---:|---:|---:|---:|---:|---:|---|
+| Grep / Ripgrep | 高 | 低 | 无 | 低 | 低 | 低 | 错误码、标识符、配置键 |
+| Ctags | 中 | 中 | 低 | 中 | 无 | 低 | 快速符号导航 |
+| Tree-sitter | 中 | 高 | 低 | 中 | 无 | 中 | 结构化 Chunk、定义候选、Repo Map |
+| LSP | 中 | 高 | 高 | 高 | 无 | 中到高 | Definition、Reference、Diagnostic、Rename |
+| SCIP / LSIF | 中 | 高 | 高 | 高 | 无 | 高 | 持久化语义索引、跨仓库导航 |
+| 向量检索 | 低 | 低到中 | 低 | 低 | 高 | 中到高 | 概念、职责和自然语言问题 |
+| 依赖图 / 调用图 | 低 | 中 | 中到高 | 高 | 低 | 高 | 影响分析、调用链和变更范围 |
+| Repo Map | 低 | 中 | 中 | 中 | 间接支持 | 中 | 为模型提供全局结构摘要 |
+| 测试与 Trace | 无 | 无 | 运行时事实 | 高 | 低 | 高 | 验证真实行为与动态路径 |
+
+### M.14.6 推荐的混合代码智能架构
+
+```mermaid
+flowchart TB
+    Q[Agent 查询] --> ROUTER[Code Intelligence Router]
+
+    ROUTER --> FAST[Grep / 文件搜索]
+    ROUTER --> PARSE[Tree-sitter / AST]
+    ROUTER --> LIVE[LSP 实时语义]
+    ROUTER --> INDEX[SCIP / Symbol Index]
+    ROUTER --> VECTOR[Embedding / Semantic Search]
+    ROUTER --> GRAPH[依赖与调用图]
+    ROUTER --> HISTORY[Git / PR / Issue]
+
+    FAST --> MERGE[结果融合]
+    PARSE --> MERGE
+    LIVE --> MERGE
+    INDEX --> MERGE
+    VECTOR --> MERGE
+    GRAPH --> MERGE
+    HISTORY --> MERGE
+
+    MERGE --> RERANK[任务感知重排]
+    RERANK --> PACK[上下文压缩与引用]
+    PACK --> AGENT[CodingAgent]
+```
+
+实践中，不应要求 Agent 自己猜该使用哪一种底层索引。应提供统一查询层，并根据问题类型自动路由：
+
+- 精确名字优先词法和符号检索。
+- “哪个模块负责某功能”优先语义检索和 Repo Map。
+- “谁调用这个方法”优先 LSP、SCIP 和调用图。
+- “修改会破坏什么”优先 Reference、依赖图、测试和 Git 历史。
+- “为什么这样设计”优先 ADR、PR、Issue 和 Blame。
+- “运行时到底走哪条路径”优先测试、Trace 和日志。
+
+---
+
+## M.15 代码检索与上下文工程
+
+代码检索的目标不是返回最多结果，而是用最小上下文找到足以完成任务的证据。
+
+### M.15.1 七类检索方式
+
+#### 1. 路径与文件检索
+
+根据文件名、扩展名、目录、Glob 和构建清单定位候选文件。
+
+适合：
+
+- 查找 `package.json`、`Cargo.toml`、`pom.xml`。
+- 定位测试、Migration、配置和生成脚本。
+- 根据模块名快速缩小范围。
+
+#### 2. 词法检索
+
+使用 Grep、Ripgrep、倒排索引或 BM25 搜索精确文本。
+
+适合：
+
+- 错误信息。
+- 函数名和配置键。
+- API 路径。
+- 日志字段。
+- Feature Flag。
+
+#### 3. 结构化检索
+
+基于 AST/CST Query 搜索语法模式，而不是字符模式。
+
+例如：
+
+- 所有调用某 API 的函数。
+- 所有未带超时的网络请求。
+- 所有实现某注解或接口的类。
+- 所有直接拼接 SQL 的表达式。
+- 所有使用某种错误处理模式的代码。
+
+#### 4. 符号检索
+
+根据 Fully Qualified Symbol、Definition、Reference、Implementation 和类型关系查询。
+
+适合：
+
+- 重名符号消歧。
+- 跨文件引用。
+- 接口实现定位。
+- Rename 和影响分析。
+
+#### 5. 语义检索
+
+将代码、文档或符号摘要编码为向量，根据自然语言语义召回。
+
+适合：
+
+- “认证在哪里做？”
+- “哪个模块负责恢复中断任务？”
+- “和上传失败相关的逻辑是什么？”
+- 用户不知道具体类名或错误字符串的情况。
+
+#### 6. 图检索
+
+沿 Import、Call、Inheritance、Data Flow、Build Dependency 或 Ownership Graph 展开。
+
+适合：
+
+- 查找上下游。
+- 识别核心模块。
+- 确定修改半径。
+- 选择应运行的受影响测试。
+
+#### 7. 历史与动态检索
+
+检索 Git History、PR、Issue、日志、Trace、Coverage 和失败报告。
+
+适合：
+
+- 理解设计原因。
+- 定位回归引入点。
+- 验证真实执行路径。
+- 查找过去类似修复。
+
+### M.15.2 多阶段混合检索架构
+
+```mermaid
+flowchart TB
+    TASK[自然语言任务] --> DECOMP[查询分解与实体提取]
+
+    DECOMP --> Q1[精确词法查询]
+    DECOMP --> Q2[符号查询]
+    DECOMP --> Q3[语义查询]
+    DECOMP --> Q4[结构模式查询]
+    DECOMP --> Q5[历史与动态查询]
+
+    Q1 --> UNION[候选集合并与去重]
+    Q2 --> UNION
+    Q3 --> UNION
+    Q4 --> UNION
+    Q5 --> UNION
+
+    UNION --> EXPAND[Definition / Reference / Dependency 扩展]
+    EXPAND --> FILTER[权限、Revision、语言与目录过滤]
+    FILTER --> RERANK[Cross-encoder 或规则重排]
+    RERANK --> PACK[Token-aware Context Packing]
+    PACK --> ANSWER[Agent 推理或编辑]
+
+    ANSWER --> VERIFY[测试与工具反馈]
+    VERIFY -->|需要更多证据| DECOMP
+```
+
+### M.15.3 Query Planner 应怎样拆任务
+
+例如用户提出：
+
+> “修复上传大文件后界面一直显示处理中，而且重启后任务无法恢复。”
+
+可以拆成：
+
+```text
+概念查询：
+- upload
+- large file
+- processing
+- resume / recovery
+- persisted task
+
+精确查询：
+- 界面显示的文案
+- 状态枚举名
+- API 路由
+- 错误日志
+
+结构查询：
+- 状态机转换
+- 后台任务创建
+- 持久化写入
+- 应用启动恢复逻辑
+
+图扩展：
+- UI 状态组件 → Store → IPC/API → Service → Repository
+- Task Model → Migration → Recovery Worker
+- 相关单元测试、E2E 和历史 PR
+```
+
+这样可以避免模型只命中包含“upload”字符串的表层 UI 文件。
+
+### M.15.4 检索结果排序
+
+一个通用的候选评分可以写成：
+
+```text
+Score =
+    w_lexical   × LexicalMatch
+  + w_semantic  × SemanticSimilarity
+  + w_symbol    × SymbolExactness
+  + w_graph     × GraphProximity
+  + w_task      × TaskRoleMatch
+  + w_history   × HistoricalEvidence
+  + w_freshness × RevisionFreshness
+  - w_noise     × GeneratedOrVendorPenalty
+```
+
+这不是固定公式。不同任务应动态调权：
+
+- 编译错误：提高精确文本、符号和构建图权重。
+- 架构问题：提高 Repo Map、语义和依赖图权重。
+- 安全问题：提高数据流、危险 API 和历史漏洞权重。
+- UI 缺陷：提高组件树、状态流、浏览器日志和截图关联权重。
+- 性能问题：提高 Trace、Profiler 和调用图权重。
+
+### M.15.5 Context Packing
+
+检索命中后，仍需要把结果组织成模型可以稳定使用的上下文。
+
+推荐顺序：
+
+1. 任务目标和验收标准。
+2. 仓库、分支和 Revision。
+3. 项目规则与不可违反的边界。
+4. 关键符号定义。
+5. 直接调用方和被调用方。
+6. 相关测试、配置和数据结构。
+7. 历史设计说明。
+8. 运行时错误、日志或 Trace。
+9. 明确标注仍然未知的部分。
+
+每个片段应包含：
+
+```text
+path
+line_start
+line_end
+symbol
+revision
+retrieval_reason
+content
+```
+
+### M.15.6 Token Budget 策略
+
+不应按“文件是否相关”做二元选择，而应分配不同信息密度：
+
+| 信息类型 | 推荐表达 |
+|---|---|
+| 顶层仓库结构 | 目录树和模块摘要 |
+| 非关键文件 | 路径、职责和主要符号 |
+| 候选文件 | 关键函数签名与局部片段 |
+| 当前修改文件 | 较完整的相关代码范围 |
+| 大型日志 | 错误窗口、摘要和原始 Artifact 引用 |
+| 重复调用方 | 聚合列表，不重复粘贴完整代码 |
+| 生成文件 | 默认排除，只保留来源指针 |
+| 外部依赖 | API 签名和版本，不复制全部源码 |
+
+### M.15.7 大型 Monorepo 的检索设计
+
+大型仓库需要分层和分片：
+
+```text
+Organization
+ └── Repository
+      └── Workspace / Package
+           └── Module
+                └── File
+                     └── Symbol
+```
+
+关键策略包括：
+
+- 以 Repository、Revision、Package 和 Language 作为索引分区。
+- 先做全局路由，再进入模块级精确检索。
+- 使用构建图和 Ownership 约束跨模块扩展。
+- Vendor、Generated、Build Output 默认降权或排除。
+- 对公共库和核心接口建立跨仓库 Symbol Link。
+- 对超大文件按语法节点切分，而不是固定字符切分。
+- 未提交工作区使用 Overlay，不污染共享基线索引。
+- 每次 Checkout、Rebase 或依赖锁文件变化都要触发一致性检查。
+
+### M.15.8 代码检索不是一次性 RAG
+
+普通文档 RAG 常采用：
+
+> 查询 → Top-K → 生成答案
+
+CodingAgent 更适合：
+
+> 查询 → 形成假设 → 调用代码工具 → 验证 → 根据新证据继续查询 → 修改 → 再验证
+
+```mermaid
+stateDiagram-v2
+    [*] --> 初始检索
+    初始检索 --> 形成假设
+    形成假设 --> 精确符号查询
+    精确符号查询 --> 修改候选
+    修改候选 --> 编译与测试
+    编译与测试 --> 完成: 验证通过
+    编译与测试 --> 错误驱动检索: 验证失败
+    错误驱动检索 --> 更新假设
+    更新假设 --> 精确符号查询
+    完成 --> [*]
+```
+
+测试错误、编译诊断和运行日志是下一轮检索的高价值 Query，不应只当作给模型看的普通文本。
+
+### M.15.9 检索与编辑的联动
+
+检索系统还应服务于编辑范围控制：
+
+- 根据 Definition 和 Reference 生成候选修改集合。
+- 根据 Build Graph 选择最小测试集。
+- 根据 Ownership 和模块边界提示需要额外审查的人。
+- 根据 API 使用方判断是否需要兼容层或迁移。
+- 根据数据结构变化定位 Schema、Migration 和序列化代码。
+- 根据 UI 状态链定位组件、Store、Backend 和 E2E 用例。
+- 根据历史修改识别容易回归的文件。
+
+### M.15.10 代码检索质量指标
+
+| 指标 | 含义 |
+|---|---|
+| Retrieval Recall@K | 真实需要修改或阅读的文件是否在前 K 个结果中 |
+| Retrieval Precision@K | 前 K 个结果中真正有用的比例 |
+| Symbol Resolution Rate | 符号查询成功解析到唯一目标的比例 |
+| Reference Completeness | 找到真实引用和实现的完整度 |
+| Stale Index Rate | 查询命中旧 Revision 或失效位置的比例 |
+| Context Utilization | 模型实际引用的上下文占比 |
+| Change Localization Accuracy | 首轮定位的修改文件与最终修改文件重合度 |
+| Retrieval Turns | 完成任务前进行多少轮补充检索 |
+| Context Cost | 每个成功任务用于代码上下文的 Token 和费用 |
+| False Dependency Rate | 错误推断调用或依赖关系的比例 |
+
+### M.15.11 常见反模式
+
+- 把所有文件向量化后就宣称完成“代码理解”。
+- 每轮都注入一份固定的大型 Repo Map。
+- 用固定字符长度切分代码，切断函数和类型边界。
+- 不记录 Revision，导致索引和工作树不一致。
+- 只检索生产代码，不检索测试、配置和 Migration。
+- 直接相信模型推测的调用链，不要求 Symbol 或运行证据。
+- 对所有语言使用同一套 Parser 和 Chunk 规则。
+- 将 Secret、`.env`、凭证文件和敏感日志纳入索引。
+- 让多个 Agent 共享可变索引，却没有 Overlay 和事务边界。
+- 只评估最终答案，不评估检索是否找到了关键证据。
+
+GitHub Copilot 的仓库索引说明明确区分了语义代码搜索与仅依赖 `grep` 的精确匹配；Aider 的 Repo Map 则展示了通过结构解析和图排序压缩仓库上下文的思路。
+
+参考资料：
+
+- [GitHub Copilot Repository Indexing](https://docs.github.com/en/copilot/concepts/context/repository-indexing)
+- [Aider Repository Map](https://aider.chat/docs/repomap.html)
+- [SCIP Code Intelligence Protocol](https://github.com/scip-code/scip)
+
+---
+
+## M.16 沙箱与执行隔离
+
+CodingAgent 会运行模型生成的命令、构建脚本、测试、安装脚本和外部工具。即使模型本身没有恶意，错误命令、Prompt Injection、恶意依赖或仓库内脚本也可能造成破坏。因此，沙箱不是附加功能，而是 CodingAgent 的基础运行时。
+
+### M.16.1 沙箱、权限和审批不是同一件事
+
+- **沙箱（Sandbox）**：从技术上限制进程能访问哪些文件、网络、系统调用和资源。
+- **权限（Permission）**：声明某个 Agent 或工具被允许执行哪些动作。
+- **审批（Approval）**：当动作越过自动授权边界时，由谁决定是否继续。
+- **策略（Policy）**：定义允许、询问、拒绝、条件和例外的规则。
+- **身份与凭证（Identity/Credential）**：决定动作以谁的身份访问外部系统。
+- **审计（Audit）**：记录 Agent 最终做了什么，而不是只记录它计划做什么。
+
+一个审批按钮不能替代沙箱。用户误批准后，沙箱仍应限制影响范围；反过来，即使动作位于沙箱内，也可能由于业务风险而需要审批。
+
+OpenAI Codex 的官方安全文档将二者明确分开：Sandbox 决定命令技术上能触达什么，Approval Policy 决定什么时候必须暂停并请求批准。Claude Code 也将 Permission Mode、Permission Rule 与 Bash Sandbox 作为不同层次。
+
+### M.16.2 沙箱的八个隔离维度
+
+| 维度 | 需要控制的内容 |
+|---|---|
+| 文件系统 | 可读根目录、可写根目录、受保护路径、临时目录 |
+| 进程 | 子进程树、信号、后台进程、守护进程、进程逃逸 |
+| 系统调用 | Mount、Ptrace、Namespace、设备访问、内核接口 |
+| 网络 | 是否联网、域名、IP、端口、协议、HTTP Method、代理 |
+| 身份 | 操作系统用户、容器用户、云身份、外部服务身份 |
+| Secret | 注入范围、有效期、可见进程、日志脱敏和吊销 |
+| 资源 | CPU、内存、磁盘、进程数、文件句柄、执行时长 |
+| 租户与工作区 | 不同用户、任务、Agent、仓库之间的隔离 |
+
+### M.16.3 常见隔离层级
+
+| 层级 | 方式 | 隔离强度 | 启动成本 | 适合场景 |
+|---|---|---:|---:|---|
+| L0 | 直接宿主机执行 | 最低 | 最低 | 可信个人环境、只读探索 |
+| L1 | 工作目录边界 + 人工审批 | 低 | 低 | 交互式本地 Agent |
+| L2 | OS 强制的每命令沙箱 | 中 | 低 | 本地高频开发 |
+| L3 | Dev Container / 普通容器 | 中 | 中 | 可复现项目环境 |
+| L4 | Hardened Container / 用户态内核 | 中高 | 中 | 多租户或较高风险任务 |
+| L5 | MicroVM / 独立 VM | 高 | 高 | 云端异步 Agent、陌生仓库 |
+| L6 | 物理或账号级隔离环境 | 最高 | 最高 | 高敏感代码和强监管场景 |
+
+这里的层级不是绝对安全等级。容器配置错误可能弱于正确配置的 OS 沙箱；VM 也可能因为共享凭证和开放网络而失去实际隔离效果。
+
+### M.16.4 Worktree 不是安全沙箱
+
+Git Worktree 解决的是：
+
+- 多个任务修改同一仓库时的文件冲突。
+- 不同 Branch 的工作区隔离。
+- 多 Agent 并行开发。
+- Diff、Commit 和回滚边界。
+
+它不解决：
+
+- 读取用户主目录。
+- 访问其他仓库。
+- 读取环境变量和凭证。
+- 访问任意网络。
+- 启动恶意后台进程。
+- 消耗宿主机全部 CPU、内存和磁盘。
+- 调用 Docker Socket 或系统管理接口。
+
+因此：
+
+> **Worktree 是代码并发隔离，不是安全隔离。**
+
+### M.16.5 Container 也不自动等于安全
+
+普通容器仍可能存在：
+
+- 以 Root 运行。
+- 挂载宿主机敏感目录。
+- 挂载 Docker Socket。
+- 使用 Host Network。
+- 拥有过多 Linux Capabilities。
+- 可访问云实例元数据服务。
+- 与其他任务共享持久卷。
+- 无 CPU、内存和进程数限制。
+- 通过开放网络外传代码和 Secret。
+
+至少应考虑：
+
+```text
+non-root user
+read-only root filesystem
+drop capabilities
+no-new-privileges
+seccomp / AppArmor / SELinux
+network default deny
+resource quotas
+ephemeral filesystem
+isolated credentials
+no host socket
+automatic teardown
+```
+
+### M.16.6 本地沙箱与云端沙箱
+
+| 维度 | 本地沙箱 | 云端沙箱 |
+|---|---|---|
+| 环境一致性 | 接近开发者真实环境 | 可由镜像和配置稳定复现 |
+| 启动速度 | 通常较快 | 取决于容器或 VM 冷启动 |
+| 数据边界 | 代码可不离开本机 | 需要上传仓库或远程克隆 |
+| 风险 | 可能影响用户机器 | 主要风险是租户隔离和数据外泄 |
+| Secret | 容易误继承本地凭证 | 可以按任务注入短期凭证 |
+| 并发 | 受本机资源限制 | 容易水平扩展 |
+| 恢复 | 依赖本地进程状态 | 可使用快照、持久卷和任务状态 |
+| 运维 | 用户承担环境复杂度 | 平台承担镜像、安全和成本 |
+
+### M.16.7 推荐的控制面与执行面分离
+
+```mermaid
+flowchart TB
+    subgraph CONTROL[控制面]
+        TASK[Task / Session]
+        POLICY[Policy Engine]
+        APPROVAL[Approval Service]
+        ID[Identity Broker]
+        AUDIT[Audit / Trace]
+        SCHED[Scheduler]
+    end
+
+    subgraph DATA[隔离执行面]
+        SANDBOX[Sandbox Runtime]
+        FS[Workspace / Worktree]
+        PROC[Shell / PTY / Process]
+        NET[Network Proxy]
+        SECRET[Ephemeral Secret Mount]
+        ART[Artifact Collector]
+    end
+
+    TASK --> SCHED
+    POLICY --> SCHED
+    APPROVAL --> POLICY
+    ID --> SECRET
+    SCHED --> SANDBOX
+    SANDBOX --> FS
+    SANDBOX --> PROC
+    SANDBOX --> NET
+    SANDBOX --> SECRET
+    FS --> ART
+    PROC --> ART
+    NET --> AUDIT
+    ART --> AUDIT
+```
+
+控制面不应把高权限长期凭证直接交给沙箱。执行面也不应能够修改自己的策略或审计记录。
+
+### M.16.8 沙箱生命周期
+
+```mermaid
+sequenceDiagram
+    participant C as 控制面
+    participant S as Sandbox Manager
+    participant I as Identity Broker
+    participant R as Runtime
+    participant A as Artifact Store
+
+    C->>S: 创建任务并附带策略
+    S->>S: 分配容器、MicroVM 或 VM
+    S->>R: 克隆指定 Revision
+    S->>R: 恢复可信依赖缓存
+    S->>I: 申请任务级短期凭证
+    I-->>R: 注入最小权限凭证
+    C->>R: 启动 CodingAgent
+    R->>R: 编辑、构建、测试
+    R-->>A: 上传 Diff、日志和测试报告
+    C->>R: 完成或取消
+    S->>R: 终止完整进程树
+    S->>I: 吊销任务凭证
+    S->>S: 清理卷、缓存和网络租约
+    S-->>C: 返回销毁证明与最终状态
+```
+
+### M.16.9 网络隔离
+
+推荐默认策略：
+
+1. 默认禁止公网访问。
+2. 依赖下载阶段与 Agent 执行阶段分开。
+3. 通过 Egress Proxy 实施域名、端口和方法级控制。
+4. 禁止访问云实例元数据、内网管理面和环回敏感服务。
+5. 对 DNS、重定向、IPv6、代理隧道和动态域名做一致约束。
+6. 对下载内容做哈希、来源和许可证记录。
+7. 记录网络请求元数据，但避免把 Secret 写入日志。
+8. 对浏览器、MCP Server 和 Shell 使用统一出口策略。
+
+OpenAI 的 Codex 云端网络文档明确提示，开放网络会引入 Prompt Injection、代码或 Secret 外泄、恶意依赖和许可证等风险。GitHub Copilot Cloud Agent 也默认使用防火墙限制互联网访问。
+
+### M.16.10 Secret 与身份隔离
+
+不要把开发者完整环境变量复制给 Agent。更安全的模式是：
+
+```text
+用户或服务身份
+      ↓
+Identity Broker
+      ↓
+针对当前任务签发短期凭证
+      ↓
+仅挂载给指定工具或进程
+      ↓
+任务结束立即吊销
+```
+
+关键要求：
+
+- Secret 不进入模型上下文。
+- Shell 输出和 Trace 自动脱敏。
+- 不允许 Agent 执行无差别环境变量导出。
+- 不同 Agent 使用不同凭证和作用域。
+- Git 凭证只能操作任务分支或受限仓库。
+- 生产凭证与开发凭证彻底分离。
+- 外部工具优先使用 OAuth 委托或工作负载身份，而不是长期 API Key。
+- 审批记录应绑定实际身份、动作参数和凭证作用域。
+
+### M.16.11 进程与资源治理
+
+CodingAgent 的 Shell Manager 至少应支持：
+
+- 命令级超时。
+- Session 级总时长。
+- CPU、内存、磁盘和进程数限制。
+- 标准输出与错误输出大小限制。
+- PTY 与非 PTY 两类命令。
+- 后台任务注册和心跳。
+- 取消时终止完整进程树。
+- 防止子进程脱离父进程长期驻留。
+- 僵尸进程回收。
+- 空闲超时和资源自动回收。
+- 磁盘水位和日志轮转。
+- 崩溃后可以判定任务是否可恢复。
+
+### M.16.12 CodingAgent 威胁模型
+
+| 威胁 | 示例 | 主要缓解措施 |
+|---|---|---|
+| 模型误操作 | 删除错误目录、Force Push | 沙箱、受保护路径、审批、Git 回滚 |
+| Prompt Injection | README 或 Issue 中要求上传 Secret | 指令与数据隔离、网络默认拒绝、工具 Guardrail |
+| 恶意依赖 | `postinstall` 执行恶意脚本 | 安装阶段隔离、锁文件、镜像扫描、网络限制 |
+| Secret 外泄 | 日志、HTTP 请求、提交中包含 Token | Secret Broker、Egress 控制、脱敏和 Secret Scan |
+| 仓库逃逸 | 脚本读取其他项目和主目录 | 文件系统根边界、独立用户或 VM |
+| 权限提升 | 调用 `sudo`、Docker Socket、内核接口 | 无特权运行、Capability Drop、设备隔离 |
+| 资源耗尽 | Fork Bomb、无限日志、磁盘写满 | Cgroup、Job Object、Quota、超时 |
+| 持久化 | 写入启动项、后台守护进程 | Ephemeral 环境、完整进程树终止、销毁 |
+| 多租户污染 | 一个任务读取另一个任务缓存 | 独立卷、缓存分区、租户密钥和销毁验证 |
+| 供应链污染 | 修改发布脚本或依赖源 | Branch Protection、签名、Review、制品溯源 |
+
+### M.16.13 产品实践
+
+- **OpenAI Codex**：将 Sandbox Mode 与 Approval Policy 分开；常见模式包括只读、工作区可写和危险的完全访问，并对工作区外写入或网络访问实施审批。
+- **Claude Code**：提供 Permission Mode、Allow/Ask/Deny Rule 和 OS 级 Bash Sandbox；其文档还区分每命令沙箱、整个进程隔离、Dev Container、自定义容器和 VM。
+- **GitHub Copilot Cloud Agent**：在临时、受防火墙保护的环境中执行任务，并通过受限分支、人工合并、安全扫描和会话日志降低风险。
+
+参考资料：
+
+- [Codex Agent Approvals and Security](https://developers.openai.com/codex/agent-approvals-security)
+- [Codex Sandboxing](https://developers.openai.com/codex/sandboxing)
+- [Codex Cloud Internet Access](https://developers.openai.com/codex/cloud/internet-access)
+- [Claude Code Sandboxing](https://code.claude.com/docs/en/sandboxing)
+- [Claude Code Sandbox Environments](https://code.claude.com/docs/en/sandbox-environments)
+- [GitHub Copilot Cloud and Local Sandboxes](https://docs.github.com/copilot/concepts/about-cloud-and-local-sandboxes)
+- [GitHub Copilot Agent Risks and Mitigations](https://docs.github.com/en/copilot/concepts/agents/cloud-agent/risks-and-mitigations)
+
+### M.16.14 沙箱验收测试
+
+不能只检查“配置项存在”，还应执行破坏性边界测试：
+
+| 测试 | 预期 |
+|---|---|
+| 写工作区内普通文件 | 按策略允许 |
+| 写工作区外目录 | 拒绝或触发审批 |
+| 修改 `.git` 受保护对象 | 拒绝或走受控 Git 服务 |
+| 读取主目录凭证 | 拒绝 |
+| 访问未允许域名 | 拒绝并记录 |
+| 访问云元数据地址 | 始终拒绝 |
+| 启动后台子进程后取消任务 | 整个进程树被回收 |
+| 申请超过内存或磁盘限额 | 被限制并返回明确错误 |
+| 尝试调用 Docker Socket | 不存在或拒绝 |
+| 输出疑似 Secret | 日志脱敏并触发告警 |
+| 任务结束后重新访问凭证 | 凭证已失效 |
+| 两个并发任务互相读取工作目录 | 无法访问 |
+
+---
+
+## M.17 权限、审批与安全治理
+
+### M.17.1 权限系统应控制“能力”，而不是只匹配命令字符串
+
+仅通过 Shell 字符串黑名单无法覆盖：
+
+- `python -c`、脚本文件或构建工具间接执行危险操作。
+- Git Alias、Shell Alias 和命令替换。
+- MCP 工具产生的外部副作用。
+- 浏览器和 HTTP 工具的数据外传。
+- 文件编辑后由构建钩子触发的动作。
+- 一个允许工具调用另一个高权限工具。
+
+更合理的权限对象是能力：
+
+```text
+filesystem.read
+filesystem.write
+process.execute
+network.connect
+secret.use
+git.commit
+git.push
+pull_request.create
+database.migrate
+deployment.trigger
+mcp.invoke
+browser.navigate
+subagent.delegate
+```
+
+然后把具体命令、工具和 API 映射到这些能力。
+
+### M.17.2 推荐的权限决策模型
+
+```mermaid
+flowchart TB
+    REQ[Agent Tool Request] --> VALID[Schema 与参数校验]
+    VALID --> CONTEXT[解析用户、任务、仓库与环境上下文]
+    CONTEXT --> DENY{命中强制拒绝规则?}
+    DENY -->|是| BLOCK[拒绝并返回原因]
+    DENY -->|否| SANDBOX{位于沙箱能力边界内?}
+    SANDBOX -->|否| APPROVE[创建审批请求]
+    SANDBOX -->|是| RISK[风险评分]
+    RISK --> LOW{低风险且已授权?}
+    LOW -->|是| EXEC[执行]
+    LOW -->|否| POLICY{策略要求询问、自动审查或人工审批?}
+    POLICY -->|拒绝| BLOCK
+    POLICY -->|自动审查| REVIEWER[独立 Reviewer]
+    POLICY -->|人工审批| HUMAN[用户或审批人]
+    REVIEWER --> DECISION{批准?}
+    HUMAN --> DECISION
+    DECISION -->|是| EXEC
+    DECISION -->|否| BLOCK
+    EXEC --> AUDIT[记录实际参数、结果与副作用]
+```
+
+推荐优先级：
+
+> **强制 Deny → 条件 Deny → Ask/Review → Allow**
+
+Claude Code 当前权限规则采用 Deny、Ask、Allow 的顺序评估。通用平台可采用类似的“拒绝优先”原则，避免宽泛 Allow 覆盖关键禁止规则。
+
+### M.17.3 权限作用域
+
+权限不应只有“允许”和“不允许”，还必须绑定作用域。
+
+| 权限 | 可能的作用域 |
+|---|---|
+| 文件读取 | 当前文件、当前仓库、指定目录、全部工作区 |
+| 文件写入 | 单文件、工作区根、生成目录、临时目录 |
+| Shell | 单命令、命令族、只读命令、当前 Session |
+| 网络 | 单次 URL、域名、端口、HTTP Method、时间窗口 |
+| Secret | 指定 Secret、指定工具、指定外部服务、一次性 |
+| Git | 当前 Branch、任务 Branch、指定 Remote、只推送不合并 |
+| PR | 创建 Draft、更新自己的 PR、禁止 Approve/Merge |
+| 数据库 | 只读、开发库、指定 Schema、禁止生产 |
+| 部署 | Preview、Staging、Production |
+| MCP | Server、Tool、参数模式、数据分类 |
+| 子 Agent | 最大数量、深度、角色、继承权限范围 |
+
+审批 UI 应明确展示“批准的动作”和“批准的范围”。“本次允许”“本会话允许”“本项目允许”不应被混成同一个按钮。
+
+### M.17.4 风险分级
+
+一个可解释的风险分数可以考虑：
+
+```text
+Risk =
+    Destructiveness
+  + ExternalSideEffect
+  + DataSensitivity
+  + PermissionBreadth
+  + Irreversibility
+  + CredentialPrivilege
+  + SourceUntrustworthiness
+  + ExecutionOpacity
+  + BlastRadius
+```
+
+#### 低风险
+
+- 读取当前仓库普通源码。
+- 搜索文件和符号。
+- 在临时目录生成分析产物。
+- 运行无副作用的静态检查。
+- 查询只读 LSP 信息。
+
+#### 中风险
+
+- 修改当前工作区文件。
+- 安装锁文件中已有依赖。
+- 运行项目测试和构建脚本。
+- 创建本地 Commit。
+- 访问少量允许域名。
+
+#### 高风险
+
+- 写工作区外文件。
+- 修改 CI、发布、鉴权和依赖脚本。
+- 新增依赖并访问公网。
+- 推送远端 Branch。
+- 使用云凭证、数据库或内部系统。
+- 调用带写副作用的 MCP 工具。
+
+#### 极高风险
+
+- Force Push、删除分支或历史重写。
+- 生产部署、生产数据库 Migration。
+- 删除云资源或大量数据。
+- 修改组织权限、Secret、计费和安全策略。
+- 关闭审计、安全扫描或分支保护。
+- 无限制网络、宿主机或管理员权限。
+
+### M.17.5 自动审批与 Reviewer Agent
+
+自动审批的价值是减少审批疲劳，但必须明确：
+
+> **自动 Reviewer 只是替代审批者，不应自动扩大 Sandbox 或 Permission Boundary。**
+
+可自动审查的内容：
+
+- 动作是否与当前任务相关。
+- 是否存在更小权限的替代方案。
+- 是否写入不相关目录。
+- 是否使用危险参数。
+- 网络目标是否属于允许的依赖源。
+- 命令是否可逆。
+- 是否会泄露代码或 Secret。
+
+不适合只由 Reviewer Agent 批准的动作：
+
+- 生产部署。
+- 数据删除。
+- 权限提升。
+- 组织级策略修改。
+- 付款和计费。
+- 高敏感数据导出。
+- 不可逆的 Git 历史操作。
+
+Codex 的 Auto-review 设计明确说明，自动审查只是审批者替换，不会增加可写目录、开启网络或削弱受保护路径。
+
+### M.17.6 通用策略示例
+
+下面是一个概念性策略，不绑定具体产品：
+
+```yaml
+version: 1
+
+defaults:
+  filesystem: read_workspace
+  process: ask
+  network: deny
+  secrets: deny
+  git_remote: deny
+  deployment: deny
+
+rules:
+  - effect: allow
+    capability: filesystem.write
+    scope:
+      roots:
+        - "${workspace}"
+        - "${temp}"
+
+  - effect: allow
+    capability: process.execute
+    match:
+      command_families:
+        - test
+        - lint
+        - typecheck
+    limits:
+      timeout_seconds: 1800
+
+  - effect: ask
+    capability: network.connect
+    scope:
+      domains:
+        - "registry.npmjs.org"
+        - "crates.io"
+      methods:
+        - GET
+        - HEAD
+
+  - effect: deny
+    capability: filesystem.read
+    scope:
+      paths:
+        - "~/.ssh"
+        - "~/.aws"
+        - "~/.config/gcloud"
+
+  - effect: deny
+    capability: git.force_push
+
+  - effect: require_human
+    capability: deployment.trigger
+    scope:
+      environments:
+        - production
+```
+
+真实系统还需要签名、版本、继承、租户覆盖、冲突解析和审计字段。
+
+### M.17.7 Prompt Injection 防护
+
+CodingAgent 会读取大量不可信内容：
+
+- Issue 和 PR 评论。
+- README、注释和文档。
+- 测试 Fixture。
+- 日志和错误消息。
+- 网页和搜索结果。
+- 第三方依赖文档。
+- MCP Tool Output。
+- 代码中故意植入的自然语言指令。
+
+必须将这些内容视为**数据**，而不是自动提升为系统指令。
+
+建议：
+
+1. 明确区分 System、Organization Policy、Project Rule、User Request 和 Untrusted Content。
+2. 给检索结果附带来源与信任等级。
+3. 不允许仓库内容改变权限和网络策略。
+4. 对“上传文件、发送 Secret、关闭安全控制”等指令进行高风险分类。
+5. 浏览器、MCP 和 Shell 共用统一 Egress Policy。
+6. 外部内容触发的工具调用必须保留因果链。
+7. 对下载后执行、脚本安装和构建钩子提高风险级别。
+8. 在执行前向 Reviewer 提供实际参数，而不是模型的自然语言摘要。
+9. 让沙箱承担最后边界，不能只依赖 Prompt 防护。
+
+### M.17.8 MCP 与外部工具权限
+
+MCP 扩大了 CodingAgent 的能力，也扩大了攻击面。平台应管理：
+
+- Server 来源、签名、版本和发布者。
+- Tool Schema 是否发生漂移。
+- Tool 是否只读、幂等、可逆或有外部副作用。
+- Tool 访问哪些数据分类。
+- Tool 使用用户身份还是服务身份。
+- 调用参数是否需要审批。
+- 返回内容是否可能包含 Prompt Injection。
+- Server 是否可访问本地文件、网络和 Secret。
+- 调用结果、错误和外部对象 ID 是否可审计。
+- MCP Server 被禁用或升级后，历史任务能否重放。
+
+建议给 Tool 增加安全元数据：
+
+```text
+read_only
+destructive
+idempotent
+open_world
+uses_secrets
+data_classification
+requires_user_presence
+supports_dry_run
+reversible
+external_side_effect
+```
+
+### M.17.9 多 Agent 权限传播
+
+父 Agent 不应把自己的全部权限自动传给子 Agent。
+
+推荐原则：
+
+- 子 Agent 权限是父权限与角色模板的交集。
+- 委派时生成独立 Capability Token。
+- Token 绑定 Task、Workspace、Agent、到期时间和调用深度。
+- 子 Agent 不能继续扩大权限。
+- Reviewer 默认只读。
+- Explorer 默认只读和有限网络。
+- Implementation Agent 只写自己的 Worktree。
+- Test Agent 可执行测试，但不允许推送或部署。
+- Release Agent 只消费已批准 Artifact。
+- 父任务取消时，所有子任务凭证和进程级联失效。
+
+```mermaid
+flowchart TB
+    USER[用户授权范围] --> ORCH[Orchestrator]
+    ORCH -->|权限交集| EXP[Explorer：只读]
+    ORCH -->|权限交集| DEV[Developer：工作树可写]
+    ORCH -->|权限交集| TEST[Test：可执行测试]
+    ORCH -->|权限交集| REVIEW[Reviewer：只读 Diff]
+    ORCH -->|人工批准后| RELEASE[Release：受限发布]
+```
+
+### M.17.10 Git 与交付权限
+
+Git 操作应按风险拆分：
+
+| 操作 | 推荐默认 |
+|---|---|
+| `status`、`diff`、`log`、`show` | 自动允许 |
+| 创建本地 Branch / Worktree | 自动允许或低风险审批 |
+| 创建本地 Commit | 项目策略允许时自动 |
+| 修改 Commit Message | 当前任务内允许 |
+| Push 到任务 Branch | 中风险，可由策略预批准 |
+| 创建 Draft PR | 中风险，通常允许 |
+| 修改他人 Branch | 高风险 |
+| Approve / Merge PR | 人工或独立审批 |
+| Force Push / Reset Remote | 默认拒绝 |
+| 修改 Branch Protection | 始终人工 |
+| 发布 Tag / Release | 高风险审批 |
+| 修改 CI、Release、Signing 配置 | 强化审查 |
+
+云端 Agent 最好只拥有单一任务 Branch 的受限写权限，而不是通用仓库 Token。
+
+### M.17.11 权限体验设计
+
+糟糕的权限体验会导致两种极端：
+
+- 用户被频繁弹窗打断，最终选择“全部允许”。
+- 平台为了流畅直接给予过大权限。
+
+更好的审批信息应包含：
+
+```text
+Agent 正要做什么
+为什么需要
+实际命令或工具参数
+读写哪些路径
+访问哪个域名
+使用哪个身份
+可能产生什么副作用
+是否可逆
+建议的最小授权范围
+```
+
+并支持：
+
+- 只允许一次。
+- 允许当前 Session。
+- 允许当前项目的特定模式。
+- 修改后再执行。
+- 以 Dry-run 方式执行。
+- 使用更低权限替代方案。
+- 拒绝并将原因反馈给 Agent。
+- 由独立 Reviewer Agent 先做风险分析。
+
+### M.17.12 企业治理
+
+企业级控制面至少需要：
+
+- SSO、RBAC 和必要时的 ABAC。
+- 组织级强制策略和项目级收窄策略。
+- 托管配置不可被本地 Agent 覆盖。
+- Secret Broker 和工作负载身份。
+- 网络出口代理与域名策略。
+- 代码、Prompt、Artifact 和 Trace 的数据保留策略。
+- Agent、模型、工具、Skill 和 MCP 版本锁定。
+- 完整 Tool Call、审批和文件变更审计。
+- 分支保护、签名 Commit、制品签名和 SBOM。
+- 模型供应商、地域和数据处理策略。
+- 异常行为检测与紧急 Kill Switch。
+- 高风险操作双人审批。
+- 定期权限回顾和过期授权回收。
+
+### M.17.13 安全基线
+
+#### 本地交互式 CodingAgent
+
+- 默认限制在当前工作区。
+- 默认关闭不必要的网络访问。
+- 敏感路径硬拒绝。
+- 高风险 Shell 和 Git 操作询问。
+- 提供一键查看当前权限、工作区和网络范围。
+- 允许用户在执行前查看精确参数。
+
+#### 云端异步 CodingAgent
+
+- 每任务独立、临时环境。
+- 每任务独立短期身份。
+- 单一任务 Branch。
+- 防火墙默认拒绝。
+- 构建依赖阶段与 Agent 执行阶段分离。
+- 完整进程、网络、工具和文件变更审计。
+- 自动安全扫描，但合并仍需人工或独立策略批准。
+- 任务完成后销毁环境和吊销凭证。
+
+#### 多 Agent 系统
+
+- 子 Agent 不继承全部父权限。
+- 工作区、端口、数据库和凭证隔离。
+- 统一预算、取消和最大委派深度。
+- 独立 Reviewer 与生产 Agent 权限分离。
+- 最终合并、发布和生产动作设为强制审批点。
+
+参考资料：
+
+- [Claude Code Permissions](https://code.claude.com/docs/en/permissions)
+- [Claude Code Permission Modes](https://code.claude.com/docs/en/permission-modes)
+- [Codex Permissions](https://developers.openai.com/codex/permissions)
+- [Codex Auto-review](https://developers.openai.com/codex/sandboxing/auto-review)
+- [GitHub Copilot Agent Risks and Mitigations](https://docs.github.com/en/copilot/concepts/agents/cloud-agent/risks-and-mitigations)
+- [GitHub Copilot Firewall](https://docs.github.com/enterprise-cloud@latest/copilot/customizing-copilot/customizing-or-disabling-the-firewall-for-copilot-coding-agent)
+
+---
+
+## M.18 CodingAgent 互操作标准
+
+### M.18.1 MCP
 
 **Model Context Protocol** 解决：
 
@@ -605,7 +2269,7 @@ MCP 已成为多个 CodingAgent 共同采用的工具扩展协议。
 
 参考：[Model Context Protocol](https://modelcontextprotocol.io/docs/2026-07-28/getting-started/intro)
 
-### M.12.2 ACP
+### M.18.2 ACP
 
 **Agent Client Protocol** 解决：
 
@@ -619,7 +2283,22 @@ ACP 允许同一个 Agent 被 Zed、JetBrains、桌面控制台或其他客户�
 
 参考：[Agent Client Protocol](https://agentclientprotocol.com/get-started/introduction)
 
-### M.12.3 AGENTS.md
+### M.18.3 A2A
+
+**Agent2Agent Protocol（A2A）** 解决：
+
+> 独立 Agent 系统如何发现彼此的能力、委派长任务、交换消息与 Artifact，并跟踪任务状态。
+
+A2A 面向的是 Agent 与 Agent 的远程协作，而不是 Agent 调用普通工具。一个 CodingAgent 可以通过 A2A 暴露“分析仓库”“实现任务”“运行验证”“创建 PR”等能力，也可以把安全审查、发布或知识检索委派给其他 Agent。
+
+A2A 与 MCP 的边界可以概括为：
+
+- MCP 更像 **Agent 使用工具和数据**。
+- A2A 更像 **Agent 与另一个具备自主执行循环的 Agent 协作**。
+
+参考：[Agent2Agent Protocol Specification](https://a2a-protocol.org/latest/specification/)
+
+### M.18.4 AGENTS.md
 
 AGENTS.md 是放在仓库里的 Agent 指令文件，类似“给 Agent 阅读的 README”，用于描述：
 
@@ -634,7 +2313,7 @@ AGENTS.md 是放在仓库里的 Agent 指令文件，类似“给 Agent 阅读�
 
 参考：[AGENTS.md](https://agents.md/)
 
-### M.12.4 Agent Skills
+### M.18.5 Agent Skills
 
 Agent Skills 通常以包含 `SKILL.md`、脚本、参考资料和资源文件的目录形式存在，解决：
 
@@ -652,23 +2331,25 @@ Agent Skills 通常以包含 `SKILL.md`、脚本、参考资料和资源文件�
 
 参考：[Agent Skills Specification](https://agentskills.io/specification)
 
-### M.12.5 五者之间的关系
+### M.18.6 七类标准与机制之间的关系
 
 | 标准或机制 | 连接对象 | 解决的问题 |
 |---|---|---|
-| **LSP** | 编辑器 ↔ 语言服务器 | 代码符号、引用、诊断和补全 |
-| **MCP** | Agent ↔ 工具与数据 | 外部能力接入 |
-| **ACP** | 客户端 ↔ CodingAgent | Agent 运行时接入与控制 |
-| **AGENTS.md** | 仓库 ↔ Agent | 项目长期指令 |
+| **LSP** | 代码客户端 ↔ 语言服务器 | 在线符号、引用、诊断、重构与语义导航 |
+| **SCIP / LSIF** | 代码 Indexer ↔ 代码智能平台 | 持久化、可交换的离线符号与引用索引 |
+| **MCP** | Agent ↔ 工具与数据 | 外部能力和上下文接入 |
+| **ACP** | 客户端 ↔ CodingAgent | Agent 运行时接入、会话与控制 |
+| **A2A** | Agent ↔ Agent | Agent 发现、委派、通信和长任务协作 |
+| **AGENTS.md** | 仓库 ↔ Agent | 项目长期指令与工程约束 |
 | **Agent Skills** | Agent ↔ 可复用能力包 | 程序化流程和领域知识复用 |
 
-这几种机制不是相互替代关系，而是分别处于不同层次。
+这些机制不是相互替代关系，而是分别处于代码语义、工具接入、Agent 接入、Agent 协作和项目知识等不同层次。
 
 ---
 
-## M.13 CodingAgent 评测体系
+## M.19 CodingAgent 评测体系
 
-### M.13.1 主流 Benchmark
+### M.19.1 主流 Benchmark
 
 | Benchmark | 主要评测内容 | 局限 |
 |---|---|---|
@@ -682,7 +2363,7 @@ Agent Skills 通常以包含 `SKILL.md`、脚本、参考资料和资源文件�
 
 参考：[SWE-bench](https://github.com/swe-bench/SWE-bench)
 
-### M.13.2 为什么不能只看 SWE-bench 排名
+### M.19.2 为什么不能只看 SWE-bench 排名
 
 排行榜无法完整反映：
 
@@ -697,7 +2378,7 @@ Agent Skills 通常以包含 `SKILL.md`、脚本、参考资料和资源文件�
 - 云端环境是否真实可复现。
 - 生成的代码是否容易审查和维护。
 
-### M.13.3 企业内部更值得关注的指标
+### M.19.3 企业内部更值得关注的指标
 
 建议使用自己的历史 Issue、PR 和回归缺陷构建内部评测集，并关注：
 
@@ -714,9 +2395,9 @@ Agent Skills 通常以包含 `SKILL.md`、脚本、参考资料和资源文件�
 
 ---
 
-## M.14 2026 年 CodingAgent 的关键趋势
+## M.20 2026 年 CodingAgent 的关键趋势
 
-### M.14.1 IDE 正在变成 Agent 控制台
+### M.20.1 IDE 正在变成 Agent 控制台
 
 未来 IDE 的核心不只是代码编辑，而是管理：
 
@@ -731,13 +2412,13 @@ VS Code 的多 Agent Session、Antigravity Agent Manager 和 Devin Desktop 都�
 
 参考：[VS Code Multi-Agent Development](https://code.visualstudio.com/blogs/2026/02/05/multi-agent-development)
 
-### M.14.2 本地与云端形成混合架构
+### M.20.2 本地与云端形成混合架构
 
 本地 Agent 适合高频交互、快速修改和使用现有开发环境；云端 Agent 适合长任务、并行任务、自动化和后台队列。
 
 成熟产品正在同时提供两种运行方式，而不是只选择其中一种。
 
-### M.14.3 Worktree、Container 和 VM 成为基础设施
+### M.20.3 Worktree、Container 和 VM 成为基础设施
 
 多 Agent 没有环境隔离就很容易出现：
 
@@ -750,7 +2431,7 @@ VS Code 的多 Agent Session、Antigravity Agent Manager 和 Devin Desktop 都�
 
 因此，环境管理将逐渐独立为 CodingAgent Platform 的核心子系统。
 
-### M.14.4 Agent 与模型进一步解耦
+### M.20.4 Agent 与模型进一步解耦
 
 Junie BYOK、OpenCode、Cline、Qwen Code、Pi 和 DeepSeek Harness 都在加强多 Provider 或插件化能力。未来团队会分别选择：
 
@@ -762,7 +2443,7 @@ Junie BYOK、OpenCode、Cline、Qwen Code、Pi 和 DeepSeek Harness 都在加强
 
 参考：[Junie Model Selection](https://junie.jetbrains.com/docs/junie-cli-model-selection.html)
 
-### M.14.5 Verification 将成为主要壁垒
+### M.20.5 Verification 将成为主要壁垒
 
 单纯生成代码越来越容易，真正困难的是：
 
@@ -775,7 +2456,7 @@ Junie BYOK、OpenCode、Cline、Qwen Code、Pi 和 DeepSeek Harness 都在加强
 
 因此，测试 Agent、Reviewer Agent、浏览器验证和 Artifact Review 会越来越重要。
 
-### M.14.6 从 Prompt-Driven 转向 Spec-Driven
+### M.20.6 从 Prompt-Driven 转向 Spec-Driven
 
 一句自然语言通常不足以约束大型任务。越来越多系统开始引入：
 
@@ -791,7 +2472,7 @@ Kiro 是这一方向较明确的产品之一；Junie、Augment、Qoder 和企业
 
 参考：[Kiro IDE](https://kiro.dev/ide/)
 
-### M.14.7 从固定角色转向动态 Agent 图
+### M.20.7 从固定角色转向动态 Agent 图
 
 早期多 Agent 常预设 Architect、Coder、Tester、Reviewer。未来更可能由 Orchestrator 根据任务动态创建：
 
@@ -805,7 +2486,7 @@ Kiro 是这一方向较明确的产品之一；Junie、Augment、Qoder 和企业
 
 Agent 生命周期会随任务动态创建和回收，而不是长期固定。
 
-### M.14.8 软件开发正在出现“生产 Agent + 验证 Agent”双层结构
+### M.20.8 软件开发正在出现“生产 Agent + 验证 Agent”双层结构
 
 未来企业不会只采购一个 CodingAgent，而会形成：
 
@@ -825,7 +2506,7 @@ CI/CD 与生产环境
 
 ---
 
-## M.15 按使用场景选择系统
+## M.21 按使用场景选择系统
 
 | 使用场景 | 优先考虑 |
 |---|---|
@@ -856,7 +2537,7 @@ CI/CD 与生产环境
 
 ---
 
-## M.16 统一多 CodingAgent 平台的通用架构参考
+## M.22 统一多 CodingAgent 平台的通用架构参考
 
 当组织需要同时使用 Claude Code、Codex、OpenCode、Cline、Qwen Code 等多个 CodingAgent 时，平台价值不应建立在重新实现一个绑定单一模型的 Agent 上，而应建立在：
 
@@ -864,7 +2545,7 @@ CI/CD 与生产环境
 
 建议形成以下十个核心子系统。
 
-### M.16.1 Agent Adapter Layer
+### M.22.1 Agent Adapter Layer
 
 为不同 CodingAgent 建立统一 Adapter，屏蔽：
 
@@ -895,7 +2576,7 @@ supports_cloud_execution
 supports_permission_callback
 ```
 
-### M.16.2 统一领域模型
+### M.22.2 统一领域模型
 
 至少统一：
 
@@ -920,7 +2601,7 @@ Usage
 
 一个 Task 可以有多次 Run；一次 Run 可以包含多个 Agent；一个 Agent 可以产生多个 Artifact。
 
-### M.16.3 Environment Manager
+### M.22.3 Environment Manager
 
 统一管理：
 
@@ -936,7 +2617,7 @@ Usage
 - 崩溃恢复。
 - 任务结束清理。
 
-### M.16.4 Context Service
+### M.22.4 Context Service
 
 统一提供：
 
@@ -950,7 +2631,7 @@ Usage
 - Context Budget 和 Compaction。
 - 来源引用与可追踪性。
 
-### M.16.5 Policy Engine
+### M.22.5 Policy Engine
 
 策略对象不应和某个 Agent CLI 绑定，而应抽象为：
 
@@ -971,7 +2652,7 @@ Secret 策略
 
 然后由不同 Adapter 翻译为对应 Agent 的权限模式。
 
-### M.16.6 Orchestration Engine
+### M.22.6 Orchestration Engine
 
 需要同时支持：
 
@@ -988,7 +2669,7 @@ Secret 策略
 - Deadlock 和 Loop Detection。
 - 人工审批节点。
 
-### M.16.7 Artifact 与 Review Layer
+### M.22.7 Artifact 与 Review Layer
 
 不要只展示聊天记录，还应把下面内容提升为一等对象：
 
@@ -1006,7 +2687,7 @@ Secret 策略
 
 用户审查 CodingAgent 的主要入口，最终会从“聊天消息”转向“结构化交付产物”。
 
-### M.16.8 Observability
+### M.22.8 Observability
 
 建议统一成：
 
@@ -1023,7 +2704,7 @@ Task Trace
 
 同时记录 Token、费用、延迟、重试、错误、Compaction、权限审批和人工介入。
 
-### M.16.9 Evaluation
+### M.22.9 Evaluation
 
 平台应支持：
 
@@ -1037,7 +2718,7 @@ Task Trace
 - 长任务恢复评测。
 - 跨平台评测。
 
-### M.16.10 协议层
+### M.22.10 协议层
 
 优先兼容：
 
@@ -1050,7 +2731,7 @@ Task Trace
 
 ---
 
-## M.17 最终判断
+## M.23 最终判断
 
 CodingAgent 的竞争正在从第一阶段走向第二阶段。
 
@@ -1078,4 +2759,4 @@ CodingAgent 的竞争正在从第一阶段走向第二阶段。
 
 ---
 
-> **使用提示**：与其他附录的分工——A 讲模型机制、B 讲方法论、C 记来源、D 列产品、E 辨异同、F 索引图版、G 详解 OTel、H 上手 DeepEval、I 评测观测平台选型、J 解析 Pi 源码、K 解析 Claude Code 源码、L 解析 Codex 源码、**M 盘点 Coding Agent 赛道**、N 盘点可观测赛道、O 盘点评估赛道、P 盘点 Memory 赛道、Q 盘点自进化赛道。与附录 D 的分工：D 管全品类速览与定位法，M 管 Coding Agent 单赛道深潜；重叠产品以各自官方页面为准（[C-36]）。对照阅读：标准系统架构（M.3）对第 12 章六大件、能力九维度（M.11）对第六篇三章、互操作标准（M.12）对第 8/18 章、评测体系（M.13）对第 15/24 章。信息基准 2026-08-30，发行前按附录 C 清单复核。
+> **使用提示**：与其他附录的分工——A 讲模型机制、B 讲方法论、C 记来源、D 列产品、E 辨异同、F 索引图版、G 详解 OTel、H 上手 DeepEval、I 评测观测平台选型、J 解析 Pi 源码、K 解析 Claude Code 源码、L 解析 Codex 源码、**M 盘点 Coding Agent 赛道**、N 盘点可观测赛道、O 盘点评估赛道、P 盘点 Memory 赛道、Q 盘点自进化赛道。与附录 D 的分工：D 管全品类速览与定位法，M 管 Coding Agent 单赛道深潜；重叠产品以各自官方页面为准（[C-36]）。对照阅读：标准系统架构（M.3）对第 12 章六大件、能力九维度（M.11）对第六篇三章、平台 Agent 对比（M.12）与代码理解/LSP/检索/沙箱/权限六专题（M.13–M.17）对第 23 章 2.1/2.5/2.6 与第 9/13 章、互操作标准（M.18）对第 8/18 章、评测体系（M.19）对第 15/24 章。信息基准 2026-08-30，发行前按附录 C 清单复核。

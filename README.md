@@ -94,7 +94,7 @@
 | [附录 J：Pi 源码架构全景解析](附录/附录J-Pi源码架构全景解析.md) | 开源 Coding Agent「Pi」整仓源码解析（全文收录，锁定 main@853a80d）——多 Provider 隔离、Agent Loop 双层循环、会话树与压缩、扩展与信任、TUI 差分渲染、远程协议与遥测旁路，附文件级导读卡片与二次开发蓝图；第六篇讲通用机制、本附录是真实实现的完整解剖 |
 | [附录 K：Claude Code 源码架构深度解析](附录/附录K-ClaudeCode源码架构深度解析.md) | Claude Code 还原源码整仓解析（全文收录，社区 source map 还原仓库、非官方，基线 b78dd22）——QueryEngine 与 Agent Loop、工具/权限/沙箱、压缩与记忆、MCP/Plugin/Skill、多 Agent 编排、50 Tool 与 87 命令参考手册；证据分级严格标注，与附录 J 互为对照 |
 | [附录 L：Codex 源码架构深度解析](附录/附录L-Codex源码架构深度解析.md) | OpenAI Codex（openai/codex，Rust）整仓源码解析（全文收录，快照 main@0ae94fd）——Thread/Turn/Item 会话内核、工具编排、审批与跨平台沙箱纵深、JSONL+SQLite 持久化恢复、MCP/Plugin/多 Agent、逐 crate 导读与 28 条故障推演；J/K/L 三套运行时互为对照 |
-| [附录 M：主流 Coding Agent 系统全景](附录/附录M-主流CodingAgent系统全景.md) | Coding Agent 赛道全景调研（全文收录，信息基准 2026-08-30）——商业/开源/国内/云端异步/多 Agent 工厂/审查/应用构建七类盘点、能力九维度、互操作标准（MCP/ACP/AGENTS.md）、评测体系与场景选型；D 管全品类速览、M 深潜这一个赛道 |
+| [附录 M：主流 Coding Agent 系统全景](附录/附录M-主流CodingAgent系统全景.md) | Coding Agent 赛道全景调研·增强版（全文收录，信息基准 2026-08-30）——七类盘点、能力九维度、增强六专题（平台 Agent 对比/代码理解/LSP·AST·符号索引·Repo Map/代码检索/沙箱隔离/权限治理）、互操作标准、评测体系与场景选型；D 管全品类速览、M 深潜这一个赛道 |
 | [附录 N：主流 Agent 可观测系统全景](附录/附录N-主流Agent可观测系统全景.md) | Agent 可观测赛道全景调研（全文收录，信息基准 2026-08）——标准与埋点生态（GenAI SemConv/OpenInference）、开源自托管/商业专用/传统 APM/云厂商/框架原生五路平台盘点、指标体系、生产参考架构与成熟度模型；第 14 章讲方法、G 讲机制、I 深评五家、N 是赛道地图 |
 | [附录 O：主流 Agent 评估系统全景](附录/附录O-主流Agent评估系统全景.md) | Agent 评估赛道全景调研·指标增强版（全文收录，信息基准 2026-08-30）——四类产品盘点（平台/框架/云厂商/Benchmark）、十八类评估维度与逐域指标清单、多 Agent 评估、工程闭环与发布门禁；第 15 章讲方法、H 上手 DeepEval、I 深评五家、O 是赛道地图 |
 | [附录 P：主流 Agent Memory 系统全景](附录/附录P-主流AgentMemory系统全景.md) | Agent 记忆赛道全景调研（全文收录，信息基准 2026-08）——定义边界与认知分类、通用架构与数据模型、独立系统十二家盘点（Mem0/Zep/Letta 等）、框架原生/云厂商/文件型记忆、研究演进、Benchmark 解读、企业参考架构与选型；第 10 章讲机制、P 是赛道地图 |
