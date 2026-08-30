@@ -270,42 +270,47 @@ appendices:
     path: 附录/附录I-评测与观测平台详解与选型.md
     status: draft
   - id: appendix-j
-    letter: M
+    letter: J
     title: 主流 Coding Agent 系统全景
     path: 附录/附录J-主流CodingAgent系统全景.md
     status: draft
   - id: appendix-k
-    letter: N
+    letter: K
     title: 主流 Agent 可观测系统全景
     path: 附录/附录K-主流Agent可观测系统全景.md
     status: draft
   - id: appendix-l
-    letter: O
+    letter: L
     title: 主流 Agent 评估系统全景
     path: 附录/附录L-主流Agent评估系统全景.md
     status: draft
   - id: appendix-m
-    letter: P
+    letter: M
     title: 主流 Agent Memory 系统全景
     path: 附录/附录M-主流AgentMemory系统全景.md
     status: draft
   - id: appendix-n
-    letter: Q
+    letter: N
     title: 主流 Agent 自进化系统全景
     path: 附录/附录N-主流Agent自进化系统全景.md
     status: draft
   - id: appendix-o
-    letter: J
-    title: Pi 源码架构全景解析
-    path: 附录/附录O-Pi源码架构全景解析.md
+    letter: O
+    title: 主流多 Agent 系统全景
+    path: 附录/附录O-主流多Agent系统全景.md
     status: draft
   - id: appendix-p
-    letter: K
-    title: Claude Code 源码架构深度解析
-    path: 附录/附录P-ClaudeCode源码架构深度解析.md
+    letter: P
+    title: Pi 源码架构全景解析
+    path: 附录/附录P-Pi源码架构全景解析.md
     status: draft
   - id: appendix-q
-    letter: L
+    letter: Q
+    title: Claude Code 源码架构深度解析
+    path: 附录/附录Q-ClaudeCode源码架构深度解析.md
+    status: draft
+  - id: appendix-r
+    letter: R
     title: Codex 源码架构深度解析
-    path: 附录/附录Q-Codex源码架构深度解析.md
+    path: 附录/附录R-Codex源码架构深度解析.md
     status: draft
