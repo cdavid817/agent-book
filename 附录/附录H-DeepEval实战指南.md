@@ -1,6 +1,6 @@
 # 附录 H：DeepEval 实战指南
 
-> 定位：**DeepEval 的完整实战教程**。正文第 15 章讲评测方法论（五层指标体系、回流闭环、框架与平台选型），本附录讲"DeepEval 具体怎么用"——从安装、数据模型、指标配置，到 RAG/Agent/多轮三条实战线、自定义扩展与 CI/CD 工程化，全文收录、按节查阅。API 快照为 **DeepEval Python 4.2.0**（2026-08-28 验证），升级前先读 Release Notes（文档与发布入口见 [C-31]）；RAG 指标的方法论口径见第 11 章 2.8，评测体系全貌见第 15 章。
+> 定位：**DeepEval 的完整实战教程**。正文第 15 章讲评测方法论（五层指标体系、回流闭环、框架与平台选型），本附录讲"DeepEval 具体怎么用"——从安装、数据模型、指标配置，到 RAG/Agent/多轮三条实战线、自定义扩展与 CI/CD 工程化，再到内置评估器全景与 Benchmark 关系，全文收录、按节查阅。API 快照为 **DeepEval Python 4.2.0**（教程 v1.1，2026-08-30 验证），升级前先读 Release Notes（文档与发布入口见 [C-31]）；RAG 指标的方法论口径见第 11 章 2.8，评测体系全貌见第 15 章，五平台选型对比见附录 I。
 
 ---
 
@@ -32,7 +32,7 @@ DeepEval 的主要能力包括：
 - 支持缓存、并发、失败重试、Flaky 标记与 CI/CD 门禁；
 - 支持本地运行，Confident AI 云平台属于可选能力，不是本地评估的必需条件。
 
-截至 2026-08-28，DeepEval Python 最新正式发布为 **4.2.0**。4.2.0 统一了指标方向：**所有指标均为分数越高越好**。
+截至 2026-08-30，DeepEval Python 最新正式发布为 **4.2.0**。4.2.0 统一了指标方向：**所有指标均为分数越高越好**。
 
 ---
 
@@ -2203,7 +2203,7 @@ evaluate(
     metrics=metrics,
     hyperparameters={
         "model": "generator-v4",
-        "prompt_version": "2026-08-28",
+        "prompt_version": "2026-08-30",
         "temperature": 0.1,
         "top_k": 8,
     },
@@ -2220,7 +2220,7 @@ import deepeval
 def hyperparameters() -> dict[str, str | int | float]:
     return {
         "model": "generator-v4",
-        "prompt_version": "2026-08-28",
+        "prompt_version": "2026-08-30",
         "temperature": 0.1,
         "top_k": 8,
     }
@@ -2788,7 +2788,953 @@ DeepEval 4.2.0 已统一为“越高越好”。从旧版本升级时应：
 
 ---
 
-## H.28 参考资料
+## H.28 DeepEval 内置评估器全景
+
+### H.28.1 “评估器”在 DeepEval 中具体指什么
+
+在 DeepEval 语境中，中文常说的“评估器”通常对应 **Metric**。它是针对某个质量维度执行判定并输出分数的对象，而不是被评估模型本身。
+
+需要区分以下概念：
+
+| 概念 | DeepEval 中的典型对象 | 职责 | 示例 |
+|---|---|---|---|
+| 测试样本 | `LLMTestCase`、`ConversationalTestCase`、`Golden` | 描述要评估什么 | 用户输入、实际输出、期望输出、检索上下文、工具调用 |
+| 评估器 / 指标 | `Metric` | 定义按什么标准评分 | Faithfulness、Task Completion、G-Eval |
+| Judge | Metric 的 `model` 参数 | 执行语义判断的评审模型 | 云端模型、本地模型、企业内部 Judge |
+| Benchmark | `deepeval.benchmarks.*` 或外部基准 | 提供标准任务集、Prompt 约定和固定评分协议 | MMLU、HumanEval、SWE-bench |
+| Harness | DeepEval 执行器或 benchmark 专用执行器 | 组织运行、隔离环境、收集结果、判分 | `deepeval test run`、SWE-bench Docker Harness |
+| 报告 / Leaderboard | 本地结果、平台报告、公开榜单 | 汇总与比较实验 | 通过率、平均分、`% Resolved` |
+
+可以用一句话概括：
+
+```text
+Test Case 是被测对象
+Metric 是尺子
+Judge 是读尺子的人
+Benchmark 是统一试卷和考试规则
+Harness 是组织考试并执行判分的系统
+```
+
+### H.28.2 4.2.0 版本到底有多少个评估器
+
+以 DeepEval Python **4.2.0** 标签中的 `deepeval.metrics.__all__` 为准：
+
+- 顶层公开列表共有 61 个名称；
+- 其中 3 个是基类：`BaseMetric`、`BaseConversationalMetric`、`BaseArenaMetric`；
+- 其中 2 个是辅助构造对象：`GEvalTemplate`、`DeepAcyclicGraph`；
+- 排除上述基类与辅助类后，共有 **56 个可直接实例化的主入口 Metric 类**；
+- `deepeval.metrics.ragas` 还提供 5 个可选 RAGAS 包装指标，但它们不在顶层 `deepeval.metrics.__all__` 中，并需要额外安装 `ragas`。
+
+因此，官方使用“**50+ metrics**”比写死一个永久数字更准确：指标数量、导出路径和分类会随版本变化。
+
+> 本节的清单固定到 DeepEval Python 4.2.0。升级 SDK 后，应重新检查官方文档、Release Notes 和 `deepeval.metrics.__all__`，不要假定类名与导入路径长期不变。
+
+### H.28.3 自定义与比较型评估器
+
+| Metric | 主要对象 | 机制 | 评估内容 | 典型用途 |
+|---|---|---|---|---|
+| `GEval` | `LLMTestCase` | LLM-as-a-Judge | 使用自然语言 Criteria 或显式 Steps 定义任意单轮质量标准 | 正确性、有用性、专业性、风格、业务规则 |
+| `ConversationalGEval` | `ConversationalTestCase` | LLM-as-a-Judge | 对完整多轮对话执行自定义判定 | 客服质量、上下文处理、会话策略、对话风格 |
+| `ArenaGEval` | `ArenaTestCase` | 盲化、随机位置、成对 Judge 比较 | 在多个候选输出或应用版本中选出更优者 | A/B 模型、Prompt、RAG 配置和 Agent 策略比较 |
+| `DAGMetric` | `LLMTestCase` | 决策图 + 局部 Judge | 通过节点、分支和终点分数实现结构化单轮 Rubric | 格式门禁、条件分级、复杂合规规则 |
+| `ConversationalDAGMetric` | `ConversationalTestCase` | 决策图 + 局部 Judge | 为多轮对话构建可控的分支判定和分数映射 | 投诉处理、身份核验、流程型客服、多阶段合规 |
+
+选择原则：
+
+```text
+标准难以穷举、偏主观       -> GEval / ConversationalGEval
+标准可拆成条件和分支       -> DAGMetric / ConversationalDAGMetric
+需要比较两个或多个候选版本 -> ArenaGEval
+完全确定性的业务规则       -> 自定义 BaseMetric 或普通单元测试
+```
+
+`ArenaGEval` 与普通 `GEval` 的关键差异是：
+
+- `GEval` 为单个候选输出打绝对分；
+- `ArenaGEval` 对多个 Contestant 做相对比较；
+- Pairwise 方法更容易判断“谁更好”，但结果是相对偏好，不等于每个候选都达到生产阈值；
+- 为降低位置偏差，应保留其盲化和随机化机制，而不是自行把候选名称写进 Judge Prompt。
+
+### H.28.4 确定性与结构正确性评估器
+
+| Metric | 是否调用 LLM | 主要输入 | 评估内容 | 适合做 CI 硬门禁吗 |
+|---|---:|---|---|---:|
+| `ExactMatchMetric` | 否 | `actual_output`、`expected_output` | 实际输出是否与期望输出完全一致 | 是 |
+| `PatternMatchMetric` | 否 | `actual_output`、Pattern | 输出是否符合预期模式或正则约束 | 是 |
+| `JsonCorrectnessMetric` | 否 | `actual_output`、Pydantic Schema | JSON 是否可解析并满足目标 Schema | 是 |
+| `ToolPermissionMetric` | 否 | `tools_called`、Allowlist / Denylist | 工具调用是否违反最小权限策略 | 是 |
+| `AgentLoopDetectionMetric` | 否 | Trace | 检测重复工具调用、推理停滞和调用图循环 | 是或作为强告警 |
+
+这类指标的优势是：
+
+- 相同输入得到相同结果；
+- 无 Judge Token 成本；
+- 不受 Judge 模型升级影响；
+- 适合在每个 Pull Request 中运行；
+- 对格式、安全边界和执行预算更可靠。
+
+其中，`AgentLoopDetectionMetric` 在 4.2.0 中使用三个确定性子信号：
+
+1. **工具调用重复**：同名工具以相同参数达到重复阈值；
+2. **推理停滞**：连续 LLM Span 输出出现过高的词面相似度；
+3. **调用图循环**：Trace 的父子 Span 路径中出现递归环。
+
+它不等价于 `StepEfficiencyMetric`：
+
+```text
+AgentLoopDetectionMetric
+  关注是否出现明显循环、停滞或重复模式
+  确定性、低成本、适合运行时和 CI
+
+StepEfficiencyMetric
+  关注完成任务的整体路径是否存在不必要步骤
+  由 Judge 结合完整任务与 Trace 做语义判断
+```
+
+### H.28.5 RAG 与内容质量评估器
+
+#### 28.5.1 原生 RAG 指标
+
+| Metric | 评估组件 | 核心比较关系 | 主要问题 |
+|---|---|---|---|
+| `AnswerRelevancyMetric` | Generator | `input` ↔ `actual_output` | 回答是否切题，是否真正回应用户问题 |
+| `FaithfulnessMetric` | Generator | `actual_output` ↔ `retrieval_context` | 回答中的声明是否能被检索上下文支持 |
+| `ContextualRelevancyMetric` | Retriever | `input` ↔ `retrieval_context` | 检索内容是否与查询相关，是否包含过多噪声 |
+| `ContextualPrecisionMetric` | Retriever / Reranker | 相关信息的排序位置 | 高价值内容是否排在无关内容之前 |
+| `ContextualRecallMetric` | Retriever | `expected_output` ↔ `retrieval_context` | 回答所需的关键事实是否被完整召回 |
+
+RAG 指标不能互相替代。例如：
+
+```text
+Faithfulness 高、Answer Relevancy 低
+-> 回答没有编造，但没有直接回答问题
+
+Contextual Recall 高、Contextual Precision 低
+-> 关键内容召回了，但排序差、噪声多
+
+Contextual Relevancy 高、Contextual Recall 低
+-> 已召回内容大多相关，但遗漏关键事实
+```
+
+#### 28.5.2 通用内容质量指标
+
+| Metric | 主要对象 | 评估内容 | 与相邻指标的区别 |
+|---|---|---|---|
+| `HallucinationMetric` | 单轮输出 | 检查输出是否包含与给定 Context 冲突或无依据的声明 | 通用 Context 幻觉检测；RAG 场景通常优先使用 `FaithfulnessMetric` |
+| `SummarizationMetric` | 摘要任务 | 判断摘要是否覆盖关键信息且保持事实一致 | 同时关注 Coverage 与 Alignment，而不只是长度 |
+| `BiasMetric` | 单轮输出 | 检测不当偏见或刻板化表达 | 属于安全与内容质量交叉指标 |
+| `ToxicityMetric` | 单轮输出 | 检测攻击性、有害或有毒内容 | 不等同于事实错误或不相关 |
+
+实践上，RAG 回归套件通常只需要：
+
+```text
+Answer Relevancy
++ Faithfulness
++ 一个 Retriever 指标
++ 一个业务 GEval
+```
+
+只有在明确需要区分召回覆盖率与排序质量时，再同时加入 Contextual Recall 和 Contextual Precision。
+
+### H.28.6 Agent 与工具调用评估器
+
+Agent 评估至少要区分四个层次：
+
+```text
+最终目标是否完成
+完整执行路径是否合理
+单次工具选择与参数是否正确
+是否违反权限、预算或循环约束
+```
+
+#### 28.6.1 Trace 轨迹级指标
+
+| Metric | 主要对象 | 评估内容 | 典型失败 |
+|---|---|---|---|
+| `TaskCompletionMetric` | 完整 Trace | Agent 是否真正完成用户任务 | 输出看似完整，但没有完成外部操作或遗漏关键目标 |
+| `StepEfficiencyMetric` | 完整 Trace | 是否以必要且合理的步骤完成任务 | 重复搜索、无效反思、绕路、过量工具调用 |
+| `PlanAdherenceMetric` | 完整 Trace + Plan | 执行是否遵循已生成计划 | 擅自跳步、顺序错乱、忽略计划约束 |
+| `PlanQualityMetric` | Plan + 完整 Trace | 计划是否逻辑完整、可执行且高效 | 计划缺步骤、依赖顺序错误、不可验证 |
+
+上述四个是 DeepEval 官方标注的主要 **Trajectory Metrics**，需要 Tracing，并通过 `EvaluationDataset.evals_iterator()` 将 Golden 与一次完整 Agent 执行关联起来。
+
+#### 28.6.2 组件级工具指标
+
+| Metric | 主要对象 | 是否通常需要参考答案 | 评估内容 |
+|---|---|---:|---|
+| `ToolCorrectnessMetric` | `tools_called` | 是，常与 `expected_tools` 比较 | 是否选择了正确工具，以及调用集合或顺序是否满足预期 |
+| `ArgumentCorrectnessMetric` | 单次工具调用 | 是或依赖上下文 | 工具参数在语义上是否正确、完整、与任务匹配 |
+| `ToolPermissionMetric` | 工具调用集合 | 否，但需要权限策略 | 是否只调用已授权工具，是否命中 Denylist |
+
+不要将三者混为一谈：
+
+```text
+ToolCorrectness
+  问：为了完成任务，选的工具对不对？
+
+ArgumentCorrectness
+  问：工具选对后，参数是否正确？
+
+ToolPermission
+  问：无论任务是否完成，这个工具是否有权调用？
+```
+
+一个调用可能同时满足：
+
+```text
+工具选择合理 = True
+参数正确     = True
+权限允许     = False
+```
+
+这仍然必须判定为安全失败。
+
+#### 28.6.3 多轮 Agent 指标
+
+| Metric | 测试对象 | 评估内容 |
+|---|---|---|
+| `GoalAccuracyMetric` | `ConversationalTestCase` | 多轮 Agent 是否正确规划并执行，最终达到会话目标 |
+| `ToolUseMetric` | `ConversationalTestCase` | 整个对话中的工具选择和参数生成能力 |
+| `TopicAdherenceMetric` | `ConversationalTestCase` | Agent 是否只回答允许或相关主题，能否对越界主题保持边界 |
+| `AgentLoopDetectionMetric` | Trace | 是否出现重复工具、推理停滞或调用图循环 |
+
+`GoalAccuracyMetric` 与 `TaskCompletionMetric` 的边界：
+
+- `GoalAccuracyMetric` 面向多轮 `ConversationalTestCase`，从会话与工具使用中判断目标达成；
+- `TaskCompletionMetric` 面向 traced Agent 的完整执行轨迹；
+- 两者都关注任务结果，但输入模型、适用执行方式和诊断粒度不同。
+
+### H.28.7 多轮对话评估器
+
+| Metric | 评估粒度 | 评估内容 | 典型场景 |
+|---|---|---|---|
+| `TurnRelevancyMetric` | 每轮或会话聚合 | Assistant 每轮回复是否与当前用户输入及上下文相关 | 客服、问答、多轮助手 |
+| `ConversationCompletenessMetric` | 整体会话 | 对话是否完整满足用户需求，而不是只处理最后一轮 | 投诉、预约、售后流程 |
+| `KnowledgeRetentionMetric` | 整体会话 | 是否正确记住并使用前文产生的新信息 | 姓名、偏好、订单号、约束条件 |
+| `RoleAdherenceMetric` | 整体会话 | 是否持续遵循设定角色、职责和行为边界 | 客服、教师、领域助手 |
+| `GoalAccuracyMetric` | 整体会话 | 是否规划并执行到目标状态 | 事务型 Agent |
+| `ToolUseMetric` | 整体会话 | 多轮工具选择和参数是否合理 | 预订、搜索、工作流 Agent |
+| `TopicAdherenceMetric` | 整体会话 | 是否限制在允许主题范围 | 领域专用机器人 |
+| `TurnFaithfulnessMetric` | 单轮 + 会话上下文 | 每轮回答是否忠实于该轮可用 Context | 多轮 RAG |
+| `TurnContextualPrecisionMetric` | 单轮检索 | 相关上下文排序是否合理 | 多轮 Retriever / Reranker |
+| `TurnContextualRecallMetric` | 单轮检索 | 当前轮所需信息是否被召回 | 多轮知识问答 |
+| `TurnContextualRelevancyMetric` | 单轮检索 | 当前轮召回内容是否相关 | 多轮 RAG 噪声诊断 |
+| `ConversationalGEval` | 整体会话 | 自定义多轮质量标准 | 任意业务 Rubric |
+| `ConversationalDAGMetric` | 整体会话 | 自定义多轮条件分支与分级 | 流程、门禁、合规 |
+
+注意：DeepEval 的源代码分类和使用场景分类会有重叠。例如，`RoleAdherenceMetric` 在导出列表中被归入安全与合规，但在实际使用中也是核心多轮对话指标。选择 Metric 时应按测试对象和业务目标，而不是机械依赖目录标签。
+
+### H.28.8 MCP 评估器
+
+DeepEval 4.2.0 提供三类 MCP 相关 Metric：
+
+| Metric | 测试对象 | 评估内容 |
+|---|---|---|
+| `MCPUseMetric` | 单轮 `LLMTestCase` | MCP Tool、Resource、Prompt 等 Primitive 的选择和参数是否与用户输入匹配 |
+| `MultiTurnMCPUseMetric` | `ConversationalTestCase` | 多轮会话中 MCP Primitive 的选择、顺序与参数是否合理 |
+| `MCPTaskCompletionMetric` | MCP 执行结果 / 会话 | 使用 MCP 后是否完成任务目标 |
+
+`MCPUseMetric` 不只检查 Tool。MCP 中可用 Primitive 可能包括：
+
+```text
+Tools
+Resources
+Prompts
+```
+
+因此测试用例需要尽可能保存：
+
+- 可用 MCP Server 及其 Primitive 定义；
+- 实际调用的 Tool / Resource / Prompt；
+- 每次调用的参数；
+- 调用结果；
+- 当前用户输入和最终输出。
+
+如果没有记录实际调用 Primitive，`MCPUseMetric` 仍可判断“本轮是否本应调用某个 MCP Primitive”，但诊断能力会弱于完整轨迹。
+
+### H.28.9 安全、合规与行为边界评估器
+
+| Metric | 机制 | 评估内容 | 关键配置或输入 |
+|---|---|---|---|
+| `PIILeakageMetric` | LLM Judge | 输出是否泄漏个人身份信息或隐私敏感数据 | `input`、`actual_output` |
+| `NonAdviceMetric` | LLM Judge | 是否给出不应提供的专业建议 | `advice_types`，如 financial、medical、legal |
+| `MisuseMetric` | LLM Judge | 专用领域机器人是否被用于领域外用途 | `domain` |
+| `RoleViolationMetric` | LLM Judge | 单轮输出是否违反指定角色或 Persona | `role` |
+| `RoleAdherenceMetric` | LLM Judge | 多轮会话是否持续遵循角色 | `chatbot_role` 或会话角色信息 |
+| `PromptAlignmentMetric` | LLM Judge | 输出是否遵循 Prompt 模板中的具体指令 | `prompt_instructions` |
+| `BiasMetric` | LLM Judge | 是否存在不当偏见或刻板印象 | `input`、`actual_output` |
+| `ToxicityMetric` | LLM Judge | 是否包含有毒、攻击或有害表达 | `input`、`actual_output` |
+| `ToolPermissionMetric` | 确定性 | 工具调用是否符合 Allowlist / Denylist | `tools_called`、权限策略 |
+
+几个容易混淆的指标：
+
+```text
+PromptAlignment
+  检查具体指令是否遵循，例如“只输出 JSON”“不得超过三句话”。
+
+RoleViolation
+  检查单轮输出是否偏离指定角色或人格。
+
+RoleAdherence
+  检查整个多轮会话是否持续保持角色。
+
+Misuse
+  检查领域专用应用是否被拿来做超出领域边界的事情。
+
+NonAdvice
+  检查是否生成了禁止提供的专业建议。
+```
+
+安全门禁不应只靠 LLM Judge。推荐组合：
+
+```text
+确定性权限、Schema、敏感词与数据分类规则
++
+DeepEval 安全语义指标
++
+对抗测试 / Red Team
++
+人工复核高风险样本
+```
+
+### H.28.10 图像与多模态评估器
+
+| Metric | 主要用途 | 评估内容 |
+|---|---|---|
+| `TextToImageMetric` | 文生图 | 生成图像是否符合文本提示中的对象、属性、关系和约束 |
+| `ImageEditingMetric` | 图像编辑 | 编辑结果是否完成指定修改，并合理保留不应改变的内容 |
+| `ImageCoherenceMetric` | 图像理解 / 多模态回答 | 图像与模型输出之间是否连贯、一致 |
+| `ImageHelpfulnessMetric` | 多模态回答 | 图像信息是否被有效利用，回答是否有帮助 |
+| `ImageReferenceMetric` | 图像引用 | 输出对图中对象、区域或视觉证据的引用是否准确 |
+
+图像 Metric 通常需要在测试用例中使用 `MLLMImage`，并使用具备视觉能力的 Judge。测试时需要同时固定：
+
+- Judge 模型及版本；
+- 图像编码或文件来源；
+- 是否允许图像压缩；
+- 图片顺序；
+- Prompt 与图像的绑定关系；
+- 多图场景下的引用标识。
+
+多模态评估不能只看文本 `actual_output`，否则无法判断模型是否真的依据图像作答，还是仅凭文本先验猜测。
+
+### H.28.11 语音 Agent 评估器
+
+DeepEval 4.2.0 的顶层接口导出以下 7 个 Voice Metric：
+
+| Metric | 主要维度 | 典型问题 |
+|---|---|---|
+| `VoiceNaturalnessMetric` | 声学自然度 | 削波、掉音、重复音频、静音过多、低信噪比、语速或音高异常 |
+| `SpeechIntelligibilityMetric` | 可懂度 | 语音是否清晰，内容是否容易被听懂 |
+| `TurnTakingNaturalnessMetric` | 轮次交互 | 是否抢话、停顿过长、轮次切换不自然 |
+| `VoiceConsistencyMetric` | 声音一致性 | 不同 Assistant Turn 的音色、说话特征是否异常漂移 |
+| `AgentResponsivenessMetric` | 响应性 | 用户结束发言后，Agent 是否在合理时延内响应 |
+| `AudioIntegrityMetric` | 音频完整性 | 音频是否可解码、缺失、损坏或出现严重传输异常 |
+| `VoiceReliabilityMetric` | 可靠性 | 多轮语音交互中是否稳定产出可用音频并完成交互 |
+
+`VoiceNaturalnessMetric` 是确定性的本地声学回归信号，不调用 LLM；它适合发现可测量的音频缺陷，但不能替代真实用户听感测试。语音质量往往受语言、口音、角色、情绪和业务场景影响，因此建议采用：
+
+```text
+确定性声学指标
++
+ASR / 文本内容正确性指标
++
+任务完成指标
++
+分层人工听测
+```
+
+### H.28.12 可选 RAGAS 包装指标
+
+DeepEval 还在 `deepeval.metrics.ragas` 中提供：
+
+| Metric | 作用 |
+|---|---|
+| `RagasMetric` | 对四个 RAGAS 子指标取综合平均 |
+| `RAGASAnswerRelevancyMetric` | RAGAS 版本的回答相关性 |
+| `RAGASFaithfulnessMetric` | RAGAS 版本的忠实度 |
+| `RAGASContextualPrecisionMetric` | RAGAS 版本的上下文精确率 |
+| `RAGASContextualRecallMetric` | RAGAS 版本的上下文召回率 |
+
+安装和导入方式不同于 DeepEval 原生 RAG Metric：
+
+```bash
+pip install ragas
+```
+
+```python
+from deepeval.metrics.ragas import RagasMetric
+```
+
+它们的定位是把 RAGAS 接入 DeepEval 的 Dataset、Pytest、缓存和报告生态，而不是 DeepEval 原生指标的升级版。官方更推荐优先使用 DeepEval 原生 RAG 指标，只有在团队已经基于 RAGAS 建立历史基线或必须与既有结果对齐时，才使用这些兼容包装器。
+
+### H.28.13 评估器选择矩阵
+
+| 被测系统 | 最小推荐组合 | 可选增强 | 不建议单独依赖 |
+|---|---|---|---|
+| 普通问答 | `AnswerRelevancyMetric` + 业务 `GEval` | `PromptAlignmentMetric`、安全指标 | 单一总分 |
+| 有标准答案的 QA | 正确性 `GEval` + `ExactMatchMetric` 或业务规则 | `ArenaGEval` 做版本对比 | 只做字符串完全匹配 |
+| RAG | `FaithfulnessMetric` + `AnswerRelevancyMetric` + 一个 Contextual Metric | 组件级 Retriever / Generator Span | 只看最终答案正确性 |
+| 单轮工具 Agent | `ToolCorrectnessMetric` + `ArgumentCorrectnessMetric` + `ToolPermissionMetric` | 业务 `GEval` | 只看工具是否被调用 |
+| 长任务 Agent | `TaskCompletionMetric` + `StepEfficiencyMetric` + `AgentLoopDetectionMetric` | `PlanQualityMetric`、`PlanAdherenceMetric` | 只看最后一段文本 |
+| 多轮事务 Agent | `GoalAccuracyMetric` + `ToolUseMetric` + `ConversationCompletenessMetric` | `TopicAdherenceMetric`、`RoleAdherenceMetric` | 只评估最后一轮 |
+| MCP Agent | `MCPUseMetric` / `MultiTurnMCPUseMetric` + `MCPTaskCompletionMetric` | 权限和任务业务 Metric | 把 MCP Tool 当普通文本处理 |
+| JSON / API 输出 | `JsonCorrectnessMetric` + 业务字段断言 | `PromptAlignmentMetric` | 用 Judge 代替 Schema 校验 |
+| 安全敏感应用 | `ToolPermissionMetric` + PII / Misuse / NonAdvice 等 | 对抗集、DeepTeam、人工审核 | 单一安全 Judge |
+| 图像应用 | 对应 Image Metric + 业务 `GEval` | OCR、对象检测等确定性检查 | 仅评估文字说明 |
+| 语音 Agent | Voice Metric + 内容正确性 + 任务完成度 | 人工听测、网络故障集 | 单一自然度分数 |
+
+### H.28.14 推荐组合示例
+
+#### RAG 回归套件
+
+```python
+from deepeval.metrics import (
+    AnswerRelevancyMetric,
+    ContextualRecallMetric,
+    FaithfulnessMetric,
+    GEval,
+)
+from deepeval.test_case import SingleTurnParams
+
+metrics = [
+    AnswerRelevancyMetric(threshold=0.80),
+    FaithfulnessMetric(threshold=0.90),
+    ContextualRecallMetric(threshold=0.80),
+    GEval(
+        name="业务正确性",
+        criteria="判断实际回答是否覆盖所有关键业务条件，且没有额外承诺。",
+        evaluation_params=[
+            SingleTurnParams.ACTUAL_OUTPUT,
+            SingleTurnParams.EXPECTED_OUTPUT,
+        ],
+        threshold=0.85,
+    ),
+]
+```
+
+#### 长任务 Agent 套件
+
+```python
+from deepeval.metrics import (
+    AgentLoopDetectionMetric,
+    StepEfficiencyMetric,
+    TaskCompletionMetric,
+)
+
+trajectory_metrics = [
+    TaskCompletionMetric(threshold=0.85),
+    StepEfficiencyMetric(threshold=0.75),
+    AgentLoopDetectionMetric(
+        threshold=0.75,
+        repetition_threshold=3,
+    ),
+]
+```
+
+#### 工具调用硬约束与语义判断组合
+
+```python
+from deepeval.metrics import (
+    ArgumentCorrectnessMetric,
+    ToolCorrectnessMetric,
+    ToolPermissionMetric,
+)
+
+metrics = [
+    ToolPermissionMetric(
+        allowed_tools=["search_kb", "read_order"],
+        denied_tools=["issue_refund"],
+        threshold=1.0,
+    ),
+    ToolCorrectnessMetric(threshold=0.90),
+    ArgumentCorrectnessMetric(threshold=0.85),
+]
+```
+
+核心原则是：
+
+```text
+硬约束优先确定性检查
+语义正确性再交给 Judge
+最终任务与执行过程分开评分
+不要把所有维度压成一个无法解释的总分
+```
+
+### H.28.15 常见误用
+
+#### 误用一：一次挂十几个 Metric
+
+问题：成本高、延迟高、指标互相重叠，失败后无法判断优先级。
+
+修正：每个套件优先控制在 2～5 个关键指标，并给每个指标写清楚“它保护什么风险”。
+
+#### 误用二：用 `GEval` 代替 JSON Schema、权限和测试执行
+
+问题：本可确定判定的事实被交给概率性 Judge，导致成本与 Flaky 增加。
+
+修正：JSON、正则、权限、文件存在性、单元测试结果和预算上限使用确定性断言。
+
+#### 误用三：把 Task Completion 当成工具正确性
+
+问题：Agent 可能通过错误工具或越权路径完成任务。
+
+修正：同时评估 Outcome、Trajectory、Action 和 Policy。
+
+#### 误用四：把 Faithfulness 当成事实真相
+
+问题：Faithfulness 只说明输出与给定 Context 一致；如果 Context 本身错误，回答仍可能获得高分。
+
+修正：另行建设知识源质量、时效性和 Ground Truth 校验。
+
+#### 误用五：把安全 Metric 当作完整 Red Team
+
+问题：安全指标只覆盖已定义风险维度，无法自动穷举攻击策略。
+
+修正：增加对抗数据集、Prompt Injection 测试、工具权限测试、人工安全评审和专门 Red Team 流程。
+
+---
+
+## H.29 DeepEval 与 SWE-bench 等 Benchmark 的关系
+
+### H.29.1 先区分 Metric、Benchmark 与 Evaluation Framework
+
+这三个术语经常被混用，但所处层级不同：
+
+```mermaid
+flowchart TB
+    A[Evaluation Framework<br/>评估框架] --> B[Dataset / Golden<br/>测试样本]
+    A --> C[Metric / Scorer<br/>评分器]
+    A --> D[Execution / CI<br/>执行与门禁]
+    A --> E[Trace / Report<br/>轨迹与报告]
+
+    F[Benchmark<br/>标准化基准] --> G[固定任务集]
+    F --> H[固定 Prompt / 环境协议]
+    F --> I[固定 Scorer]
+    F --> J[可比较结果]
+
+    K[SWE-bench] --> L[真实仓库与 Issue]
+    K --> M[生成 Patch]
+    K --> N[Docker Harness]
+    K --> O[仓库测试判分]
+```
+
+- **Metric**：一把尺子，例如 Faithfulness、Task Completion、Exact Match；
+- **Benchmark**：标准化试卷，包含任务集、输入格式、运行约束和固定评分规则；
+- **Evaluation Framework**：承载自定义数据集、Metric、执行、缓存、Tracing、CI 和报告的通用基础设施；
+- **Harness**：真正执行被测程序或模型并产生可判分结果的运行系统。
+
+因此，DeepEval 与 SWE-bench **不是同一层面的替代品**。
+
+### H.29.2 DeepEval 自身也提供标准 Benchmark 适配器
+
+DeepEval 不只是自定义 Metric 框架，也包含 `deepeval.benchmarks` 模块。以 Python 4.2.0 源码公开导出为准，共有以下 17 个 Benchmark 类：
+
+| 类别 | Benchmark | 主要测量能力 |
+|---|---|---|
+| 综合知识 | `MMLU` | 多学科知识与理解 |
+| 指令遵循 | `IFEval` | 可验证指令约束的遵循能力 |
+| 常识与语言 | `HellaSwag` | 常识性句子或情境续写选择 |
+| 常识与指代 | `Winogrande` | 常识推理与代词消歧 |
+| 语言建模 | `LAMBADA` | 长上下文中的目标词预测 |
+| 阅读判断 | `BoolQ` | 基于短文的布尔问答 |
+| 复杂推理 | `BigBenchHard` | 多种高难度推理任务 |
+| 离散阅读推理 | `DROP` | 基于段落的数值、离散与组合推理 |
+| 小学数学 | `GSM8K` | 多步骤数学文字题 |
+| 数学问答 | `MathQA` | 数学推理与选择题 |
+| 逻辑推理 | `LogiQA` | 基于文本的逻辑理解与推理 |
+| 科学推理 | `ARC` | 科学知识与选择题推理 |
+| 抽取式问答 | `SQuAD` | 基于文章的答案抽取 |
+| 真实性 | `TruthfulQA` | 是否避免常见错误认知与虚假回答 |
+| 社会偏见 | `BBQ` | 歧义问答场景中的社会偏见 |
+| 医疗公平性 | `EquityMedQA` | 医疗问答中的公平性与差异风险 |
+| 函数级代码生成 | `HumanEval` | 根据函数描述生成可通过测试的代码 |
+
+使用形式通常为：
+
+```python
+from deepeval.benchmarks import MMLU
+
+benchmark = MMLU()
+result = benchmark.evaluate(model=your_custom_model)
+
+print(benchmark.overall_score)
+print(benchmark.task_scores)
+print(benchmark.predictions)
+```
+
+这些 Benchmark 的重点是：
+
+- 评估一个自定义 `DeepEvalBaseLLM` 的通用能力；
+- 尽量复现原论文的任务、Few-shot 和评分协议；
+- 输出 Overall Score、Task Scores 和逐样本 Prediction；
+- 便于对不同基础模型或推理配置做统一比较。
+
+> 官方 Benchmark 概览页仍重点列出 7 个经典基准，而 4.2.0 的源码顶层接口已导出 17 个类。遇到文档与安装包差异时，应以当前锁定版本的源码和可导入接口为准。
+
+### H.29.3 SWE-bench 是什么
+
+官方名称是 **SWE-bench**。它面向真实软件工程 Issue 解决能力，而不是普通问答或短代码补全。
+
+原始 SWE-bench 包含：
+
+- 2,294 个软件工程问题；
+- 来自 12 个真实 Python 开源仓库；
+- 每个实例基于真实 GitHub Issue 和对应修复；
+- 模型或 Coding Agent 获得仓库与 Issue 描述；
+- 被测系统需要修改代码库并生成 Patch；
+- 结果通过仓库测试和专用判分逻辑验证。
+
+当前 SWE-bench 家族还包括：
+
+| 变体 | 规模 | 主要定位 |
+|---|---:|---|
+| SWE-bench Full | 2,294 | 原始完整集合 |
+| SWE-bench Lite | 300 | 较低运行成本的子集 |
+| SWE-bench Verified | 500 | 经人工筛选、可解性和判分质量更高的子集 |
+| SWE-bench Multilingual | 300 | 来自 42 个仓库、覆盖 9 种编程语言 |
+| SWE-bench Multimodal | 517 | Issue 描述包含视觉元素的任务 |
+
+SWE-bench Leaderboard 的主要指标是：
+
+```text
+% Resolved = 被成功解决的任务实例数 / 总任务实例数
+```
+
+它的判分不是“让另一个 LLM 看 Patch 像不像正确”，而是由专用 Harness：
+
+1. 准备任务对应的 Docker 环境；
+2. Checkout 指定仓库和基线版本；
+3. 应用模型生成的 Patch；
+4. 运行仓库测试及 Benchmark 判分测试；
+5. 判断 Issue 是否被解决；
+6. 汇总实例结果和 `% Resolved`。
+
+这是 SWE-bench 的核心可信度来源：**最终结果由可执行代码和测试判定，而不是主要依赖主观 Judge。**
+
+### H.29.4 DeepEval 与 SWE-bench 的核心关系
+
+最准确的关系是：
+
+```text
+DeepEval
+= 通用 LLM / RAG / Agent 评估框架
++ 一组 Metric
++ 数据集、Tracing、Pytest、CI 与报告能力
++ 一些传统 LLM Benchmark 适配器
+
+SWE-bench
+= 真实软件工程任务 Benchmark
++ 仓库、Issue、Patch 数据协议
++ 专用 Docker Evaluation Harness
++ 固定的测试型 Scorer
++ 公共 Leaderboard
+```
+
+二者可以组合，但不能互相替代：
+
+- DeepEval 的 `TaskCompletionMetric` 不能替代 SWE-bench Harness 的测试结果；
+- SWE-bench 的 `% Resolved` 不能解释 Agent 为什么失败、是否绕路、是否越权、是否成本过高；
+- SWE-bench 适合回答“这个 Coding Agent 在公开真实仓库任务上能解决多少问题”；
+- DeepEval 更适合回答“这个具体应用是否满足团队自己的质量、策略、成本和回归要求”。
+
+### H.29.5 对比表
+
+| 维度 | DeepEval | SWE-bench | MMLU / GSM8K 等传统 Benchmark | HumanEval |
+|---|---|---|---|---|
+| 类型 | 通用评估框架，兼带部分 benchmark 适配 | 软件工程 Benchmark + 专用 Harness | 标准化模型能力 Benchmark | 函数级代码生成 Benchmark |
+| 被测对象 | LLM 应用、RAG、Agent、多轮、MCP、多模态、语音 | Coding Model / Coding Agent | 基础模型或聊天模型 | 代码生成模型 |
+| 输入 | 自定义 Test Case、Golden、Trace | 仓库快照 + Issue 描述 | 问题、选项或短文本 | 函数签名与 Docstring |
+| 输出 | 文本、工具调用、Trace、图像、语音等 | Git Patch | 答案、选项或短输出 | 函数实现 |
+| 主要判分 | LLM Judge、确定性 Metric、自定义规则 | 应用 Patch 后运行仓库测试 | Exact Match 或基准固定 Scorer | 隐藏单元测试与 Pass@k |
+| 环境复杂度 | 由应用决定 | 高，需要可复现仓库依赖和 Docker | 通常较低 | 中等，需安全执行代码 |
+| 最主要结果 | 每项 Metric 分数与通过率 | `% Resolved` | Accuracy 等 | Pass@k |
+| 是否适合产品 CI | 非常适合 | 适合 Coding Agent 的专项回归，但成本较高 | 通常用于周期性模型评测 | 适合代码模型专项评测 |
+| 是否有公开可比性 | 自定义数据通常没有；内置 benchmark 有 | 有 | 有 | 有 |
+| 是否解释执行过程 | 支持 Trace / Span | 原生重点是最终 Patch 是否通过 | 通常不解释 | 通常不解释 |
+
+### H.29.6 DeepEval 4.2.0 是否原生支持 SWE-bench
+
+**不原生支持。**
+
+DeepEval 4.2.0 的 `deepeval.benchmarks.__all__` 没有 `SWEBench` 或等价类。因此不要使用类似下面的假想代码：
+
+```python
+# 4.2.0 中不存在这样的官方顶层适配器
+from deepeval.benchmarks import SWEBench
+```
+
+正确方式有两种：
+
+#### 方式一：SWE-bench 负责正式判分，DeepEval 负责补充评估
+
+这是推荐方案：
+
+```mermaid
+flowchart LR
+    A[SWE-bench Instance] --> B[Coding Agent]
+    B --> C[model_patch]
+    C --> D[SWE-bench Docker Harness]
+    D --> E[Resolved / Unresolved]
+
+    B --> F[DeepEval Trace]
+    F --> G[Task Completion]
+    F --> H[Step Efficiency]
+    F --> I[Loop Detection]
+    F --> J[Tool Permission]
+
+    E --> K[统一实验报告]
+    G --> K
+    H --> K
+    I --> K
+    J --> K
+```
+
+分工如下：
+
+```text
+SWE-bench Harness
+  负责最终可执行正确性：Patch 是否真正修复 Issue。
+
+DeepEval
+  负责过程质量：Agent 是否高效、是否循环、工具是否正确、是否越权。
+
+Telemetry / Cost Collector
+  负责 Token、时延、费用、工具调用次数和资源消耗。
+```
+
+#### 方式二：将 SWE-bench 实例适配成内部 Golden / Dataset
+
+可以把 SWE-bench 字段映射到自己的评估数据模型：
+
+| SWE-bench 数据 | DeepEval / 内部评估字段 | 注意事项 |
+|---|---|---|
+| `instance_id` | Golden ID / Metadata | 用于结果关联和重跑 |
+| `problem_statement` | `input` | 被测 Agent 可见 |
+| `repo`、`base_commit` | Metadata / 环境配置 | 必须固定版本 |
+| `model_patch` | 实际产物 | 不只是自然语言 `actual_output` |
+| `gold_patch` | Ground Truth Artifact | **不得在推理时泄漏给 Agent** |
+| `FAIL_TO_PASS` / `PASS_TO_PASS` | 确定性测试 Oracle | 由原生 Harness 执行 |
+| Agent trajectory | DeepEval Trace / Span | 用于过程评估 |
+| `resolved` | 主任务结果 | 作为正式 benchmark 成功信号 |
+
+但是，即使做了 Dataset 映射，**最终 Patch 判分仍应调用 SWE-bench 原生 Harness**。不要让 LLM Judge 读取 Patch 后自行决定“是否修好”。
+
+### H.29.7 推荐的联合评估结果模型
+
+不要把所有结果过早压成一个加权总分。建议至少保留四组独立维度：
+
+```json
+{
+  "instance_id": "owner__repo-1234",
+  "benchmark": {
+    "name": "SWE-bench Verified",
+    "resolved": true,
+    "harness_version": "pinned-version",
+    "dataset_revision": "pinned-revision"
+  },
+  "quality": {
+    "task_completion": 0.95,
+    "step_efficiency": 0.72,
+    "agent_loop_detection": 1.0,
+    "tool_permission": 1.0
+  },
+  "operations": {
+    "latency_seconds": 384.2,
+    "input_tokens": 182430,
+    "output_tokens": 24781,
+    "tool_calls": 83,
+    "estimated_cost": 4.26
+  },
+  "configuration": {
+    "model": "model-and-version",
+    "agent_harness": "agent-version",
+    "prompt_revision": "git-sha",
+    "max_steps": 120
+  }
+}
+```
+
+报告时分别呈现：
+
+| 维度 | 推荐指标 |
+|---|---|
+| 最终能力 | `% Resolved`、Resolved Count |
+| 稳定性 | 多次运行成功率、Pass@k、Pass^k 或置信区间 |
+| 过程质量 | Step Efficiency、Loop Rate、无效调用率 |
+| 安全与治理 | 越权率、策略违规率、敏感操作率 |
+| 成本 | 每个已解决任务的平均 Token、费用和时间 |
+| 可维护性 | Patch 大小、触及文件数、回归测试失败数 |
+
+一个模型可能：
+
+```text
+Resolved 高，但成本和步骤数极高
+Resolved 较低，但单位成本很低
+平均表现高，但多次运行稳定性差
+最终测试通过，但频繁触发越权工具
+```
+
+这些都不能由单一 `% Resolved` 解释。
+
+### H.29.8 公共 Benchmark 与私有评估集分别回答什么问题
+
+| 问题 | 公共 Benchmark | DeepEval 私有 Dataset |
+|---|---:|---:|
+| 模型在行业标准任务上的相对能力如何 | 强 | 弱 |
+| 能否与公开论文、模型或 Agent 榜单比较 | 强 | 弱 |
+| 是否覆盖自己的业务 Prompt、数据与工具 | 弱 | 强 |
+| 是否覆盖历史线上失败 | 弱 | 强 |
+| 是否可以作为每次产品变更的回归门禁 | 有限 | 强 |
+| 是否能测试权限、合规和内部策略 | 通常有限 | 强 |
+| 是否能定位组件和轨迹问题 | 通常有限 | 强 |
+| 是否容易发生公开数据污染 | 较高 | 可控 |
+
+正确的质量体系不是二选一，而是：
+
+```text
+公共 Benchmark
+  验证通用能力和外部可比性
+
+私有 DeepEval Regression Set
+  验证产品正确性和业务回归
+
+确定性测试与专用 Harness
+  验证代码、协议、权限和真实执行结果
+
+线上监控与人工评审
+  验证真实分布、长尾问题和用户价值
+```
+
+### H.29.9 不同 Benchmark 适合测什么
+
+| 目标 | 更合适的评估方式 |
+|---|---|
+| 多学科基础知识 | MMLU |
+| 常识推理与情境补全 | HellaSwag、Winogrande |
+| 数学推理 | GSM8K、MathQA、部分 BBH |
+| 真实性与错误认知 | TruthfulQA |
+| 偏见与公平性 | BBQ、EquityMedQA |
+| 指令遵循 | IFEval |
+| 函数级代码生成 | HumanEval |
+| 真实仓库 Issue 修复 | SWE-bench |
+| 通用工具型 Assistant | GAIA 等 Agent Benchmark |
+| 浏览器操作 | WebArena、BrowserGym 等环境型 Benchmark |
+| 具体产品 RAG / Agent | DeepEval 自建 Golden、Trace 和 Metric |
+
+这里的关键是评估单位：
+
+```text
+HumanEval 的单位是一个函数
+SWE-bench 的单位是一个真实仓库 Issue
+RAG Eval 的单位通常是一次问答或一次检索链路
+多轮 Agent Eval 的单位是一次完整会话或任务轨迹
+```
+
+不同单位的分数不可直接横向比较。
+
+### H.29.10 为什么不能只看 SWE-bench 分数
+
+#### 一、结果受 Agent Harness 影响
+
+同一基础模型在不同 Agent 框架、系统 Prompt、工具集、上下文管理、检索策略和 Token Budget 下，SWE-bench 成绩可能不同。因此榜单结果通常代表：
+
+```text
+Model
++ Agent Scaffold
++ Tools
++ Prompt
++ Context Strategy
++ Budget
++ Execution Environment
+```
+
+而不只是基础模型本身。
+
+#### 二、通过测试不等于 Patch 工程质量完美
+
+测试是强 Oracle，但仍可能存在：
+
+- 测试覆盖不足；
+- 过拟合现有测试；
+- 代码可读性和维护性较差；
+- 引入未覆盖的安全或性能风险；
+- Patch 过大或修改无关文件。
+
+因此可以在 SWE-bench 判分之外增加确定性静态检查、Patch 范围检查和 DeepEval 业务 Rubric。
+
+#### 三、公开 Benchmark 存在污染与适配风险
+
+应记录：
+
+- 模型是否可能见过题目或修复；
+- Dataset Revision；
+- Harness 版本和镜像；
+- Agent Prompt；
+- 最大步骤、时间和 Token；
+- 重试与并发策略；
+- 是否使用额外检索或网络；
+- 是否执行多次采样。
+
+#### 四、Benchmark 分布不等于生产分布
+
+公开任务无法完全覆盖团队自己的：
+
+- 语言与框架；
+- 私有仓库结构；
+- 构建系统；
+- 权限策略；
+- 工具链；
+- 代码规范；
+- 性能目标；
+- 数据安全要求。
+
+因此，SWE-bench 高分是有价值的能力证据，但不是产品验收的充分条件。
+
+### H.29.11 推荐的分层评估架构
+
+```mermaid
+flowchart TB
+    A[Level 1<br/>确定性单元与集成测试] --> B[Schema / 权限 / 编译 / 单测 / 静态分析]
+    C[Level 2<br/>DeepEval 语义评估] --> D[RAG / Agent / 多轮 / 安全 / 业务 Rubric]
+    E[Level 3<br/>公开 Benchmark] --> F[MMLU / HumanEval / SWE-bench / GAIA]
+    G[Level 4<br/>生产评估] --> H[线上抽样 / Trace / 用户反馈 / 人工审核]
+
+    B --> I[统一质量报告]
+    D --> I
+    F --> I
+    H --> I
+
+    I --> J{发布门禁}
+    J -->|通过| K[发布]
+    J -->|失败| L[定位、修复、回流 Regression Set]
+```
+
+建议执行频率：
+
+| 层级 | 推荐频率 | 目的 |
+|---|---|---|
+| 确定性测试 | 每次提交 / PR | 快速阻断明确错误 |
+| DeepEval Smoke | 每次 PR | 发现 Prompt、RAG 和 Agent 质量回归 |
+| DeepEval Full Regression | Nightly / Release | 覆盖长尾、高成本和多模型实验 |
+| SWE-bench 等公开 Benchmark | 周期性、大版本或模型切换时 | 验证外部通用能力和趋势 |
+| 生产抽样与人工审核 | 持续 | 捕获真实分布和未知失败 |
+
+最终应形成两个互补结论：
+
+```text
+外部能力结论
+  “在固定 SWE-bench 版本与 Harness 下，系统解决了多少真实 Issue。”
+
+内部产品结论
+  “在自己的数据、工具、权限、成本与业务规则下，系统是否达到发布标准。”
+```
+
+只有同时回答这两个问题，评估结果才具有完整的工程意义。
+
+---
+
+## H.30 参考资料
 
 以下内容以 DeepEval 官方文档和官方 GitHub 仓库为主要依据：
 
@@ -2816,6 +3762,19 @@ DeepEval 4.2.0 已统一为“越高越好”。从旧版本升级时应：
 22. [Conversation Simulator Model Callback](https://deepeval.com/docs/conversation-simulator-model-callback)
 23. [Role Adherence Metric](https://deepeval.com/docs/metrics-role-adherence)
 24. [Tool Correctness Metric](https://deepeval.com/docs/metrics-tool-correctness)
+25. [DeepEval 4.2.0 Metric exports](https://github.com/confident-ai/deepeval/blob/python-v4.2.0/deepeval/metrics/__init__.py)
+26. [DeepEval Benchmark Introduction](https://deepeval.com/docs/benchmarks-introduction)
+27. [DeepEval 4.2.0 Benchmark exports](https://github.com/confident-ai/deepeval/blob/python-v4.2.0/deepeval/benchmarks/__init__.py)
+28. [Arena G-Eval](https://deepeval.com/docs/metrics-arena-g-eval)
+29. [Agent Loop Detection Metric](https://deepeval.com/docs/metrics-agent-loop-detection)
+30. [Tool Permission Metric](https://deepeval.com/docs/metrics-tool-permission)
+31. [MCP Use Metric](https://deepeval.com/docs/metrics-mcp-use)
+32. [Voice Naturalness Metric](https://deepeval.com/docs/metrics-voice-naturalness)
+33. [DeepEval RAGAS compatibility metric](https://deepeval.com/docs/metrics-ragas)
+34. [SWE-bench paper](https://arxiv.org/abs/2310.06770)
+35. [SWE-bench Official Leaderboards and Dataset Variants](https://www.swebench.com/)
+36. [SWE-bench Evaluation Harness Reference](https://www.swebench.com/SWE-bench/reference/harness/)
+37. [SWE-bench Evaluation Guide](https://www.swebench.com/SWE-bench/guides/evaluation/)
 
 ---
 
@@ -2850,7 +3809,20 @@ Component Metric 定位 Retriever、Tool、LLM 或子 Agent
 6. 最后建设阈值校准、回归分层和线上失败回流
 ```
 
-这样可以把主观的“模型感觉变好了”，转化为可复现、可解释、可回归、可阻断发布的工程质量信号。
+涉及公开 Benchmark 时，还应保持判分职责清晰：
+
+```text
+MMLU、HumanEval 等 DeepEval 内置 Benchmark
+  -> 按各自固定数据集和 Scorer 评估基础模型能力
+
+SWE-bench 等环境型 Benchmark
+  -> 使用其原生 Harness 判定任务是否真正完成
+
+DeepEval 自定义评估
+  -> 补充业务质量、Agent 轨迹、工具、安全、成本和私有回归
+```
+
+这样可以把主观的“模型感觉变好了”，转化为可复现、可解释、可回归、可阻断发布的工程质量信号，同时避免把公开榜单分数误当成产品验收结果。
 
 ---
 

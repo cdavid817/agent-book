@@ -341,7 +341,8 @@
 - H.12–H.15 三条实战线：RAG（五指标+组合分数四情况+组件级）、Agent（轨迹/工具正确性/确定性规则）、Tracing（@observe/Span 指标）、多轮对话（ConversationalTestCase/Simulator）
 - H.16–H.19 数据与扩展：数据集与 Golden 管理（六层分层）、Synthesizer 合成数据、自定义 Judge（DeepEvalBaseLLM）、自定义 Metric（BaseMetric）
 - H.20–H.25 工程化：并发/缓存/错误处理、CLI 参数、CI/CD 质量门禁（GitHub Actions+分层门禁）、阈值校准与 A/B 实验、成本/性能/数据安全、推荐项目结构
-- H.26–H.28 收尾：常见问题排查、落地检查清单、参考资料
+- H.26–H.27 收尾：常见问题排查、落地检查清单
+- H.28–H.30 扩展：DeepEval 内置评估器全景、与 SWE-bench 等 Benchmark 的关系、参考资料
 
 ## 附录 I：评测与观测平台详解与选型
 
