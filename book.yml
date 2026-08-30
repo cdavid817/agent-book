@@ -301,16 +301,21 @@ appendices:
     status: draft
   - id: appendix-p
     letter: P
-    title: Pi 源码架构全景解析
-    path: 附录/附录P-Pi源码架构全景解析.md
+    title: 主流 MCP 系统全景
+    path: 附录/附录P-主流MCP系统全景.md
     status: draft
   - id: appendix-q
     letter: Q
-    title: Claude Code 源码架构深度解析
-    path: 附录/附录Q-ClaudeCode源码架构深度解析.md
+    title: Pi 源码架构全景解析
+    path: 附录/附录Q-Pi源码架构全景解析.md
     status: draft
   - id: appendix-r
     letter: R
+    title: Claude Code 源码架构深度解析
+    path: 附录/附录R-ClaudeCode源码架构深度解析.md
+    status: draft
+  - id: appendix-s
+    letter: S
     title: Codex 源码架构深度解析
-    path: 附录/附录R-Codex源码架构深度解析.md
+    path: 附录/附录S-Codex源码架构深度解析.md
     status: draft
