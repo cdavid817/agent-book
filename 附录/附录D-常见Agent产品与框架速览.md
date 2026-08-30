@@ -68,7 +68,7 @@
 
 **Superpowers**：Claude Code 之上的 **Skill 集合 / 插件生态**（第 6 章 Skill 机制的社区放大），把一批可复用的任务技能打包分发，甚至含"用于安装技能的技能"。定位坐标：它不改 Claude Code 的循环，只扩充其程序记忆（第 10 章 Skill=程序记忆的落地）。价值与风险并存：Skill 正文会进上下文并被执行，第三方 Skill 是供应链面（第 8 章 2.4、第 13 章）——来源白名单 + 入库评审不可省。*核验状态：项目存在；具体技能清单与维护方以其仓库为准。*
 
-**codex**（OpenAI）：OpenAI 的 Coding Agent 线，两种形态——**Codex CLI**（开源、终端、对标 Claude Code）与**云端异步 Codex**（任务进队列、云沙箱并行、以 PR 交付，即第 25 章"并行 worktree 开发"的托管版）。定位坐标：完整六大件，绑定 OpenAI 模型生态；选型时按第 20 章数据出域与条款、第 15 章自家评测集与 Claude Code 对标，而非看演示。
+**codex**（OpenAI）：OpenAI 的 Coding Agent 线，两种形态——**Codex CLI**（开源、终端、对标 Claude Code）与**云端异步 Codex**（任务进队列、云沙箱并行、以 PR 交付，即第 25 章"并行 worktree 开发"的托管版）。定位坐标：完整六大件，绑定 OpenAI 模型生态；选型时按第 20 章数据出域与条款、第 15 章自家评测集与 Claude Code 对标，而非看演示。Codex CLI（Rust 内核）的**整仓源码级解析**见附录 L（快照 main@0ae94fd [C-35]）——与附录 J（Pi）、附录 K（Claude Code 还原源码）三套运行时互为对照。
 
 **openclaw**：*核验状态：待确认*——本书未能确证该名称对应的具体项目。若确为开源的 Claude Code 类编码/计算机操作 Agent，则按其形态归入本节或 D.2；发行前务必核实其真实存在与定位，**否则删除此条**（附录 C 纪律：无来源的产品名不进发布稿）。
 

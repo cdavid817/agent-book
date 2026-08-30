@@ -1,7 +1,7 @@
 # 《企业级 Agent 从入门到专家（2026版）》章节大纲
 
 > 主线逻辑：能力递进为主线、专题深潜为支线
-> 全书七篇 · 27 章 · 附录 A/B/C · 附贯穿实战项目
+> 全书七篇 · 27 章 · 附录 A–L 十二本工具书 · 附贯穿实战项目
 
 ---
 
@@ -377,3 +377,19 @@
 - 篇四（K.35–K.52）扩展编排：Task/Agent/Coordinator 多 Agent、MCP、Plugin、Skill、Bridge 远程、重构路线图
 - 篇五/篇六（K.53–K.55）参考手册：50 个 Tool 条目（含证据等级）、87 个命令子目录与注册体系
 - 篇七（K.56–K.63）源码导航与维护：模块地图、服务层地图、术语表、验收清单、架构决策与权衡、风险登记表、证据索引、总结
+
+## 附录 L：Codex 源码架构深度解析
+
+> 定位：OpenAI Codex（openai/codex，Rust Workspace）整仓源码解析（全文收录，快照锁定 main@0ae94fd）——源码事实/设计解释/演进推断三级证据；与附录 J/K 三套 Coding Agent 运行时互为对照。
+
+- 篇一（L.1–L.4）全局认识：项目定位（本地 Agent 运行时）、Thread/Turn/Item 三名词、共享内核与宿主适配器、Rust 迁移动因、工作区全景与总体数据流
+- 篇二（L.5–L.12）入口与会话控制：MultitoolCli、TUI、Exec、App Server、Protocol、ThreadManager、Session、Agent Loop
+- 篇三（L.13–L.22）模型与工具执行：ModelClient、Prompt 与压缩、ToolRouter/Registry/Orchestrator、Shell、Patch、Code Mode
+- 篇四（L.23–L.28）安全纵深：PermissionProfile、审批策略、Guardian、跨平台 Sandbox、Network Proxy、威胁模型
+- 篇五（L.29–L.35）扩展与多 Agent：MCP、Skill、Plugin、Hook、Extension API、AgentControl 与角色协作
+- 篇六（L.36–L.41）持久化与一致性：ThreadStore、JSONL rollout、SQLite 派生索引、恢复/分叉/归档与故障矩阵
+- 篇七（L.42–L.49）配置认证与观测：Config、Profile、Auth、Model Provider、Realtime、OTEL、Analytics
+- 篇八（L.50–L.58）测试与工程治理：测试金字塔、CI、静态检查、资源生命周期、发布与贡献模式
+- 篇九（L.59）逐 crate 源码导读：覆盖固定提交全部 workspace member
+- 篇十（L.60）端到端场景与故障推演：29 条控制流/安全流/数据流联合场景
+- 篇十一（L.61–L.66）收尾：结论、阅读路线、二次开发原则、关键源码链接、术语表、质量门禁

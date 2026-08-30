@@ -279,3 +279,8 @@ appendices:
     title: Claude Code 源码架构深度解析
     path: 附录/附录K-ClaudeCode源码架构深度解析.md
     status: draft
+  - id: appendix-l
+    letter: L
+    title: Codex 源码架构深度解析
+    path: 附录/附录L-Codex源码架构深度解析.md
+    status: draft

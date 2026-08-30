@@ -47,6 +47,7 @@
 | C-32 | 附录 I 五平台调研的能力、许可证与版本信息（信息基准 2026-08-27，发行前逐项复核） | DeepEval / Ragas（https://docs.ragas.io/）/ Arize Phoenix / Langfuse / MLflow 各官方文档与仓库 | 2026-08-28 |
 | C-33 | 附录 J 整仓源码解析的分析对象；**分析锁定 main@853a80d，社区分析非官方文档，上游演进不影响固定提交结论** | earendil-works, *Pi*：https://github.com/earendil-works/pi | 2026-08-30 |
 | C-34 | 附录 K 整仓源码解析的分析对象（附录 D.1 引用）；**source map 还原仓库、非 Anthropic 官方，审阅基线 b78dd22，结论受还原风险约束** | pengchengneo, *Claude-Code*（还原源码树）：https://github.com/pengchengneo/Claude-Code | 2026-08-30 |
+| C-35 | 附录 L 整仓源码解析的分析对象；**快照锁定 main@0ae94fd，上游快速演进不影响固定提交结论** | OpenAI, *Codex*：https://github.com/openai/codex | 2026-08-30 |
 | C-06 | 附录 D 全部产品/框架的名称、归属与成熟度状态 | 各产品供应商官方页面与开源仓库（发行前逐项复核，名单半衰期 6–12 个月） | 2026-08-23 |
 | C-07 | 附录 D.7/D.8/D.9/D.10 社区与新兴项目（opencode / OhMyOpencode / Superpowers / codex / openclaw / DeepSeek Harness / Hermes Agent / Vibe Coding / D.10 分类速览全部条目 等） | 各项目开源仓库/官方页面；**标注"待确认"者发行前必须核实真实形态与存续，无法确证即删除**——不进发布稿 | 2026-08-23 |
 
@@ -83,6 +84,7 @@
 - 附录 I / 第 15 章：C-32（五平台官方文档，许可证与版本随时间漂移）
 - 附录 J：C-33（Pi 源码仓库，分析锁定 main@853a80d）
 - 附录 K / 附录 D：C-34（Claude Code 还原源码仓库，非官方、基线 b78dd22）
+- 附录 L：C-35（OpenAI Codex 源码仓库，快照 main@0ae94fd）
 - 第 8 章：C-03（MCP 规范）、C-22（SLSA 供应链）
 - 附录 D：C-06（D.1–D.6）、C-07（D.7/D.8/D.9/D.10 社区与新兴项目及分类速览，含"待确认"条目）
 - 第 16、20、24 章：按发布时的供应商/标准官方页面增补时效性条目
