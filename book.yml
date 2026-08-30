@@ -299,3 +299,8 @@ appendices:
     title: 主流 Agent 评估系统全景
     path: 附录/附录O-主流Agent评估系统全景.md
     status: draft
+  - id: appendix-p
+    letter: P
+    title: 主流 Agent Memory 系统全景
+    path: 附录/附录P-主流AgentMemory系统全景.md
+    status: draft

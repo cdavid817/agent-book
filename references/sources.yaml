@@ -360,6 +360,15 @@ sources:
     expires_at: "2026-11-30"
     status: verified
     url: "https://www.swebench.com/"
+  - id: C-39
+    title: "主流 Agent Memory 系统官方页面与论文（附录 P 全景盘点，信息基准 2026-08）"
+    publisher: "各 Memory 系统供应商、框架社区与研究团队"
+    source_type: vendor-page
+    claim_scope: [appendix-p]
+    verified_at: "2026-08-30"
+    expires_at: "2026-11-30"
+    status: verified
+    url: "https://github.com/mem0ai/mem0"
 
 # 协议版本一致性锚点：check_sources 校验 C-03.version 与第 8 章 PROTOCOL_VERSION 常量相等。
 version_anchors:
