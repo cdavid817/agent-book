@@ -269,3 +269,8 @@ appendices:
     title: 评测与观测平台详解与选型
     path: 附录/附录I-评测与观测平台详解与选型.md
     status: draft
+  - id: appendix-j
+    letter: J
+    title: Pi 源码架构全景解析
+    path: 附录/附录J-Pi源码架构全景解析.md
+    status: draft
