@@ -274,3 +274,8 @@ appendices:
     title: Pi 源码架构全景解析
     path: 附录/附录J-Pi源码架构全景解析.md
     status: draft
+  - id: appendix-k
+    letter: K
+    title: Claude Code 源码架构深度解析
+    path: 附录/附录K-ClaudeCode源码架构深度解析.md
+    status: draft
