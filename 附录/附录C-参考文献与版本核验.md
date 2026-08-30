@@ -50,6 +50,7 @@
 | C-35 | 附录 L 整仓源码解析的分析对象；**快照锁定 main@0ae94fd，上游快速演进不影响固定提交结论** | OpenAI, *Codex*：https://github.com/openai/codex | 2026-08-30 |
 | C-36 | 附录 M 全景盘点的产品名单、格局与标准动态（信息基准 2026-08-30，发行前逐项复核） | 各 Coding Agent 产品供应商与开源社区官方页面 | 2026-08-30 |
 | C-37 | 附录 N 全景盘点的平台名单与标准动态（信息基准 2026-08，发行前逐项复核） | 各可观测平台官方页面；OpenTelemetry, *GenAI Observability*：https://opentelemetry.io/blog/2026/genai-observability/ | 2026-08-30 |
+| C-38 | 附录 O 全景盘点的平台/框架/Benchmark 名单与指标口径（信息基准 2026-08-30，发行前逐项复核） | 各评估平台供应商、框架社区与 Benchmark 官方页面 | 2026-08-30 |
 | C-06 | 附录 D 全部产品/框架的名称、归属与成熟度状态 | 各产品供应商官方页面与开源仓库（发行前逐项复核，名单半衰期 6–12 个月） | 2026-08-23 |
 | C-07 | 附录 D.7/D.8/D.9/D.10 社区与新兴项目（opencode / OhMyOpencode / Superpowers / codex / openclaw / DeepSeek Harness / Hermes Agent / Vibe Coding / D.10 分类速览全部条目 等） | 各项目开源仓库/官方页面；**标注"待确认"者发行前必须核实真实形态与存续，无法确证即删除**——不进发布稿 | 2026-08-23 |
 
@@ -89,6 +90,7 @@
 - 附录 L：C-35（OpenAI Codex 源码仓库，快照 main@0ae94fd）
 - 附录 M：C-36（Coding Agent 各产品官方页面，格局与名单随时间漂移）
 - 附录 N：C-37（可观测平台官方页面与 OTel GenAI Observability）
+- 附录 O：C-38（评估平台/框架/Benchmark 官方页面）
 - 第 8 章：C-03（MCP 规范）、C-22（SLSA 供应链）
 - 附录 D：C-06（D.1–D.6）、C-07（D.7/D.8/D.9/D.10 社区与新兴项目及分类速览，含"待确认"条目）
 - 第 16、20、24 章：按发布时的供应商/标准官方页面增补时效性条目

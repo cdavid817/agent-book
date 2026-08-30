@@ -351,6 +351,15 @@ sources:
     expires_at: "2026-11-30"
     status: verified
     url: "https://opentelemetry.io/blog/2026/genai-observability/"
+  - id: C-38
+    title: "主流 Agent 评估平台/框架/Benchmark 官方页面（附录 O 全景盘点，信息基准 2026-08-30）"
+    publisher: "各平台供应商、评估框架社区与 Benchmark 官方"
+    source_type: vendor-page
+    claim_scope: [appendix-o]
+    verified_at: "2026-08-30"
+    expires_at: "2026-11-30"
+    status: verified
+    url: "https://www.swebench.com/"
 
 # 协议版本一致性锚点：check_sources 校验 C-03.version 与第 8 章 PROTOCOL_VERSION 常量相等。
 version_anchors:

@@ -294,3 +294,8 @@ appendices:
     title: 主流 Agent 可观测系统全景
     path: 附录/附录N-主流Agent可观测系统全景.md
     status: draft
+  - id: appendix-o
+    letter: O
+    title: 主流 Agent 评估系统全景
+    path: 附录/附录O-主流Agent评估系统全景.md
+    status: draft
