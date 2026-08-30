@@ -270,42 +270,42 @@ appendices:
     path: 附录/附录I-评测与观测平台详解与选型.md
     status: draft
   - id: appendix-j
-    letter: J
-    title: Pi 源码架构全景解析
-    path: 附录/附录J-Pi源码架构全景解析.md
-    status: draft
-  - id: appendix-k
-    letter: K
-    title: Claude Code 源码架构深度解析
-    path: 附录/附录K-ClaudeCode源码架构深度解析.md
-    status: draft
-  - id: appendix-l
-    letter: L
-    title: Codex 源码架构深度解析
-    path: 附录/附录L-Codex源码架构深度解析.md
-    status: draft
-  - id: appendix-m
     letter: M
     title: 主流 Coding Agent 系统全景
-    path: 附录/附录M-主流CodingAgent系统全景.md
+    path: 附录/附录J-主流CodingAgent系统全景.md
     status: draft
-  - id: appendix-n
+  - id: appendix-k
     letter: N
     title: 主流 Agent 可观测系统全景
-    path: 附录/附录N-主流Agent可观测系统全景.md
+    path: 附录/附录K-主流Agent可观测系统全景.md
     status: draft
-  - id: appendix-o
+  - id: appendix-l
     letter: O
     title: 主流 Agent 评估系统全景
-    path: 附录/附录O-主流Agent评估系统全景.md
+    path: 附录/附录L-主流Agent评估系统全景.md
     status: draft
-  - id: appendix-p
+  - id: appendix-m
     letter: P
     title: 主流 Agent Memory 系统全景
-    path: 附录/附录P-主流AgentMemory系统全景.md
+    path: 附录/附录M-主流AgentMemory系统全景.md
     status: draft
-  - id: appendix-q
+  - id: appendix-n
     letter: Q
     title: 主流 Agent 自进化系统全景
-    path: 附录/附录Q-主流Agent自进化系统全景.md
+    path: 附录/附录N-主流Agent自进化系统全景.md
+    status: draft
+  - id: appendix-o
+    letter: J
+    title: Pi 源码架构全景解析
+    path: 附录/附录O-Pi源码架构全景解析.md
+    status: draft
+  - id: appendix-p
+    letter: K
+    title: Claude Code 源码架构深度解析
+    path: 附录/附录P-ClaudeCode源码架构深度解析.md
+    status: draft
+  - id: appendix-q
+    letter: L
+    title: Codex 源码架构深度解析
+    path: 附录/附录Q-Codex源码架构深度解析.md
     status: draft

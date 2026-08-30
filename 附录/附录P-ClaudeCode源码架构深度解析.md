@@ -1,6 +1,6 @@
-# 附录 K：Claude Code 源码架构深度解析
+# 附录 P：Claude Code 源码架构深度解析
 
-> 定位：**Claude Code 还原源码的整仓深度解析**（全文收录）。分析对象是社区仓库 `pengchengneo/Claude-Code`——依据公开 npm 包 source map 还原的 TypeScript/TSX 源码树，**非 Anthropic 官方仓库**（详见下方"重要说明"，仓库入口见 [C-34]；审阅基线锁定提交 `b78dd22`，2026-08-29 生成）。第 25 章 2.5 与附录 D.1 的"Claude Code 设计考古"讲述设计要点，本附录是完整的源码级证据链：QueryEngine 会话引擎、Agent Loop、工具与权限系统、压缩与记忆、MCP/Plugin/Skill 扩展、多 Agent 编排、50 个 Tool 与 87 个命令的参考手册。与附录 J（Pi 源码解析）互为对照——同一类问题的两套工程答案。
+> 定位：**Claude Code 还原源码的整仓深度解析**（全文收录）。分析对象是社区仓库 `pengchengneo/Claude-Code`——依据公开 npm 包 source map 还原的 TypeScript/TSX 源码树，**非 Anthropic 官方仓库**（详见下方"重要说明"，仓库入口见 [C-34]；审阅基线锁定提交 `b78dd22`，2026-08-29 生成）。第 25 章 2.5 与附录 D.1 的"Claude Code 设计考古"讲述设计要点，本附录是完整的源码级证据链：QueryEngine 会话引擎、Agent Loop、工具与权限系统、压缩与记忆、MCP/Plugin/Skill 扩展、多 Agent 编排、50 个 Tool 与 87 个命令的参考手册。与附录 O（Pi 源码解析）互为对照——同一类问题的两套工程答案。
 
 ---
 
@@ -22,21 +22,21 @@
 
 这份文档不是按文件名逐个复述代码，而是先建立系统模型，再沿关键调用链下钻，最后回到扩展、测试和治理。推荐有三种阅读路径：
 
-1. **架构路径**：K.1–K.9 → K.16–K.24 → K.35–K.40。适合快速建立全景。
-2. **运行时路径**：K.10–K.15 → K.25–K.34。适合理解一次请求如何从输入走到模型、工具、权限、压缩和持久化。
-3. **二次开发路径**：K.41–K.50 → 工具目录、命令目录、源码地图与附录。适合新增工具、命令、Skill、MCP、Provider 或运行模式。
+1. **架构路径**：P.1–P.9 → P.16–P.24 → P.35–P.40。适合快速建立全景。
+2. **运行时路径**：P.10–P.15 → P.25–P.34。适合理解一次请求如何从输入走到模型、工具、权限、压缩和持久化。
+3. **二次开发路径**：P.41–P.50 → 工具目录、命令目录、源码地图与附录。适合新增工具、命令、Skill、MCP、Provider 或运行模式。
 
 文档中的 Mermaid 图均使用中文节点和中文箭头。大图用于表达边界，小图用于表达局部状态机；阅读时应把图与对应章节中的不变量、失败路径和扩展点结合起来，而不是只看“快乐路径”。
 
 ## 第一篇·基线、边界与全景架构
 
-## K.1 审阅范围与证据方法
+## P.1 审阅范围与证据方法
 
-### K.1.1 审阅对象
+### P.1.1 审阅对象
 
 审阅对象是 `pengchengneo/Claude-Code` 仓库当前 `main` 分支。根目录主要包含 `docs`、`shims`、`src`、`vendor`，以及 `README.md`、`AGENTS.md`、`package.json`、TypeScript/Bun 配置等工程文件。README 给出的规模约为 1,987 个 TypeScript/TSX 文件，目录中可见 53 类工具、87 组命令、大量 React/Ink 组件与 Hook，以及 Agent、MCP、Bridge、Coordinator、Proactive、Voice、Vim 等子系统。[源码确认]
 
-### K.1.2 审阅粒度
+### P.1.2 审阅粒度
 
 本附录采用四层审阅粒度：
 
@@ -49,7 +49,7 @@
 
 静态审阅最容易犯的错误，是把“存在一个目录”误读为“功能一定完整可用”，或者把“类型支持某字段”误读为“所有路径都正确生产该字段”。因此本附录只在代码证据足够时使用确定语气；对于仅从模块名推导的部分，会显式写为结构推断。
 
-### K.1.3 证据链
+### P.1.3 证据链
 
 核心结论尽量形成“目录 → 类型 → 控制流 → 状态 → 失败路径”的证据链。例如，判断工具系统是否具备统一治理能力，不能只看 `src/tools` 数量，而要同时检查：
 
@@ -61,7 +61,7 @@
 
 这种方法可以避免“接口看起来很漂亮，但执行路径绕过了它”的误判。
 
-### K.1.4 本次未覆盖的验证
+### P.1.4 本次未覆盖的验证
 
 本文没有声称完成下列工作：没有对 1,987 个文件逐行人工审阅；没有在三种操作系统上构建；没有连接真实 Claude API、Bedrock、MCP Server、Bridge 后端或 GrowthBook；没有运行官方内部测试；没有证明恢复仓库与某一官方发布包逐字节一致。文档的价值在于建立**高可信源码模型、关键调用链和系统性阅读地图**，而不是替代动态测试、安全审计或法律层面的来源鉴定。
 
@@ -77,15 +77,15 @@ flowchart LR
     H -.->|"动态验证仍需另行执行"| I["构建、测试、真实服务联调"]
 ```
 
-## K.2 仓库来源、还原机制与可信边界
+## P.2 仓库来源、还原机制与可信边界
 
-### K.2.1 Source Map 还原意味着什么
+### P.2.1 Source Map 还原意味着什么
 
 README 明确说明，源码由公开 npm 包 `@anthropic-ai/claude-code` 携带的 source map 重建。Source map 通常保存打包后位置到原始文件、原始行列和源文本的映射；若 `sourcesContent` 完整，理论上可以恢复大量原始 TypeScript/TSX。它的优势是文件名、模块边界、类型注释和多数源码语义得以保留；风险则包括：某些构建期替换值缺失、内部生成文件未被映射、原始资源不在 map 中、宏展开结果与源码不一致、依赖源码仅以 vendor 形式残留，以及格式化后行号与官方仓库不一致。
 
 `package.json` 使用 `999.0.0-restored` 作为版本号且标记 `private`，这是很重要的信号：该仓库以研究和还原为目的，不应把占位版本解释为真实产品版本。[源码确认]
 
-### K.2.2 dev-entry 的恢复完整性闸门
+### P.2.2 dev-entry 的恢复完整性闸门
 
 `src/dev-entry.ts` 不是普通入口包装。它会递归扫描 `src/vendor` 中的 TS/JS 文件，解析相对导入，检测目标文件是否存在。当缺失导入仍然存在时，入口输出恢复状态并停止；只有缺失数归零，才动态导入 `src/entrypoints/cli.tsx`。这相当于一个“恢复完整性闸门”：
 
@@ -94,7 +94,7 @@ README 明确说明，源码由公开 npm 包 `@anthropic-ai/claude-code` 携带
 3. 给还原工作提供可度量的完成条件；
 4. 但不能证明语义完整，因为“文件存在”不等于“内容与构建宏一致”。
 
-### K.2.3 当前提交历史的解释
+### P.2.3 当前提交历史的解释
 
 当前 `main` 只显示一个还原提交，提交日期为 2026 年 4 月 1 日。单提交历史使源码阅读更像“某一发布快照的镜像”，而不是可追踪设计演进的开发仓库。这带来三个后果：
 
@@ -102,7 +102,7 @@ README 明确说明，源码由公开 npm 包 `@anthropic-ai/claude-code` 携带
 - 无法从 PR、回归提交和版本迁移中判断某个兼容分支何时引入；
 - 文档应以“快照架构”表述，不应推断维护团队长期开发流程。
 
-### K.2.4 可信使用方式
+### P.2.4 可信使用方式
 
 这个仓库很适合：研究大型 Agent CLI 的模块划分、工具抽象、上下文压缩、权限建模、终端 UI、多 Agent 与远程控制设计；也适合做静态代码导航、架构对标和教学。它不适合直接被当作官方支持的生产依赖，不应在没有补全来源验证、许可证评估、依赖锁定、密钥隔离、构建复现和安全测试的情况下分发为产品。
 
@@ -118,17 +118,17 @@ flowchart TD
     F -.->|"继续恢复"| C
 ```
 
-## K.3 规模、技术栈与依赖版图
+## P.3 规模、技术栈与依赖版图
 
-### K.3.1 语言与运行时
+### P.3.1 语言与运行时
 
 项目主体是 TypeScript/TSX，采用 ESM。`package.json` 指定 Bun 1.3.5 作为包管理与主要运行环境，并声明 Node.js 24 及以上。开发脚本把 `dev`、`start` 和版本查询都指向 `src/dev-entry.ts`。这表明项目不是传统“先 tsc 再 node dist”的单一路径，而更依赖 Bun 对 TypeScript、宏、bundle feature 与运行时模块加载的支持。[源码确认]
 
-### K.3.2 UI 技术
+### P.3.2 UI 技术
 
 交互界面以 React 和 Ink 为核心。Ink 把 React 组件模型映射到终端输出，允许系统用组件、Context、Hook、局部状态和重渲染组织复杂 CLI。`src/components`、`src/hooks` 与 `src/context` 的规模说明 TUI 不是薄壳，而是承担消息渲染、差异展示、权限确认、设置、任务、团队、技能、MCP、通知、弹层和输入编辑等大量产品逻辑。
 
-### K.3.3 Agent 与协议依赖
+### P.3.3 Agent 与协议依赖
 
 依赖中可见 Anthropic SDK、Agent SDK、sandbox runtime、AWS Bedrock Runtime、MCP SDK、OpenTelemetry、GrowthBook、WebSocket、Zod 等。由此可以建立几条明确的能力轴：
 
@@ -139,7 +139,7 @@ flowchart TD
 - **可观测轴**：分析事件、成本、性能和 OpenTelemetry；
 - **远程轴**：WebSocket/HTTP 混合传输与 Bridge 环境注册。
 
-### K.3.4 依赖治理风险
+### P.3.4 依赖治理风险
 
 恢复仓库没有天然继承官方内部供应链保证。对二次开发者而言，最重要的不是“能否 bun install”，而是锁文件完整性、依赖来源、宏支持、原生模块兼容、SDK 版本耦合和 Node/Bun 行为差异。尤其 `bun:bundle` 的 `feature()` 是多处死代码消除和产品变体的基础；若替换运行时或用普通 tsc 执行，必须先证明宏语义等价。
 
@@ -177,7 +177,7 @@ flowchart TB
     WS --> Integration
 ```
 
-## K.4 系统定位与核心设计原则
+## P.4 系统定位与核心设计原则
 
 从源码看，该系统不是“把用户输入拼成一个 API 请求”的简单 CLI，而是一个在本地终端运行的 Agent Runtime。它同时负责交互界面、会话状态、上下文构建、模型路由、工具注册、权限治理、本地进程、文件事务、扩展协议、后台任务、远程控制和可观测性。可以把它理解为五种角色的组合：
 
@@ -189,27 +189,27 @@ flowchart TB
 
 源码反复体现几条设计原则。
 
-### K.4.1 显式能力契约
+### P.4.1 显式能力契约
 
 工具不是任意回调，而是带 Schema、权限、并发、破坏性、只读性、开放世界访问、UI 渲染和结果映射的完整对象。命令也不只是字符串替换，而有可用性、来源、类型和远程安全集合。显式契约使系统能够在模型调用前构建准确工具描述，在执行前进行统一治理，在执行后形成稳定消息。
 
-### K.4.2 流式事件优先
+### P.4.2 流式事件优先
 
 `query()` 是异步生成器，流式增量、完整 Assistant 消息、工具进度、工具结果、附件、压缩边界与终止事件通过同一可迭代通道传播。这样 headless SDK、REPL、Bridge 或其他消费者可以选择不同展示方式，而不必复制 Agent Loop。
 
-### K.4.3 安全不是单点判断
+### P.4.3 安全不是单点判断
 
 权限由配置规则、工具专属校验、Hook、自动分类器、沙箱、人工确认和组织策略共同组成。安全链路的目标不是“总是弹窗”，而是对低风险请求无摩擦放行，对已禁止请求确定拒绝，对上下文相关风险请求收集可解释确认。
 
-### K.4.4 上下文是受预算约束的状态
+### P.4.4 上下文是受预算约束的状态
 
 系统对消息、工具输出、系统提示、记忆、技能和文件读取都做预算治理；Compact 并非唯一方案，还存在微压缩、响应式压缩、Context Collapse、History Snip、工具结果落盘和文件读取限额。说明上下文管理被当作持续运行的资源调度问题，而不是异常时才处理。
 
-### K.4.5 主线程与长生命周期基础设施分离
+### P.4.5 主线程与长生命周期基础设施分离
 
 `ToolUseContext` 中同时存在普通 `setAppState` 和用于任务的 `setAppStateForTasks`。注释明确指出异步 Agent 的普通状态写入可能是 no-op，而后台任务、会话 Hook 等基础设施必须触达根 Store。这体现了对“子 Agent 生命周期”和“会话基础设施生命周期”不同的认识。
 
-### K.4.6 缓存字节稳定性
+### P.4.6 缓存字节稳定性
 
 工具输入的可观察副本可以做兼容字段回填，但原始 API 绑定消息不能被修改，以免破坏 prompt cache 字节一致性。子 Agent 甚至可以复用父线程在回合开始时冻结的渲染系统提示，避免实验开关从冷到热导致缓存失配。缓存不是外围优化，而是已经影响核心对象是否可变。
 
@@ -247,35 +247,35 @@ mindmap
       成本与遥测
 ```
 
-## K.5 顶层分层架构
+## P.5 顶层分层架构
 
 虽然仓库没有采用严格的 DDD 或六边形目录命名，但从依赖方向可以抽象为七层。
 
-### K.5.1 入口与运行模式层
+### P.5.1 入口与运行模式层
 
 `src/dev-entry.ts`、`src/entrypoints/cli.tsx`、`src/main.tsx`、`src/replLauncher.tsx` 负责恢复闸门、参数快路径、配置初始化、模式选择和应用挂载。CLI 入口大量使用动态导入，尽量让 `--version`、Bridge、Daemon、后台会话、模板、Runner 等快路径不加载完整交互应用。
 
-### K.5.2 表示层
+### P.5.2 表示层
 
 `src/components`、`src/screens`、`src/ink`、`src/hooks`、`src/context`、`src/vim`、`src/keybindings` 构成终端 UI。它接收流式消息与状态，渲染工具调用、差异、确认框、设置和任务面板，并把用户事件转换成命令、消息或权限决策。
 
-### K.5.3 会话编排层
+### P.5.3 会话编排层
 
 `QueryEngine.ts`、`query.ts`、`query/*`、`state`、`bootstrap` 维护会话与回合。它将用户输入处理成消息，装配系统上下文，调用模型循环，记录 transcript，处理压缩边界，汇总使用量，并把 SDK 事件向外输出。
 
-### K.5.4 能力与工具层
+### P.5.4 能力与工具层
 
 `Tool.ts` 定义能力契约，`src/tools` 给出具体实现。工具既是模型可见 API，也是本地副作用边界。Bash、文件修改、远程触发和发送消息等工具必须通过权限与策略；只读工具可以在满足条件时并行。
 
-### K.5.5 扩展与协议层
+### P.5.5 扩展与协议层
 
 `src/services/mcp`、`src/plugins`、`src/skills` 把外部 Server、插件包和提示技能引入系统；`commands` 则提供面向人的 Slash Command。四者最终都可能改变模型可见工具、系统提示、可执行流程或 UI。
 
-### K.5.6 基础设施层
+### P.5.6 基础设施层
 
 `src/services/api`、OAuth、settingsSync、analytics、compact、SessionMemory、LSP、notifier、policyLimits、remoteManagedSettings 等处理外部 API、认证、存储、策略、实验、可观测和资源治理。
 
-### K.5.7 特殊运行体层
+### P.5.7 特殊运行体层
 
 `assistant`、`proactive`、`coordinator`、`bridge`、`remote`、`tasks`、`jobs`、`voice` 等目录承载长期运行助手、多 Agent、远程控制、后台工作和媒体能力。它们并不是完全独立的应用，而是复用会话、工具、权限和消息内核的不同组合。
 
@@ -300,7 +300,7 @@ flowchart TB
     SX -->|"复用扩展与任务"| L5
 ```
 
-## K.6 源码目录职责地图
+## P.6 源码目录职责地图
 
 下面的目录地图用于快速定位。由于恢复仓库中部分文件可能被格式化为很长的单行，实际阅读时应优先从类型、导出符号与注释切入。
 
@@ -350,13 +350,13 @@ flowchart LR
     Modal --> UX
 ```
 
-## K.7 启动与 Bootstrap
+## P.7 启动与 Bootstrap
 
-### K.7.1 恢复入口与真实入口
+### P.7.1 恢复入口与真实入口
 
 开发脚本先进入 `src/dev-entry.ts`。该文件提供恢复仓库特有的检查与帮助；检查通过后，才导入 `src/entrypoints/cli.tsx`。在真实发行构建中，入口可能由打包器直接指向 CLI 文件，因此二次开发时应分清“还原仓库入口”和“产品入口”。
 
-### K.7.2 CLI 的快路径哲学
+### P.7.2 CLI 的快路径哲学
 
 `entrypoints/cli.tsx` 在顶部先处理少量必须在模块加载前设置的环境变量，例如 Corepack 自动固定、远程环境的堆内存、实验基线对后台任务与自动记忆的禁用。之后 `main()` 只读取 `process.argv`，优先分发以下快路径：
 
@@ -372,11 +372,11 @@ flowchart LR
 
 这种顺序不是简单优化。某些模块在导入时捕获环境变量为常量，例如 BashTool、AgentTool 和 PowerShellTool 是否允许后台任务。若实验基线在 `init()` 之后才设置，模块级常量已经固化，功能开关会失效。因此入口必须承担“在任何相关模块求值前确定进程级语义”的职责。
 
-### K.7.3 初始化阶段
+### P.7.3 初始化阶段
 
 完整启动通常包含：启用配置、初始化日志/分析 Sink、解析身份与认证、读取全局和项目设置、判断工作区信任、加载插件与 Skill、连接 MCP、构建工具集合、选择模型与 thinking 配置、准备 AppState，最后挂载 Ink 应用或启动 headless QueryEngine。不同模式会有裁剪，例如 `--bare` 更关注低启动延迟，Bridge 先校验认证与组织策略，Daemon Worker 避免加载不必要 UI。
 
-### K.7.4 启动失败的分类
+### P.7.4 启动失败的分类
 
 启动错误至少分四类：
 
@@ -417,31 +417,31 @@ sequenceDiagram
     end
 ```
 
-## K.8 CLI 多模式路由
+## P.8 CLI 多模式路由
 
 大型 Agent CLI 的难点之一，是同一可执行文件既要像普通命令一样快速退出，又要支持长生命周期 TUI、守护进程、远程桥接和子工作进程。源码选择“入口显式路由 + 动态导入”，而不是先加载整个应用再在内部判断。
 
-### K.8.1 交互模式
+### P.8.1 交互模式
 
 默认模式挂载 Ink REPL。用户输入文本、Slash Command 或快捷键，界面维护消息列表、工具进度、状态栏、确认队列和弹层。交互模式拥有 `requestPrompt`、`setToolJSX`、OS 通知等 UI 能力，权限决策可以进入队列让用户确认。
 
-### K.8.2 Print/Headless/SDK 模式
+### P.8.2 Print/Headless/SDK 模式
 
 Headless 路径以 QueryEngine 为中心，输入和输出更结构化。`ToolUseContext` 中 `isNonInteractiveSession` 会影响工具描述与权限行为；不存在 UI Prompt 时，必须由调用方注入 `canUseTool` 或采用确定策略，不能默默等待一个永远不会出现的弹窗。
 
-### K.8.3 Bridge 与远程控制
+### P.8.3 Bridge 与远程控制
 
 Bridge 模式让 Web/移动端控制本地 CLI。入口先检查 OAuth、GrowthBook/能力 Gate、最低版本和组织策略，再启动 Bridge 主程序。远端可以提交消息、接收流式输出、批准权限、切换模型或中断；本地仍然是文件和 Shell 副作用的执行位置。
 
-### K.8.4 Daemon 与后台会话
+### P.8.4 Daemon 与后台会话
 
 Daemon Supervisor 管理长生命周期 Worker；后台会话命令则围绕本地 Session Registry 提供查看、日志、附着和终止。它们与工具层的后台 Shell 不是同一概念：前者管理整场 Claude 会话，后者管理一条工具调用产生的本地任务。
 
-### K.8.5 MCP/Native Host 子模式
+### P.8.5 MCP/Native Host 子模式
 
 Chrome、Computer-use 或 SDK Control 可把 CLI 进程作为协议服务端或 Native Messaging Host。此时标准 REPL 不应初始化，stdout/stderr 也可能成为协议通道，因此日志输出必须严格隔离。
 
-### K.8.6 模式路由不变量
+### P.8.6 模式路由不变量
 
 - 特殊模式必须在加载会污染协议输出或显著拖慢启动的模块前识别；
 - 进程级环境开关必须在目标模块求值前确定；
@@ -467,21 +467,21 @@ flowchart TD
     H -->|"Headless"| Q["QueryEngine"]
 ```
 
-## K.9 REPL 与 Ink 终端 UI
+## P.9 REPL 与 Ink 终端 UI
 
-### K.9.1 UI 不是 Agent Loop
+### P.9.1 UI 不是 Agent Loop
 
 终端 UI 与 Agent Loop 通过消息、进度和状态边界协作。UI 不应自行决定工具执行顺序；QueryEngine/query 也不应直接写终端 escape sequence。Ink 组件消费状态并生成虚拟终端树，Hook 把用户输入、权限决定和窗口事件转成运行时操作。这样同一 Agent Loop 可以被 REPL、SDK、Bridge 或测试替换消费者。
 
-### K.9.2 AppState 的聚合性质
+### P.9.2 AppState 的聚合性质
 
 从 `ToolUseContext.getAppState/setAppState`、组件目录和 Hook 命名可见，AppState 聚合了消息、工具权限上下文、MCP 连接、IDE 状态、主题、任务、通知、弹层、队列和其他会话状态。大型聚合 Store 的优点是工具与 UI 可共享快照；代价是更新粒度、闭包陈旧、异步 Agent 写入和测试隔离都更困难。源码通过函数式更新、专用 Context、局部 Hook 和 `setAppStateForTasks` 缓解部分问题。
 
-### K.9.3 PromptInput 与命令队列
+### P.9.3 PromptInput 与命令队列
 
 输入层需要同时处理普通文本、Slash Command、粘贴、多行编辑、Vim 模式、快捷键、语音转写、文件提及和排队消息。提交后，当前工具可能仍在运行；每个工具的 `interruptBehavior()` 决定新消息是取消当前工具还是被阻塞排队。命令队列因此不是简单 FIFO，它还要理解当前回合状态、可中断工具、后台化和系统消息。
 
-### K.9.4 消息渲染
+### P.9.4 消息渲染
 
 不同消息有不同生命周期：
 
@@ -494,11 +494,11 @@ flowchart TD
 
 `Tool` 接口甚至提供 `extractSearchText`，要求全文检索索引文本与 transcript 模式真实可见文本保持一致，避免“索引命中但屏幕无法高亮”的幽灵结果。这说明终端 UI 已经具备接近桌面应用的搜索一致性要求。
 
-### K.9.5 权限 UI
+### P.9.5 权限 UI
 
 权限请求不应直接阻塞 React render。`useCanUseTool` 返回 Promise，并把需要人工确认的请求放入队列；组件显示描述、工具名、输入摘要、匹配规则、潜在影响和允许/拒绝选项。取消、会话中断或组件卸载时 Promise 必须被解析，防止 Agent Loop 永久等待。
 
-### K.9.6 终端约束
+### P.9.6 终端约束
 
 Ink UI 仍受终端宽度、颜色、Unicode、鼠标、Alt Screen、重绘频率与 stdout 污染影响。工具输出可能包含控制字符、超长行、二进制或图像协议，因此渲染前需要清洗、截断和能力探测。恢复仓库中的大量 UI 工具函数，反映出“终端不是普通 DOM”的现实。
 
@@ -520,9 +520,9 @@ flowchart LR
 
 ## 第二篇·会话内核与 Agent Loop
 
-## K.10 QueryEngine 会话引擎
+## P.10 QueryEngine 会话引擎
 
-### K.10.1 类的边界
+### P.10.1 类的边界
 
 `QueryEngine` 的源码注释直接给出设计意图：它拥有一场会话的查询生命周期和会话状态，将原本位于 `ask()` 中的核心逻辑抽取为可供 headless/SDK 使用、未来也可供 REPL 复用的独立类。实例粒度是“一场 conversation 一个 QueryEngine”；每次 `submitMessage()` 开启一个新回合，但消息、文件缓存、使用量等状态跨回合保留。[源码确认]
 
@@ -539,7 +539,7 @@ flowchart LR
 
 这个边界非常重要。若把每次请求都创建成无状态函数，恢复、文件缓存、Skill 去重、累计成本和中断会散落到调用方；若把所有状态都放进全局单例，又会导致多会话污染。QueryEngine 选择会话级对象，在可测试性和状态聚合之间取得平衡。
 
-### K.10.2 submitMessage 的阶段
+### P.10.2 submitMessage 的阶段
 
 `submitMessage()` 可以抽象为十一个阶段：
 
@@ -555,21 +555,21 @@ flowchart LR
 10. 记录消息、Compact Boundary、使用量、结构化输出和错误结果；
 11. 生成 SDK result 事件并保留可供下一回合使用的会话状态。
 
-### K.10.3 先写用户消息再请求模型
+### P.10.3 先写用户消息再请求模型
 
 源码中的长注释说明了一个容易忽略的可靠性问题：如果只在模型开始返回后才写 transcript，那么用户点击 Stop、桌面宿主杀死子进程或进程异常退出时，日志里可能只有队列操作，没有真正的用户消息；恢复逻辑会判断“没有会话”。因此 QueryEngine 在进入查询循环前先写入用户消息。交互模式等待写入完成，以换取可恢复性；`--bare` 可 fire-and-forget，以降低脚本调用的关键路径延迟。
 
 这是一种典型的**意图先持久化**策略：先保证用户已接受的输入不会消失，再开始不可预测的远程调用。它并不等同数据库事务，但建立了明确的恢复锚点。
 
-### K.10.4 Compact 后的内存释放
+### P.10.4 Compact 后的内存释放
 
 当 Compact Boundary 被写入并包含保留段信息后，SDK/headless 路径可以删除边界之前的 `mutableMessages`，释放长期会话的堆内存。REPL 可能仍保留完整历史用于滚动和搜索，因此两种模式对“逻辑上下文”和“UI 历史”的物理存储策略不同。这是把上下文窗口、持久化日志和屏幕历史分开建模的体现。
 
-### K.10.5 中断与可变配置
+### P.10.5 中断与可变配置
 
 `interrupt()` 直接触发 QueryEngine 的 AbortController；`setModel()` 可以改变后续回合的模型配置；`getMessages()`、`getReadFileState()` 和 `getSessionId()` 向宿主暴露受控状态。引擎没有把内部数组任意交给外部修改，而以只读视图或专用方法暴露，这有利于维持消息顺序和缓存不变量。
 
-### K.10.6 设计风险
+### P.10.6 设计风险
 
 QueryEngine 已经很大，既处理输入、上下文、持久化、SDK 事件、压缩、结构化输出又处理错误聚合。它是自然的“会话应用服务”，但也存在继续膨胀为 God Object 的风险。后续重构可将 TranscriptCoordinator、TurnContextBuilder、SDKEventMapper、UsageAccumulator 和 CompactBoundaryManager 拆为组合对象，同时保留 QueryEngine 作为门面。
 
@@ -596,9 +596,9 @@ stateDiagram-v2
     Interrupted --> Idle: 清理并返回中断结果
 ```
 
-## K.11 `query()` 异步生成器与 Agent Loop
+## P.11 `query()` 异步生成器与 Agent Loop
 
-### K.11.1 为什么使用异步生成器
+### P.11.1 为什么使用异步生成器
 
 `query(params)` 返回 `AsyncGenerator`，持续产出 StreamEvent、请求开始事件、Message、Tombstone、ToolUseSummary 等对象，并最终返回 Terminal。异步生成器同时解决三个问题：
 
@@ -608,7 +608,7 @@ stateDiagram-v2
 
 与回调树相比，生成器保留顺序语义；与“返回最终数组”相比，它显著降低首 Token 延迟和峰值内存。更重要的是，生成器允许内部在模型、工具、Hook、压缩和重试之间切换，而外部只看到有序事件。
 
-### K.11.2 主循环的逻辑模型
+### P.11.2 主循环的逻辑模型
 
 一个典型循环是：
 
@@ -624,7 +624,7 @@ stateDiagram-v2
 
 这里有一个源码明确强调的细节：`stop_reason=tool_use` 并不被认为足够可靠，**流中实际出现工具块**才是退出当前模型流并进入工具执行阶段的依据。这样可以避免供应商或 SDK 在边缘情况下错误标注 stop reason，导致遗漏已收到的工具请求。
 
-### K.11.3 可观察输入与缓存输入分离
+### P.11.3 可观察输入与缓存输入分离
 
 某些工具需要为旧 SDK、Transcript、Hook 或权限弹窗补充派生字段。`Tool.backfillObservableInput()` 允许对工具输入的复制品原地补齐，但原始消息保持不变。理由是 prompt cache 对序列化字节敏感；若为了展示而修改历史工具输入，下一个请求的缓存前缀可能失效。
 
@@ -635,11 +635,11 @@ stateDiagram-v2
 
 任何新增兼容逻辑都应放在观察轨，不能反向污染 API 事实轨。
 
-### K.11.4 工具执行结果的顺序
+### P.11.4 工具执行结果的顺序
 
 模型可以一次发出多个工具调用。只读、并发安全的调用可以并行；会改变上下文或相互依赖的调用需要串行。无论底层并发如何，回填给模型的 Tool Result 必须能按 tool_use ID 正确关联，并保持可预测顺序。若中途异常，执行器需要为未完成调用补齐错误结果，避免下一次 API 请求出现“有 tool_use 没有 tool_result”的协议不完整状态。
 
-### K.11.5 可恢复错误与不可恢复错误
+### P.11.5 可恢复错误与不可恢复错误
 
 query 循环会暂缓暴露部分 prompt-too-long、max-output 等错误，因为 Context Collapse、Reactive Compact 或截断仍可能恢复；若过早把错误产出为最终结果，上层会结束会话，恢复策略没有机会执行。相反，认证失败、明确预算超限、无法满足协议或取消应快速终止。
 
@@ -648,7 +648,7 @@ query 循环会暂缓暴露部分 prompt-too-long、max-output 等错误，因�
 1. 当前消息/工具状态是否仍然协议完整？
 2. 是否存在不会重复副作用的恢复动作？
 
-### K.11.6 Terminal 条件
+### P.11.6 Terminal 条件
 
 终止可能来自：模型自然结束、达到 max turns、达到美元预算、结构化输出工具成功、用户中断、停止 Hook、不可恢复 API 错误、工具链无法继续或组织策略阻断。高质量 Agent Loop 不能只写 `while(true)` 等模型不再调用工具，而要把每种退出原因转成明确的 Terminal/Result subtype，供 CLI、SDK 与远端调用方可靠处理。
 
@@ -689,9 +689,9 @@ sequenceDiagram
     end
 ```
 
-## K.12 消息模型与事件流
+## P.12 消息模型与事件流
 
-### K.12.1 消息不是单一 Chat Message
+### P.12.1 消息不是单一 Chat Message
 
 `ToolUseContext` 引用的消息类型至少包括 UserMessage、AssistantMessage、AttachmentMessage、SystemMessage、ProgressMessage 与 SystemLocalCommandMessage。QueryEngine 还向 SDK 输出初始化、流式、结果和状态类事件。把这些对象都叫“消息”容易混淆，实际可以按用途分为四层：
 
@@ -702,7 +702,7 @@ sequenceDiagram
 
 `normalizeMessagesForAPI` 之类的边界负责剥离不能进入 API 的本地对象。类型上把 `appendSystemMessage` 参数排除 `SystemLocalCommandMessage`，就是用编译期约束保护边界。
 
-### K.12.2 Tool Use 与 Tool Result 配对
+### P.12.2 Tool Use 与 Tool Result 配对
 
 Assistant Message 可以包含多个 `tool_use` 内容块；对应结果通常以 User Message 的 `tool_result` 内容块返回。配对键是 tool use ID，而不是数组索引。消息规整器必须处理：
 
@@ -715,15 +715,15 @@ Assistant Message 可以包含多个 `tool_use` 内容块；对应结果通常�
 
 任何情况下都应尽量生成协议合法的结果块。让模型在下一轮看到“工具失败：权限拒绝”比直接删除调用更正确，因为删除会改变因果历史。
 
-### K.12.3 附件与嵌套记忆
+### P.12.3 附件与嵌套记忆
 
 AttachmentMessage 用于承载不适合直接作为普通用户文本的结构化上下文，如结构化输出、max-turns 信号、文件、记忆或其他运行时附件。`nestedMemoryAttachmentTriggers` 与 `loadedNestedMemoryPaths` 防止同一 CLAUDE.md 因文件缓存 LRU 淘汰而在繁忙会话中重复注入几十次。
 
-### K.12.4 Progress 的生命周期
+### P.12.4 Progress 的生命周期
 
 Progress 不一定持久保留为模型上下文。它主要服务 UI、SDK 观察者和遥测，例如 Bash 已运行时长、Agent 子任务进度、MCP 调用阶段、Web Search 状态。完成后，最终结果应该包含足够事实，使删除进度消息不会损害模型理解。否则长期会话会被大量瞬时状态污染。
 
-### K.12.5 Compact Boundary
+### P.12.5 Compact Boundary
 
 Compact Boundary 是特殊 System Message，记录“此前上下文已被摘要替代”的事实，并可能带 preservedSegment 的头尾 UUID。它同时服务：
 
@@ -733,7 +733,7 @@ Compact Boundary 是特殊 System Message，记录“此前上下文已被摘要
 - UI 分段与调试；
 - 保持压缩前后因果关系。
 
-### K.12.6 消息 UUID 与可追踪性
+### P.12.6 消息 UUID 与可追踪性
 
 QueryEngine 支持调用方为输入指定 UUID。稳定 ID 有助于 transcript、回放、分支、工具结果关联和远程桥接。设计上应避免以数组位置代替身份，因为 Compact、Snip、过滤 UI 消息和恢复重排都会改变位置。
 
@@ -781,21 +781,21 @@ classDiagram
     ToolUseBlock --> ToolResultBlock : 通过 tool_use_id 配对
 ```
 
-## K.13 模型请求、流式响应与重试
+## P.13 模型请求、流式响应与重试
 
-### K.13.1 请求装配
+### P.13.1 请求装配
 
 模型请求不是只包含消息。运行时还需要决定主循环模型、fallback 模型、thinking 配置、系统提示、工具 Schema、严格模式、最大输出、缓存策略、查询来源、组织限制与用户覆盖。QueryEngine 在处理输入后重新获取模型和上下文，是因为 Slash Command 或输入处理本身可能改变模型、权限模式或系统提示。
 
-### K.13.2 Provider 与模型选择
+### P.13.2 Provider 与模型选择
 
 依赖版图显示系统支持 Anthropic SDK 与 AWS Bedrock Runtime；源码还包含模型解析和 API 服务目录。架构上应把“用户输入的模型别名”“最终供应商模型 ID”“认证方式”“区域/端点”和“能力集”分离。否则同一个 `model` 字符串会同时承担 UI 名称、计费键、API 参数与兼容判断，后期极难演进。
 
-### K.13.3 流式生命周期
+### P.13.3 流式生命周期
 
 典型流包括 request_start、message_start、content block start/delta/stop、message delta 和 message stop。运行时一边向外 yield 增量，一边构造完整 AssistantMessage。工具输入也可能分片到达，因此 Tool 的 `renderToolUseMessage` 接收 Partial Input，允许 UI 提前显示“正在运行什么”，但真正验证必须等待 Schema 可解析的完整输入。
 
-### K.13.4 重试分类
+### P.13.4 重试分类
 
 合理的 API 重试必须区分：
 
@@ -809,15 +809,15 @@ classDiagram
 
 特别是含工具调用的部分响应，不能简单重发并把两份 tool_use 都执行。系统必须以完整消息边界、流事件状态和 tool use ID 判断是否安全恢复。
 
-### K.13.5 Fallback 模型
+### P.13.5 Fallback 模型
 
 Fallback 不应被当作所有错误的兜底。切模型可能改变上下文窗口、工具调用格式、thinking 支持、输出风格和成本。适合切换的通常是供应商容量或特定模型不可用；不适合切换的是输入非法、权限失败或同样会触发的上下文超限。切换后还应记录最终实际模型，保证成本与调试准确。
 
-### K.13.6 请求级和会话级预算
+### P.13.6 请求级和会话级预算
 
 `maxTurns` 限制 Agent Loop 迭代次数，`maxBudgetUsd` 限制成本，`taskBudget` 约束任务消耗。它们对应不同风险：无限工具循环、昂贵模型输出、并发子任务膨胀。预算判断需要在发请求前预防，也要在收到真实 usage 后结算；只做事后统计无法阻止超支。
 
-### K.13.7 使用量与结果
+### P.13.7 使用量与结果
 
 QueryEngine 累积 totalUsage，并在最终 SDK Result 中带出时长、错误、拒绝、结构化输出和最后停止原因。流式展示与最终结算分离：前者追求低延迟，后者追求完整性。任何工具或 Hook 在 Assistant 响应之后插入的 Progress/Attachment 都不能让结果提取错误地把“最后一条消息”当作最终文本，源码已通过限定最后有效消息类型修复这类问题。
 
@@ -840,9 +840,9 @@ flowchart TD
     L -->|"不可"| M["补齐错误 Tool Result 或终止"]
 ```
 
-## K.14 工具统一类型系统
+## P.14 工具统一类型系统
 
-### K.14.1 Tool 是能力描述对象
+### P.14.1 Tool 是能力描述对象
 
 `Tool<Input, Output, Progress>` 以 Zod Schema 约束输入，`call()` 返回 `ToolResult<Output>`。它并非只有执行函数，而是包含模型提示、UI 呈现、权限、并发和结果序列化的综合契约。关键字段与方法可以按六组理解。
 
@@ -858,25 +858,25 @@ flowchart TD
 
 **兼容组**：aliases、`backfillObservableInput()`、`inputsEquivalent()`、MCP 原始 server/tool 名。它们允许工具重命名、观察字段补齐和重复调用比较。
 
-### K.14.2 ToolUseContext 是执行环境
+### P.14.2 ToolUseContext 是执行环境
 
 ToolUseContext 聚合运行工具所需的会话能力：命令、模型、工具列表、thinking、MCP、预算、AppState、AbortController、文件缓存、通知、系统提示、Agent 身份、消息、权限跟踪、Skill 发现、嵌套记忆去重、内容替换预算和交互 Prompt。它相当于依赖注入容器与 Unit of Work 的混合体。
 
 优点是每个工具调用签名稳定，新增会话能力无需修改几十个工具参数；缺点是上下文很宽，工具可能依赖过多字段。二次开发应把 ToolUseContext 当作只读能力集合，避免任意修改不属于本工具领域的状态。
 
-### K.14.3 ToolResult 不只是 data
+### P.14.3 ToolResult 不只是 data
 
 `ToolResult` 可以带 `newMessages`、`contextModifier` 与 MCP metadata。`newMessages` 允许工具在主结果之外向会话注入附件或系统信息；`contextModifier` 只对非并发安全工具生效，因为并发执行时多个修改器的顺序难以定义。这个限制体现了对状态合并确定性的保护。
 
-### K.14.4 延迟加载工具
+### P.14.4 延迟加载工具
 
 `shouldDefer` 让工具以 defer_loading 方式提供，由 ToolSearch 先发现再调用；`alwaysLoad` 则保证某些工具首轮就完整出现在 Prompt。延迟加载可以减少大量 MCP/专业工具 Schema 占用，但带来一次额外搜索回合和“模型不知道该搜什么”的召回风险。因此 `searchHint` 必须使用工具名之外的高区分关键词。
 
-### K.14.5 大结果治理
+### P.14.5 大结果治理
 
 `maxResultSizeChars` 定义结果达到多大后保存到磁盘，只向模型提供预览与路径。Read 工具可设为 Infinity，因为把 Read 结果再保存成文件会形成“读文件→结果文件→再读文件”的循环，而且 Read 自己已有行数和字节限制。这说明统一机制必须允许领域例外，而不是强迫所有工具一刀切。
 
-### K.14.6 契约不变量
+### P.14.6 契约不变量
 
 - Schema 验证发生在副作用前；
 - `checkPermissions` 只能在输入有效后调用；
@@ -937,13 +937,13 @@ classDiagram
     Tool --> ToolResult : 返回
 ```
 
-## K.15 StreamingToolExecutor 与并发调度
+## P.15 StreamingToolExecutor 与并发调度
 
-### K.15.1 为什么需要专门执行器
+### P.15.1 为什么需要专门执行器
 
 模型流可能在同一 Assistant Message 中发出多个工具调用，工具参数又是分片到达。专门的 StreamingToolExecutor 可以把“解析流”“判断调用何时完整”“权限”“并发”“进度”“结果配对”和“异常补齐”集中处理，避免 query 主循环被每个工具的特殊逻辑淹没。
 
-### K.15.2 调度依据
+### P.15.2 调度依据
 
 并发决策不能只看工具名，应调用每个工具的 `isConcurrencySafe(input)`。同一个 BashTool，`pwd` 与 `rm` 风险不同；同一个 FileReadTool 可并行读不同文件，而 FileEditTool 通常会影响文件缓存、Git 状态和后续工具。只读性和并发安全性相关但不等价：网络搜索可能只读，却受速率限制；读取正在被另一个调用修改的文件也可能产生时序问题。
 
@@ -955,19 +955,19 @@ classDiagram
 4. 纯只读且资源不冲突的调用并行；
 5. 并发度仍受会话级/任务级上限约束。
 
-### K.15.3 结果提交屏障
+### P.15.3 结果提交屏障
 
 并行工具可以在不同时间完成，但在发送下一次模型请求前，应等待本批需要回填的结果达到一致屏障。否则模型可能先基于部分结果继续，再收到剩余结果，造成逻辑分叉。进度可以实时 yield，最终 Tool Result 则应按原 tool_use 序列或稳定规则组装。
 
-### K.15.4 取消
+### P.15.4 取消
 
 AbortController 应传播到权限等待、Hook、MCP、Shell、Web 和子 Agent。取消不是简单停止监听：仍需终止子进程、关闭流、清理临时文件、释放锁，并为协议中已经产生的 tool_use 生成取消结果。工具的 `interruptBehavior()` 允许区分“新用户消息应取消当前工具”与“必须等待当前不可安全中断的操作完成”。
 
-### K.15.5 权限队列与并发
+### P.15.5 权限队列与并发
 
 多个并发工具同时需要确认时，UI 不宜弹出多个重叠对话框。权限请求队列应串行展示，但自动允许/拒绝可以并发计算。`awaitAutomatedChecksBeforeDialog` 可用于 Coordinator Worker：先等待分类器/Hook，避免刚打开人工对话框就被自动结果关闭。对无 UI 的后台 Agent，`shouldAvoidPermissionPrompts` 要求无法自动决定时拒绝，而不是挂死。
 
-### K.15.6 异常完整性
+### P.15.6 异常完整性
 
 若第一个工具抛出异常，执行器不能遗忘同一消息中的其他 tool_use。合理策略是：
 
@@ -977,7 +977,7 @@ AbortController 应传播到权限等待、Hook、MCP、Shell、Web 和子 Agent
 - 所有 result 使用原 ID；
 - 原始异常既记录内部日志，也转成模型可理解的安全错误，不泄露密钥或不必要栈信息。
 
-### K.15.7 背压
+### P.15.7 背压
 
 Bash 或 Agent 进度可能非常频繁。若每个字符都触发 React 重绘和 SDK 事件，吞吐会被 UI 拖垮。执行器或 UI 层需要节流、合并增量、限制缓冲区，并确保最终输出不因节流丢失。背压策略应区分“展示采样”和“事实结果”：可以少画几帧，但不能少保存关键 stderr 或退出码。
 
@@ -1004,15 +1004,15 @@ flowchart TD
     N --> O["按 tool_use ID 回填消息"]
 ```
 
-## K.16 权限模型
+## P.16 权限模型
 
-### K.16.1 权限上下文
+### P.16.1 权限上下文
 
 `ToolPermissionContext` 包含当前模式、附加工作目录、always allow/deny/ask 规则、是否允许绕过权限、是否支持自动模式、被剥离的危险规则、是否避免弹窗、是否等待自动检查，以及进入 Plan Mode 前的权限模式。默认上下文是 `mode: default`、空规则并关闭 bypass。
 
 这不是一个布尔开关，而是会话级策略快照。工具自己的 `checkPermissions` 负责解释领域输入，通用权限层负责合并规则来源、当前模式和交互方式。
 
-### K.16.2 决策层次
+### P.16.2 决策层次
 
 从低到高可以抽象为：
 
@@ -1027,27 +1027,27 @@ flowchart TD
 
 仅靠第六层弹窗不是安全模型。用户可能疲劳点击，描述可能不准确，而执行期环境也可能在确认后变化。
 
-### K.16.3 useCanUseTool
+### P.16.3 useCanUseTool
 
 `useCanUseTool.tsx` 把 AppState、权限上下文、确认队列、日志和自动分类器连接起来。通用检查返回 deny 时，立即记录“配置拒绝”；需要 ask 时，可并行等待 speculative classifier。源码设置约两秒竞速窗口：若高置信分类器及时匹配且相关 feature 开启，可以记录自动批准；否则进入用户对话框。无论哪条路径，取消都会解析 Promise 并清理“正在分类”状态。
 
-### K.16.4 自动模式与分类器
+### P.16.4 自动模式与分类器
 
 自动模式的目标是减少安全操作的打断，但分类器绝不能成为唯一防线。工具通过 `toAutoClassifierInput()` 提供简洁安全相关表示；Bash 传命令，Edit 传路径和内容摘要，无安全意义的工具可以返回空。分类器结果还需要 feature gate、置信度和规则匹配。对于高风险命令，静态危险模式和沙箱仍应优先。
 
-### K.16.5 规则来源
+### P.16.5 规则来源
 
 `ToolPermissionRulesBySource` 暗示规则可来自用户、项目、受管设置、命令行或会话更新。保留来源很重要，因为冲突解释、UI 展示、组织强制和“这条规则为什么生效”都依赖 provenance。合并时不应把规则拍平成无来源字符串。
 
-### K.16.6 Permission Update
+### P.16.6 Permission Update
 
 用户可能选择“仅本次允许”“本会话允许”“把规则写入项目/用户配置”等更新。更新必须先验证其范围，防止低信任项目通过提示让用户写入全局宽泛规则。对于 Shell 通配符，解析和 shadowed rule 检测能识别一条更宽规则是否遮蔽了后续细规则。
 
-### K.16.7 Bypass 权限
+### P.16.7 Bypass 权限
 
 绕过权限是高危能力，应同时受模式可用性、组织 killswitch、环境、UI 警告和审计约束。即便 bypass 开启，也不意味着可以绕过操作系统权限、沙箱政策或组织远程控制限制。实现上要避免把“跳过人工确认”误写为“跳过所有 validate 和安全检查”。
 
-### K.16.8 背景 Agent
+### P.16.8 背景 Agent
 
 后台 Agent 无法显示本地确认时，应该使用 allowlisted 工具、只读模式、预授权规则或确定拒绝。源码中的 `shouldAvoidPermissionPrompts`、本地 denial tracking 和阈值逻辑正是在处理这种场景。否则子 Agent 会在 Promise 上永久等待，主线程只看到任务无进展。
 
@@ -1074,41 +1074,41 @@ flowchart TD
     J --> K["审计 Tool Decision"]
 ```
 
-## K.17 Bash 执行与沙箱
+## P.17 Bash 执行与沙箱
 
-### K.17.1 BashTool 的复杂度来源
+### P.17.1 BashTool 的复杂度来源
 
 `BashTool.tsx` 超过千行，目录还拆出权限、安全、命令语义、危险提示、路径校验、只读验证、sed 解析、沙箱选择和 UI。这是合理的复杂度信号：Shell 是 Agent 最强大、也最容易越权的通用工具。把它当作 `exec(command)` 包装会遗漏几乎所有真实工程问题。
 
-### K.17.2 输入 Schema
+### P.17.2 输入 Schema
 
 Bash 输入包含 command、可选 timeout、description、run_in_background、dangerouslyDisableSandbox，以及内部 `_simulatedSedEdit`。description 被要求使用简洁主动语态，避免用“复杂”“风险”等模糊词掩盖真实行为。`_simulatedSedEdit` 永远从模型可见 Schema 中移除；它只在用户批准 sed 编辑预览后由内部 UI 写入。如果把该字段暴露给模型，模型可能用无害命令配合任意文件内容绕过权限和沙箱。[源码确认]
 
-### K.17.3 命令解析与语义
+### P.17.3 命令解析与语义
 
 BashTool 使用命令拆分、AST 安全解析和语义集合判断搜索、读取、目录列举、静默成功等。对于管道与 `&&`、`||`、重定向，必须理解每个片段；只有所有有效命令都属于搜索/读取且没有改变语义的片段，整体才可折叠为只读展示。简单按字符串前缀判断 `cat` 或 `grep` 会被管道后的写操作绕过。
 
-### K.17.4 权限规则
+### P.17.4 权限规则
 
 Shell 权限通常支持 `Bash(git status)`、`Bash(npm test:*)` 等模式。匹配器需要规范空白、引号、环境变量、路径和复合命令；规则过宽可能允许命令替换、重定向或子 Shell。源码提供 `permissionRuleExtractPrefix`、通配符匹配、Shell 规则解析与 shadow 检测，说明规则语言本身被视为安全敏感 DSL。
 
-### K.17.5 只读约束
+### P.17.5 只读约束
 
 只读模式不只禁用 `rm`。重定向、`sed -i`、`git checkout`、包管理安装、数据库命令、curl 上传、环境持久化等都可能修改状态。`readOnlyValidation.ts` 和 `sedValidation.ts` 代表两类策略：通用语义检查与高风险命令专用解析。若无法可靠解析，应保守地要求确认，而不是假设只读。
 
-### K.17.6 沙箱选择
+### P.17.6 沙箱选择
 
 `shouldUseSandbox` 结合全局模式、工具输入和危险覆盖字段选择 sandbox。执行仍要设置工作目录、环境、超时、输出捕获和进程组取消。`dangerouslyDisableSandbox` 必须经过额外权限确认，不能仅因为模型传 true 就生效。
 
-### K.17.7 前台与后台
+### P.17.7 前台与后台
 
 默认命令注册为前台任务；长时间命令可以显式 `run_in_background`，某些 Assistant 模式的阻塞命令在预算后自动后台化。后台任务把输出写到任务路径，用户或 Agent 之后用 Read/TaskOutput 获取。Sleep 等命令被禁止自动后台化，防止语义变化。
 
-### K.17.8 输出治理
+### P.17.8 输出治理
 
 Bash 同时收集 stdout、stderr、退出码、持续时间和可能的图像输出。超长结果使用累加器截断或落盘，预览包含文件路径；静默命令成功时 UI 显示 Done 而不是误导性的 No output。控制字符、终端重置和编码需要清洗。对于改变文件的命令，可能触发文件历史跟踪、Git 操作记录和 VS Code MCP 文件更新通知。
 
-### K.17.9 TOCTOU 与边界
+### P.17.9 TOCTOU 与边界
 
 权限确认看到的命令文本和真正执行的命令必须完全一致。内部预览字段要绑定被确认内容；工作目录在确认后也不能被攻击者用符号链接无声替换。绝对消除 TOCTOU 很难，但可以通过规范路径、在沙箱中限制可写根、减少确认到执行的可变步骤和记录最终 argv/环境来降低风险。
 
@@ -1142,37 +1142,37 @@ sequenceDiagram
     end
 ```
 
-## K.18 文件读写与编辑事务
+## P.18 文件读写与编辑事务
 
-### K.18.1 文件工具族
+### P.18.1 文件工具族
 
 工具目录包含 FileReadTool、FileWriteTool、FileEditTool、GlobTool、GrepTool、NotebookEditTool 等。把文件读取、搜索、创建和局部编辑拆开，有利于更精确地描述权限和结果：Read 天然只读，Glob/Grep 可并发，Write 会覆盖或创建，Edit 需要验证旧文本与当前文件一致，Notebook 则要保留结构化单元格。
 
-### K.18.2 FileRead
+### P.18.2 FileRead
 
 读取工具应完成路径规范化、工作区边界检查、大小与 Token 限制、编码检测、行号切片、二进制/图片识别和文件状态缓存。`ToolUseContext.fileReadingLimits` 支持 maxTokens/maxSizeBytes，`readFileState` 则可以记录模型已读版本。Read 的结果通常不再由统一大结果机制落盘，以免产生递归读取结果文件。
 
-### K.18.3 FileWrite
+### P.18.3 FileWrite
 
 写入工具必须区分新建与覆盖。覆盖现有文件属于破坏性操作，应显示 Diff 或至少显示目标路径与大小。可靠写入建议采用同目录临时文件、fsync（按需要）和原子 rename；Windows 上 rename 语义与文件占用需要单独处理。写后要更新文件缓存、历史快照、IDE 通知和 Git 变更感知。
 
-### K.18.4 FileEdit
+### P.18.4 FileEdit
 
 局部编辑通常输入 file_path、old_string、new_string、replace_all 等。关键不变量是 old_string 必须与当前文件唯一匹配或满足明确 replace_all；否则模型基于旧版本生成的补丁可能错位。编辑前可读取缓存中的 mtime/hash，与磁盘重新核对，发现并发修改时拒绝并要求重新读取。
 
-### K.18.5 Diff 与用户确认
+### P.18.5 Diff 与用户确认
 
 UI 的 StructuredDiff 可以把新增、删除、上下文行和语法颜色展示给用户。权限确认应基于最终将写入的内容，而不是模型最初的粗略描述。对于 sed 命令，源码专门解析并计算预览，再把批准后的模拟结果通过内部字段传回 BashTool，这本质上是把“命令式编辑”转换成可审核的“声明式文件差异”。
 
-### K.18.6 NotebookEdit
+### P.18.6 NotebookEdit
 
 Notebook 不是纯文本文件。编辑单元格需要维护 cell ID、类型、source 数组、execution count 和 outputs。直接字符串替换 JSON 可能损坏结构或产生巨大无意义 Diff。Notebook 工具应在结构层验证目标单元格，执行后再序列化，同时避免把输出二进制或大量 base64 全部注入模型。
 
-### K.18.7 搜索工具
+### P.18.7 搜索工具
 
 Glob 和 Grep 应限制结果数量、忽略 vendor/二进制/大目录、尊重工作区与用户显式路径，并返回稳定排序。搜索结果是后续 Read 的导航，不应一次塞入所有文件内容。`globLimits.maxResults` 体现了这种预算思路。
 
-### K.18.8 文件事务边界
+### P.18.8 文件事务边界
 
 单个工具调用可以近似事务：验证 → 备份/快照 → 写入 → 更新缓存 → 通知。多个工具调用构成的代码修改则不是原子事务，需要借助 Git、文件历史或 Worktree 提供回滚。Agent 应在大改动前确认基线、每批修改后运行验证，不能假设所有工具调用会一起成功。
 
@@ -1194,13 +1194,13 @@ flowchart TD
     K --> L["返回摘要、Diff 与新状态"]
 ```
 
-## K.19 工具结果预算、落盘与可视化
+## P.19 工具结果预算、落盘与可视化
 
-### K.19.1 为什么单工具截断不够
+### P.19.1 为什么单工具截断不够
 
 如果每个工具只限制自己的最大输出，十个“合法大小”的工具结果仍可能共同挤爆上下文。因此 `ToolUseContext.contentReplacementState` 用于每个会话线程的聚合工具结果预算；query 层可以根据已存在的消息和稳定 UUID 决定哪些内容替换为摘要或磁盘引用。子 Agent 复用/恢复时还要重建相同决策，保证 prompt cache 共享和回放一致。
 
-### K.19.2 结果落盘
+### P.19.2 结果落盘
 
 统一流程通常是：
 
@@ -1214,19 +1214,19 @@ flowchart TD
 
 结果目录必须避免路径注入、权限过宽和跨会话猜测；文件名应随机或基于安全 ID，而不是直接拼接工具输入。
 
-### K.19.3 头部还是尾部
+### P.19.3 头部还是尾部
 
 日志类输出通常尾部更有价值，编译错误和失败摘要常在最后；搜索结果则头部有代表性；Diff 需要保留变更上下文。通用截断器应允许工具声明策略。Bash 使用 EndTruncatingAccumulator 表明其重点是保留末尾；同时 UI 可以显示总行数和截断提示。
 
-### K.19.4 模型视图与人类视图
+### P.19.4 模型视图与人类视图
 
 `mapToolResultToToolResultBlockParam` 决定模型视图，`renderToolResultMessage` 决定终端视图，二者不必完全相同。模型需要结构化、无控制字符、带路径和下一步提示的紧凑事实；人类可能需要颜色、折叠、进度、Diff 和点击展开。`extractSearchText` 又为 transcript 搜索建立第三种投影。三种视图必须共享同一事实来源，但可以有不同表现。
 
-### K.19.5 图片和二进制
+### P.19.5 图片和二进制
 
 Bash 或 Web 工具可能产生图片。系统需要探测 MIME、限制像素和字节、缩放或转换，再构造图像 Tool Result。二进制不能误按 UTF-8 注入终端；对模型不可直接消费的格式，应保存文件并提供元数据。图像处理本身也可能耗内存，必须在解码前检查文件大小，在解码后限制尺寸。
 
-### K.19.6 隐私与保留
+### P.19.6 隐私与保留
 
 工具结果可能含源码、日志、Token 或用户文件。落盘目录的生命周期应与会话一致，默认仅用户可读，并支持清理。远程 Bridge 不应自动上传所有完整结果，除非用户动作和策略允许；远端通常只需得到与本地 UI 相同或更小的安全投影。
 
@@ -1247,33 +1247,33 @@ flowchart LR
     M --> Q["下一轮 query"]
 ```
 
-## K.20 上下文装配与 CLAUDE.md
+## P.20 上下文装配与 CLAUDE.md
 
-### K.20.1 上下文的来源
+### P.20.1 上下文的来源
 
 一次模型请求的上下文至少包含：默认或自定义系统提示、追加系统提示、用户与系统环境信息、会话消息、可用工具 Schema、Agent 定义、MCP 信息、项目指令、记忆、Skill/插件提示、当前模式、计划或团队约束。上下文装配的目标不是“越多越好”，而是让每条信息有清晰来源、作用域、优先级和预算。
 
-### K.20.2 项目记忆文件
+### P.20.2 项目记忆文件
 
 `CLAUDE.md` 类型的项目指令可能位于用户级、项目根、子目录或其他工作目录。读取文件时触发嵌套记忆注入，可以让 Agent 在深入某个子目录后获取更局部规则。问题是文件缓存可能淘汰旧记录，如果仅靠 LRU 的 has 判断，同一路径可能重复注入。因此上下文维护独立 `loadedNestedMemoryPaths` 集合作为会话级去重。
 
-### K.20.3 优先级与冲突
+### P.20.3 优先级与冲突
 
 合理优先级通常是：系统硬规则与组织策略最高；用户显式指令高于项目建议；更局部目录规则可覆盖通用项目约定，但不能取消安全策略；Skill 提示只在被调用时生效；自动记忆属于低权重背景，不应覆盖当前明确要求。源码具体提示拼装顺序仍需结合常量与 queryContext 逐行核对，但这些作用域原则是阅读和扩展时必须验证的不变量。
 
-### K.20.4 自定义系统提示
+### P.20.4 自定义系统提示
 
 QueryEngine 支持 `customSystemPrompt` 替换默认提示，也支持 `appendSystemPrompt` 追加。替换适合 SDK/嵌入式场景，但会失去默认工具使用规范、安全提醒或模式说明；追加相对安全。宿主若允许外部调用方完全替换，应明确哪些硬约束在系统提示之外仍由代码执行，否则安全只剩 Prompt。
 
-### K.20.5 工具描述预算
+### P.20.5 工具描述预算
 
 53 个内置工具、MCP 工具和插件工具若全部展开 Schema，会显著占用上下文。`shouldDefer`、ToolSearch 和 alwaysLoad 构成工具发现层：首轮只放核心工具和延迟工具索引，模型在需要时搜索加载。工具 searchHint 和简洁 description 的质量会直接影响召回。
 
-### K.20.6 Skill 与上下文
+### P.20.6 Skill 与上下文
 
 Skill 更像按需加载的程序化提示。它可以先以名称/描述进入命令与搜索索引，调用后把完整 SKILL.md 或构建结果注入会话。`discoveredSkillNames` 记录它是否先经发现，再实际调用，用于衡量工具发现机制。动态 Skill 目录触发集合避免反复扫描。
 
-### K.20.7 上下文可观测性
+### P.20.7 上下文可观测性
 
 `/context`、`ctx_viz`、成本和统计类命令意味着产品提供某种上下文可视化。优秀的上下文诊断应展示各来源 Token 占比、系统提示、工具 Schema、消息、记忆、附件和压缩后的保留段，而不是只显示总 Token。否则用户无法理解为何“刚开始对话就很满”。
 
@@ -1296,9 +1296,9 @@ flowchart TB
 
 ## 第三篇·上下文、压缩、记忆与恢复
 
-## K.21 Token Budget 与上下文过载治理
+## P.21 Token Budget 与上下文过载治理
 
-### K.21.1 预算不是单一数字
+### P.21.1 预算不是单一数字
 
 上下文窗口的可用空间不是模型宣称的最大 Token 减去消息 Token 这么简单。还要预留系统提示、工具 Schema、thinking、预计输出、Tool Result、停止 Hook 和下一次工具回填。源码中的 `query/tokenBudget.ts`、Compact 服务、文件读取限制和工具结果预算共同表明，系统把 Token 视为多来源共享资源。
 
@@ -1310,27 +1310,27 @@ flowchart TB
 
 当输入占用接近可用输入时，系统可采取五种不同强度的动作：延迟工具加载、截断单个结果、替换历史大结果、微压缩冗余块、生成整体摘要。不同动作的信息损失和延迟差异很大，应从低损失到高损失逐级使用。
 
-### K.21.2 文件读取预算
+### P.21.2 文件读取预算
 
 FileRead 的 `maxTokens` 与 `maxSizeBytes` 先在能力入口限制单次读取。这样可以在内容进入消息前阻断异常大文件。Token 估算不必精确到计费级，但必须保守，尤其源码、JSON 和非英文文本的字符/Token 比例不同。读取切片应返回行范围和“还有多少未读”，让模型可以定向继续，而不是自动把余下全部加载。
 
-### K.21.3 工具 Schema 预算
+### P.21.3 工具 Schema 预算
 
 工具数量随 MCP、插件和项目扩展增长。延迟工具机制通过 `defer_loading` 和 ToolSearch 把完整 Schema 从首轮移出，只保留可搜索信息。核心高频工具或服务端 `_meta['anthropic/alwaysLoad']` 指定的 MCP 工具仍首轮加载。治理指标应包括：初始工具 Token、一次任务实际加载工具数、ToolSearch 额外回合数、未召回率。
 
-### K.21.4 历史结果预算
+### P.21.4 历史结果预算
 
 内容替换状态按会话线程跟踪超大工具结果。稳定决策很关键：若同一历史在父 Agent 与 fork 子 Agent 中选择不同替换集合，prompt cache 前缀会分叉。源码注释明确要求缓存共享 fork 使用相同决策。恢复 Agent 也要从 sidechain 记录重建替换状态。
 
-### K.21.5 输出预留
+### P.21.5 输出预留
 
 若输入恰好填满窗口，模型没有空间输出，更没有空间发工具调用。系统应按模型和模式预留输出；thinking 模式还可能消耗额外预算。结构化输出需要保证 JSON/Schema 完整，预留应高于普通短答。预算不足时宁可提前压缩，也不要依赖 API 返回 413 再补救。
 
-### K.21.6 预算与任务调度
+### P.21.6 预算与任务调度
 
 多 Agent/任务场景还存在总预算。父 Agent 不应把全部美元或 Token 授予每个子任务；`taskBudget` 可做总量计数，子任务启动前原子扣减或申请额度。否则并行子 Agent 都认为预算充足，合计远超用户上限。
 
-### K.21.7 预算可解释性
+### P.21.7 预算可解释性
 
 当系统因为预算删减内容，应产生可观察事件：压缩了哪些范围、保留哪些文件和目标、结果文件放在哪里、剩余多少预算。模型也应知道某段上下文是摘要而非原文，避免把摘要中的省略当作事实不存在。
 
@@ -1359,37 +1359,37 @@ flowchart TD
     G --> C
 ```
 
-## K.22 Compact、Context Collapse 与 History Snip
+## P.22 Compact、Context Collapse 与 History Snip
 
-### K.22.1 多层压缩体系
+### P.22.1 多层压缩体系
 
 `src/services/compact` 包含 `apiMicrocompact`、`autoCompact`、`compact`、`microCompact`、`reactiveCompact`、`sessionMemoryCompact`、`snipCompact`、`snipProjection`、分组、缓存配置和清理模块。它不是一个“调用摘要 Prompt”的函数，而是一组根据触发时机和信息粒度分层的策略。
 
-### K.22.2 Auto Compact
+### P.22.2 Auto Compact
 
 Auto Compact 在请求前或预算临界时主动判断是否需要整体压缩。它通常选择一段历史，生成包含任务目标、已完成工作、关键决策、文件状态、错误和待办的摘要，然后构造 post-compact messages。主动压缩的优势是可控，不必等待 API 硬错误；代价是增加模型调用与信息损失。
 
-### K.22.3 Reactive Compact
+### P.22.3 Reactive Compact
 
 Reactive Compact 在真实 prompt-too-long 等错误后执行。源码 query 流程会暂缓向上暴露可恢复错误，使响应式策略有机会重建上下文。它需要防止无限循环：同一请求压缩后若仍超限，应提高压缩强度或终止，不能重复生成相近摘要。
 
-### K.22.4 Micro Compact
+### P.22.4 Micro Compact
 
 微压缩适合删除低价值冗余：过时 Progress、重复系统提醒、可从磁盘重读的大结果、空内容块、已经被后续状态覆盖的中间消息。它比语义摘要更确定、成本更低，应该优先执行。API Microcompact 可能利用服务端能力或特定消息变换，具体行为应按目标构建进一步核对。
 
-### K.22.5 Context Collapse
+### P.22.5 Context Collapse
 
 Context Collapse 关注结构性折叠，而不是把整段历史改写成一篇总结。例如，把一批工具调用折叠为关键结果、把探索分支收敛为结论、保留最近的工作集。它更适合 Agent 任务，因为工具历史的价值高度不均：一次 Grep 的完整 200 行输出很快过时，但“目标函数在三个文件中被引用”仍应保留。
 
-### K.22.6 History Snip
+### P.22.6 History Snip
 
 History Snip 通过边界和投影从逻辑历史中剪掉一段。QueryEngine 的配置注释说明：SDK/headless 没有 UI 滚动历史，可以在 Snip Boundary 后真正截断内存；REPL 则保留全历史，仅在构造模型视图时投影被 Snip 的版本。这样“人仍能回看”和“模型不再携带”可以同时成立。
 
-### K.22.7 Compact Boundary 与 preserved segment
+### P.22.7 Compact Boundary 与 preserved segment
 
 压缩后写入 System Compact Boundary，可记录保留段 head/tail UUID。恢复时沿链接裁剪旧消息；如果边界前尾消息没有先落盘，子进程在恰当时刻被杀会导致 relink 失败，恢复加载全部旧历史。因此 QueryEngine 在写 boundary 前补写内存中的尾段。这是恢复正确性比表面压缩算法更关键的工程细节。
 
-### K.22.8 摘要质量
+### P.22.8 摘要质量
 
 压缩摘要必须保留：
 
@@ -1403,7 +1403,7 @@ History Snip 通过边界和投影从逻辑历史中剪掉一段。QueryEngine �
 
 摘要不应把猜测写成事实，也不应只记录“做了什么”而丢失“为什么这样做”。
 
-### K.22.9 压缩后的缓存与 GC
+### P.22.9 压缩后的缓存与 GC
 
 Compact 后要清理无用 Tool Result 文件引用、重算 Token Budget、刷新提示建议，并允许旧消息被 GC。若 UI 仍保留历史，模型视图投影和屏幕消息必须使用不同容器或懒投影，避免误删用户可见记录。
 
@@ -1427,21 +1427,21 @@ stateDiagram-v2
     Failed --> [*]
 ```
 
-## K.23 会话持久化、恢复与分支
+## P.23 会话持久化、恢复与分支
 
-### K.23.1 Transcript 是事件历史而非最终答案
+### P.23.1 Transcript 是事件历史而非最终答案
 
 会话持久化记录用户、Assistant、工具结果、附件、Compact Boundary、队列操作和其他控制事件。它既用于 `/resume`，也用于调试、分析、Session Memory 和远程接管。把它仅看作聊天导出会低估其一致性要求。
 
-### K.23.2 写入时机
+### P.23.2 写入时机
 
 QueryEngine 在模型请求前写用户输入；对 Assistant/User/Compact Boundary 等输出边消费边记录；在特定桌面/急切刷新模式下显式 flush。写入策略在延迟与恢复之间权衡：交互模式更看重不丢用户意图，脚本 bare 模式更看重启动和首请求延迟。
 
-### K.23.3 原子性与尾部损坏
+### P.23.3 原子性与尾部损坏
 
 JSONL 或类似追加日志适合流式写入，但进程崩溃可能留下半行。恢复器应忽略或隔离最后一个不完整记录，而不能让整场会话不可读。每条记录带 UUID、parent/sidechain 关系和时间，可以支持分支与重放。写入大附件时最好只存引用，避免一条记录巨大。
 
-### K.23.4 恢复流程
+### P.23.4 恢复流程
 
 恢复可抽象为：
 
@@ -1458,19 +1458,19 @@ JSONL 或类似追加日志适合流式写入，但进程崩溃可能留下半�
 
 恢复不是把数组读回来就结束，因为运行环境、权限、插件和外部 Server 都可能已变化。
 
-### K.23.5 孤儿权限
+### P.23.5 孤儿权限
 
 QueryEngine 配置支持 `orphanedPermission`，说明权限请求可能在宿主重启、远程断线或 UI 消失后悬空。恢复时必须决定：视为拒绝、重新询问、由远端已记录决定重放，还是丢弃对应工具调用。默认安全策略应偏向拒绝并解释。
 
-### K.23.6 分支与 Rewind
+### P.23.6 分支与 Rewind
 
 命令目录包含 branch、rewind、resume、session、rename、tag 等，表明会话支持导航和管理。分支应共享不可变历史前缀，后续消息形成新链；Rewind 可以回到某个用户消息，但不能假装已经发生的外部副作用被撤销。文件修改需依赖 file history/Git 才能回滚，发出的网络消息、部署或删除则可能不可逆。
 
-### K.23.7 会话身份与远程接管
+### P.23.7 会话身份与远程接管
 
 Bridge、后台会话和 SDK 都依赖稳定 Session ID。身份应与进程 PID 分离，因为进程可以重启；与工作目录也不能完全等同，因为同目录可有多场会话。远程端的操作要绑定 Session 和权限租约，防止把一场会话的批准误用于另一场。
 
-### K.23.8 数据保留
+### P.23.8 数据保留
 
 Transcript 可能含敏感源码、终端输出、环境路径和用户提示。应有用户可理解的存储位置、保留期、清理命令和分享前脱敏。组织环境还需要受管策略控制是否允许上传、分析或远程同步。
 
@@ -1492,9 +1492,9 @@ flowchart TD
     M --> N["恢复为可继续会话"]
 ```
 
-## K.24 Memory、SessionMemory 与 Auto Memory
+## P.24 Memory、SessionMemory 与 Auto Memory
 
-### K.24.1 三类“记忆”不要混淆
+### P.24.1 三类“记忆”不要混淆
 
 源码至少呈现三种不同层面的记忆：
 
@@ -1504,15 +1504,15 @@ flowchart TD
 
 AgentTool 还包含 agentMemory 与 snapshot，团队目录有 team memory。它们作用域不同，不能统一塞进一个无来源的“memory”字符串。
 
-### K.24.2 memdir 结构
+### P.24.2 memdir 结构
 
 `src/memdir` 包含相关记忆检索、主存储、年龄、扫描、形状遥测、类型、路径和团队记忆 Prompt。可推断其基本流程是：确定自动记忆目录 → 扫描/读取候选 → 按查询或上下文找相关内容 → 应用年龄与形状治理 → 生成模型可用提示。路径模块处理默认位置和覆盖，QueryEngine 会加载 memory prompt。
 
-### K.24.3 SessionMemory
+### P.24.3 SessionMemory
 
 `src/services/SessionMemory` 将 Prompt、核心实现和工具函数分开；Compact 服务还有 `sessionMemoryCompact`。这说明 Session Memory 既可作为压缩策略，也可能作为会话离开/总结产物。它应关注当前目标、修改状态、下一步和恢复材料，而长期记忆更关注稳定偏好、项目约定和反复出现事实。
 
-### K.24.4 记忆写入原则
+### P.24.4 记忆写入原则
 
 自动写入应满足：
 
@@ -1524,11 +1524,11 @@ AgentTool 还包含 agentMemory 与 snapshot，团队目录有 team memory。它
 - 支持用户查看、编辑和删除；
 - 写入失败不能阻塞主对话。
 
-### K.24.5 检索原则
+### P.24.5 检索原则
 
 相关性不仅是文本相似度。项目 ID、工作目录、Agent 类型、团队、时间、新旧冲突和用户显式固定都应参与排序。旧记忆并非自动错误，但在项目版本变化后可能失效；`memoryAge` 表明系统至少考虑时间维度。检索结果应带来源和置信度，模型被提示把它当背景而非最高优先级指令。
 
-### K.24.6 记忆污染
+### P.24.6 记忆污染
 
 跨会话记忆最大的风险是错误事实被反复注入，逐渐获得“看起来很确定”的权威。治理需要：
 
@@ -1539,11 +1539,11 @@ AgentTool 还包含 agentMemory 与 snapshot，团队目录有 team memory。它
 - 对自动推断使用较低权重；
 - 记录哪条记忆实际影响了回答，便于调试。
 
-### K.24.7 AutoDream 与 Consolidation
+### P.24.7 AutoDream 与 Consolidation
 
 Kairos 文档描述 AutoDream 需要经过超过 24 小时、至少若干新会话、无锁等门槛，并采用 Orient、Gather、Consolidate、Prune 四阶段。它使用带 PID/mtime 的锁和双写校验，避免多个进程同时整理记忆。Dream 更像离线治理作业：汇总日志、提取稳定内容、合并并修剪，不应和用户等待的主请求争抢关键路径。
 
-### K.24.8 团队记忆与 Agent 记忆
+### P.24.8 团队记忆与 Agent 记忆
 
 团队记忆需要以 team/project 为作用域，避免一个 Team 的中间结论污染全局。子 Agent 记忆 snapshot 更接近任务上下文快照，目标是 fork/resume 后继续工作，不应自动升级为长期用户记忆。作用域提升必须经过明确 promotion 规则。
 
@@ -1567,39 +1567,39 @@ flowchart LR
 
 ## 第四篇·多 Agent、任务与扩展编排
 
-## K.25 AgentTool 与子 Agent
+## P.25 AgentTool 与子 Agent
 
-### K.25.1 AgentTool 目录
+### P.25.1 AgentTool 目录
 
 `src/tools/AgentTool` 包含主工具、UI、颜色、展示、agentMemory、memory snapshot、工具辅助、内置 Agent、fork、加载 Agent 目录、Prompt、resume 和 runAgent。这个目录表明子 Agent 不是一次简单的“再调用模型”，而是有独立身份、显示、记忆、恢复和运行上下文的完整执行体。
 
-### K.25.2 Agent 定义
+### P.25.2 Agent 定义
 
 AgentDefinition 通常描述名称、用途、系统提示或补充提示、允许工具、模型、权限模式和来源。定义可以来自内置 Agent、用户/项目 agents 目录或插件。加载器要处理重名、优先级、无效配置、禁用和作用域。向模型展示的 Agent 列表应只包含当前可用且允许的定义。
 
-### K.25.3 fork 与普通 spawn
+### P.25.3 fork 与普通 spawn
 
 Fork 子 Agent 的特殊价值是共享父会话的上下文前缀和 prompt cache。源码在 ToolUseContext 中保留父线程回合开始时冻结的 `renderedSystemPrompt`，避免 spawn 时重新渲染因 GrowthBook 冷热变化而改变字节。Fork 还可能克隆 content replacement state，确保历史工具结果替换决定一致。
 
 普通 spawn 可以使用更小、任务专属上下文；fork 更适合“基于当前研究继续深入”。两者都应显式选择传递哪些消息、文件状态、权限和记忆，不能无条件复制整个 AppState。
 
-### K.25.4 子 Agent 上下文隔离
+### P.25.4 子 Agent 上下文隔离
 
 异步 Agent 的普通 `setAppState` 可能被设计为 no-op，防止子 Agent任意改主线程 UI；但后台任务注册和清理必须通过 `setAppStateForTasks` 到根 Store。权限拒绝计数也不能依赖主 Store，因此 ToolUseContext 有 `localDenialTracking`。这些细节说明隔离不是单纯深拷贝，而是按能力选择共享或局部实现。
 
-### K.25.5 工具过滤
+### P.25.5 工具过滤
 
 子 Agent 应获得最小工具集。研究 Agent 可以用 Read/Grep/Web，但不应默认写文件；实现 Agent 可以编辑指定范围；验证 Agent 可以执行测试但不做产品变更。Tool Filter 不只节省 Schema Token，也是权限最小化。若 Agent 定义声明不存在的工具，应在启动前报错。
 
-### K.25.6 Agent 结果
+### P.25.6 Agent 结果
 
 子 Agent 输出通常需要转换成父 Agent 可消费的简明结果，并可携带 task notification、文件列表、证据或 resume ID。完整 transcript 可以保存供用户查看，但不应全部注入父上下文。父 Agent需要知道：任务是否成功、做了什么、证据在哪里、有哪些未解决风险。
 
-### K.25.7 恢复与后台化
+### P.25.7 恢复与后台化
 
 长任务可以后台运行，AgentTool 返回 resume ID；用户或父 Agent 用 TaskOutput/Agent Resume 继续。恢复要重新建立模型、工具、内容替换状态和 sidechain 历史，并确认旧权限不被跨会话滥用。后台 Agent 无 UI 时使用避免弹窗策略。
 
-### K.25.8 失败传播
+### P.25.8 失败传播
 
 子 Agent 失败不一定终止主 Agent。父 Agent 可重试、缩小任务、换 Agent 类型或自行接管。但不可恢复错误、预算耗尽和组织策略应清晰传播。多 Agent 系统最危险的失败不是“返回错误”，而是子 Agent 静默停止、父 Agent仍以为它在工作，因此任务状态和心跳必须可观察。
 
@@ -1630,9 +1630,9 @@ sequenceDiagram
     end
 ```
 
-## K.26 Coordinator 多 Agent 编排
+## P.26 Coordinator 多 Agent 编排
 
-### K.26.1 模式定位
+### P.26.1 模式定位
 
 Coordinator 文档把编排分为 Research、Synthesis、Implementation、Verification 四阶段。Coordinator 自身只拥有 Agent、SendMessage、TaskStop 等协调工具，Worker 才拥有经过筛选的实际工具。这是“控制面与数据面分离”：
 
@@ -1641,7 +1641,7 @@ Coordinator 文档把编排分为 Research、Synthesis、Implementation、Verifi
 
 限制 Coordinator 直接改文件，可以防止它一边管理一边绕开并发规则。
 
-### K.26.2 四阶段流程
+### P.26.2 四阶段流程
 
 **Research**：并行只读 Worker 探索不同子域，输出事实与源码证据。  
 **Synthesis**：Coordinator 合并结果，识别冲突和缺口，形成实施计划。  
@@ -1650,7 +1650,7 @@ Coordinator 文档把编排分为 Research、Synthesis、Implementation、Verifi
 
 阶段并非必须严格瀑布；小任务可合并，但“研究并行、写入受控、验证独立”是核心不变量。
 
-### K.26.3 并发规则
+### P.26.3 并发规则
 
 文档明确：只读任务可并行；同一文件只能有一个 Writer。更完整的冲突模型还应考虑：
 
@@ -1662,19 +1662,19 @@ Coordinator 文档把编排分为 Research、Synthesis、Implementation、Verifi
 
 因此 Coordinator 需要资源锁或声明式 ownership，而不只是比较文件名字符串。
 
-### K.26.4 通信
+### P.26.4 通信
 
 Worker 结果可使用 XML task-notification 包装，向 Coordinator 传递状态、摘要和标识。SendMessage 支持定向沟通，Mailbox 保存异步消息。消息格式应结构化包含：任务 ID、发送者、阶段、严重性、证据、请求动作和截止条件。自由文本仍可存在，但不能作为唯一调度协议。
 
-### K.26.5 任务分解质量
+### P.26.5 任务分解质量
 
 好的子任务具有清晰输入、输出、文件范围、允许工具、验收命令和停止条件。坏的子任务如“研究一下项目并修好所有问题”，会导致重复探索、工具滥用和不可验证结果。Coordinator 应在派发前检查任务是否可独立完成、是否与其他任务冲突以及预算是否足够。
 
-### K.26.6 汇总与冲突
+### P.26.6 汇总与冲突
 
 多个研究 Worker 可能给出矛盾结论。Synthesis 不能按多数投票，应回到源码证据、版本和运行条件。对于实现冲突，应选择一个 Writer，其他 Worker 变为 Reviewer；不能让父 Agent手工拼接两个未知基线上的完整文件。
 
-### K.26.7 失败和降级
+### P.26.7 失败和降级
 
 某个 Worker 超时或失败时，Coordinator 可以重派、缩小范围、停止相关任务或降级为单 Agent。预算接近上限时，优先保留验证，不应把预算全部耗在更多研究。TaskStop 必须清理子进程和锁，不能只把 UI 标成 stopped。
 
@@ -1702,41 +1702,41 @@ flowchart LR
     D -->|"是"| O["汇总结果与证据"]
 ```
 
-## K.27 Team、Mailbox 与任务系统
+## P.27 Team、Mailbox 与任务系统
 
-### K.27.1 工具与任务类型
+### P.27.1 工具与任务类型
 
 工具目录包含 TeamCreate/Delete、SendMessage、TaskCreate/Get/List/Output/Stop/Update；`src/tasks` 包含 DreamTask、InProcessTeammateTask、LocalAgentTask、LocalShellTask、LocalWorkflowTask、MonitorMcpTask、RemoteAgentTask 和 LocalMainSessionTask。可见“任务”是统一管理的长期执行单元，而不仅是 Todo 条目。
 
-### K.27.2 任务状态机
+### P.27.2 任务状态机
 
 统一状态至少需要 pending、running、blocked/waiting、completed、failed、stopped。任务还应包含类型、所有者、父任务、创建/更新时间、输出位置、进度、退出原因、可中断性和资源信息。TaskUpdate 修改的是调度元数据；实际执行状态应由任务实现驱动，避免模型随意把仍在运行的任务标成 completed。
 
-### K.27.3 LocalShellTask
+### P.27.3 LocalShellTask
 
 Shell 任务持有子进程、输出文件、开始时间、退出状态和通知标记。前台命令可以在阈值后转后台，转换时不能重新启动命令；应把同一进程注册到任务 Store，继续写同一输出。停止任务需终止进程组，处理子孙进程和 Windows 差异。
 
-### K.27.4 LocalAgentTask 与 InProcessTeammateTask
+### P.27.4 LocalAgentTask 与 InProcessTeammateTask
 
 LocalAgentTask 运行隔离子 Agent；InProcessTeammateTask 可能在同一进程内运行团队成员并保留可查看 transcript。ToolUseContext 的 `preserveToolUseResults` 为这种“用户能查看队友历史”的场景保留详细结果。进程内任务成本低、共享缓存方便，但隔离和崩溃影响更大。
 
-### K.27.5 RemoteAgentTask
+### P.27.5 RemoteAgentTask
 
 远程任务需要租约、心跳、状态同步和断线恢复。远端报告 completed 前应上传或引用结果；本地停止可能与远端完成竞态，需要幂等状态转移。安全上要验证任务与当前组织、会话和工作区绑定。
 
-### K.27.6 Mailbox
+### P.27.6 Mailbox
 
 Mailbox 支持 Agent 间异步通信。它应提供至少一次投递和去重 ID，收件方处理后 ACK。消息不能无限注入模型上下文，应先形成通知摘要，按需读取正文。团队删除前要处理未读消息和仍在运行任务。
 
-### K.27.7 通知
+### P.27.7 通知
 
 任务完成后可生成 UI 通知、系统消息或 OS 通知。`markTaskNotified` 避免重复提醒。通知与状态是两件事：即使通知发送失败，任务仍应完成；即使用户清除了通知，任务结果仍可查询。
 
-### K.27.8 资源与预算
+### P.27.8 资源与预算
 
 任务 Store 应统一限制并发 Shell、并发 Agent、远程任务数和磁盘输出。父子任务共享预算时，创建任务必须检查剩余额度。输出文件应有总容量和清理策略，防止长期会话耗尽磁盘。
 
-### K.27.9 Todo 与 Task 的区别
+### P.27.9 Todo 与 Task 的区别
 
 TodoWrite 更像模型规划和 UI 面板中的逻辑工作项；TaskCreate 等代表真实可执行或可观测任务。把两者混用会导致“计划上已完成但进程仍运行”或“任务失败但 Todo 被勾选”。文档和 UI 应显式区分。
 
@@ -1758,37 +1758,37 @@ stateDiagram-v2
     Stopped --> [*]
 ```
 
-## K.28 后台 Shell、Workflow、Cron 与 Proactive
+## P.28 后台 Shell、Workflow、Cron 与 Proactive
 
-### K.28.1 后台能力的共同抽象
+### P.28.1 后台能力的共同抽象
 
 Shell、Agent、Workflow、Monitor 和 Dream 都可能长时间运行。共同抽象包括：任务身份、开始/结束、取消、输出、心跳、通知和恢复。差异在于执行器：Shell 是子进程，Agent 是查询循环，Workflow 是多步骤状态机，Monitor 是持续订阅，Dream 是计划性离线整理。
 
-### K.28.2 WorkflowTool
+### P.28.2 WorkflowTool
 
 Workflow 可把多个工具步骤封装为可观察任务。它不应只是让模型在内部自由循环，而应显式记录步骤、输入、输出、重试和补偿。这样 TaskOutput 可以展示当前阶段，失败后也能从安全边界恢复。执行 Workflow 前仍需逐步权限，除非整个流程经过可信签名和预授权。
 
-### K.28.3 ScheduleCron
+### P.28.3 ScheduleCron
 
 Cron 工具允许创建定时任务。安全上必须限制命令/Agent 能力、工作目录、时区、最大频率、过期和无人值守权限。用户确认应显示“将来会自动执行什么”，而不是只确认一次当前操作。删除或更新计划也要审计。
 
-### K.28.4 Proactive
+### P.28.4 Proactive
 
 Proactive 模式在没有即时用户输入时产生行动，风险高于响应式 Agent。触发器可以是时间、工作区事件、通知或远程消息。每个触发器必须映射到明确策略：可自动读取什么、何时需要确认、是否能写文件、如何避免重复触发。主动建议与主动执行应分开开关。
 
-### K.28.5 Kairos 常驻任务
+### P.28.5 Kairos 常驻任务
 
 Kairos 文档描述 catch-up、morning-checkin、dream 等永久计划任务。激活需通过 feature、用户设置、目录信任、GrowthBook 和运行状态五类检查。多重 Gate 是必要的：常驻助手既涉及后台资源，也涉及跨会话记忆和主动通知，单一配置开关不足以表达所有约束。
 
-### K.28.6 Catch-up 与幂等
+### P.28.6 Catch-up 与幂等
 
 计划任务可能因电脑休眠错过时间。Catch-up 应判断上次成功时间并补执行一次，而不是补跑每个遗漏周期造成风暴。每次运行带幂等键，如 `taskName + logicalDate`，确保进程重启或锁超时后不会重复写入。
 
-### K.28.7 监控 MCP
+### P.28.7 监控 MCP
 
 MonitorMcpTask 可能持续监听 MCP Server 的资源或通知。连接断开时需要重连和退避；任务停止时关闭 transport；Server 发来的数据必须经过大小、Schema 和通道 allowlist。持续流不能把每条事件都直接注入主会话，应先聚合或生成提醒。
 
-### K.28.8 睡眠与唤醒
+### P.28.8 睡眠与唤醒
 
 SleepTool 使 Agent 在 Workflow 中等待条件，但必须受最大时长和取消控制。系统休眠会使 wall clock 跳跃，应按绝对截止时间判断。Agent 不应通过大量 Sleep 占用并发槽；长等待最好转后台任务。
 
@@ -1809,9 +1809,9 @@ flowchart TB
     C -->|"取消/永久失败"| S["清理资源并记录终态"]
 ```
 
-## K.29 命令系统
+## P.29 命令系统
 
-### K.29.1 Command 与 Tool 的差异
+### P.29.1 Command 与 Tool 的差异
 
 Tool 面向模型调用，Command 主要面向用户输入。Slash Command 可以：
 
@@ -1824,17 +1824,17 @@ Tool 面向模型调用，Command 主要面向用户输入。Slash Command 可�
 
 Command 不一定进入 Agent Loop，因此不能用 Tool 权限契约完全覆盖。命令实现应自己声明可用性、是否只适合交互模式、是否能远程触发和是否含副作用。
 
-### K.29.2 聚合与动态加载
+### P.29.2 聚合与动态加载
 
 根 `commands.ts` 维护内部命令集合、`COMMANDS` 缓存和 `getCommands(cwd)`。命令列表会按可用性过滤，并把动态 Skill 转为 Prompt Command，做名称去重。内部命令只对特定用户类型且非 demo 生效。由此可见，命令注册表同时合并内置产品命令和用户扩展。
 
-### K.29.3 Remote Safe 与 Bridge Safe
+### P.29.3 Remote Safe 与 Bridge Safe
 
 源码定义 `REMOTE_SAFE_COMMANDS` 和 `BRIDGE_SAFE_COMMANDS`。前者是在 `--remote` 下本地 TUI 可安全执行的命令；后者是远程控制消息可以触发的命令。两份集合不能简单相同：本地用户按键触发的命令可能打开交互 UI，远端无法完成；远端可触发的命令则必须避免任意本地副作用或设置写入。
 
 安全默认应是 allowlist，而不是排除少数危险命令。新增命令如果没有显式评审，不应自动进入远程集合。
 
-### K.29.4 Command 类型
+### P.29.4 Command 类型
 
 从目录可按作用分为：
 
@@ -1848,15 +1848,15 @@ Command 不一定进入 Agent Loop，因此不能用 Tool 权限契约完全覆�
 - 体验：theme、color、vim、voice、keybindings、stickers、buddy 相关入口；
 - 内部/实验：mock-limits、reset-limits、ctx_viz、debug-tool-call 等。
 
-### K.29.5 命令输入解析
+### P.29.5 命令输入解析
 
 Slash Command 解析要处理引号、补全、路径、命令别名和剩余文本。不能把整行简单 split 空格，尤其 `/add-dir "A B"`、模型名、Prompt 文本和 JSON 参数。命令参数应有独立 Schema 或 parser，并提供一致错误消息。
 
-### K.29.6 本地 JSX 命令
+### P.29.6 本地 JSX 命令
 
 某些命令返回 UI 组件并暂时隐藏 PromptInput。ToolUseContext 的 `setToolJSX` 支持标记 local JSX、立即显示、继续动画和清理。命令组件完成后必须调用 onDone/clear，避免 UI 永久卡在模态状态。Headless 模式遇到这类命令应返回“不支持交互”而非静默忽略。
 
-### K.29.7 命令与持久化
+### P.29.7 命令与持久化
 
 改变模型、主题、权限或插件的命令需明确写入用户、项目还是会话层。会话命令应该记录足够事件供恢复；但纯视觉切换不必污染模型历史。命令输出转换到 SDK 时要区分本地反馈和应作为 Assistant 文本返回的内容。
 
@@ -1879,13 +1879,13 @@ flowchart TD
     B --> O
 ```
 
-## K.30 Skill 系统
+## P.30 Skill 系统
 
-### K.30.1 Skill 的定位
+### P.30.1 Skill 的定位
 
 Skill 是按需加载的可复用任务知识单元，通常包含名称、描述、完整提示、允许工具、资源或脚本说明。它介于 Slash Command 和 Tool 之间：用户可以像命令一样显式调用，模型也可通过 DiscoverSkills/SkillTool 发现并加载；真正能力仍由底层 Tool/MCP 提供。
 
-### K.30.2 来源
+### P.30.2 来源
 
 `src/skills` 包含 bundled、bundledSkills、loadSkillsDir、mcpSkillBuilders 和 mcpSkills。结合命令聚合可见 Skill 来源至少包括：
 
@@ -1897,11 +1897,11 @@ Skill 是按需加载的可复用任务知识单元，通常包含名称、描�
 
 加载结果需要保存 source、scope 和优先级，重名时给出确定规则。
 
-### K.30.3 发现与调用
+### P.30.3 发现与调用
 
 DiscoverSkillsTool 提供搜索和列表，SkillTool 加载具体 Skill。`discoveredSkillNames` 记录本回合经发现的名称；实际调用遥测可带 `was_discovered`。这可以分析延迟加载是否有效：模型是否能找到正确 Skill、是否经常直接猜名称失败、搜索后是否真正使用。
 
-### K.30.4 Skill Schema
+### P.30.4 Skill Schema
 
 高质量 Skill 元数据应包含：
 
@@ -1917,19 +1917,19 @@ DiscoverSkillsTool 提供搜索和列表，SkillTool 加载具体 Skill。`disco
 
 仅有一篇长 Prompt 会让注册、升级、权限和遥测都难以治理。
 
-### K.30.5 注入策略
+### P.30.5 注入策略
 
 调用 Skill 时，不应把所有 Skill 全文常驻系统提示。正确策略是首轮只提供索引；调用后把目标 Skill 内容作为带来源的上下文注入，必要时加载相对资源。资源路径必须限制在 Skill 根目录，防止 `../` 读取任意文件。
 
-### K.30.6 Skill 与工具权限
+### P.30.6 Skill 与工具权限
 
 Skill 声明“会使用 Bash”不等于预授权 Bash。每次真实工具调用仍走标准权限。可信组织可以为签名 Skill 配置策略模板，但最终执行输入仍需工具级校验。Skill Prompt 也可能被第三方篡改或包含提示注入，因此来源和安装权限非常重要。
 
-### K.30.7 动态刷新
+### P.30.7 动态刷新
 
 `dynamicSkillDirTriggers` 可记录已触发目录，避免每次文件读取都扫描。`reload-plugins` 或 skills 命令可以显式刷新。刷新应产生新注册快照；正在执行的回合最好继续使用回合开始时工具/Skill 快照，避免中途名称指向不同内容。
 
-### K.30.8 MCP Skill
+### P.30.8 MCP Skill
 
 MCP Skill Builder 可以把 Server 提供的资源、Prompt 或工具组合包装成 Skill。好处是为模型提供任务层语义，而不只是几十个低层工具；风险是 Server 内容不可信。构建时要规范名称、限制大小、保存原始 Server 身份，并在权限界面显示能力来自哪个连接。
 
@@ -1956,37 +1956,37 @@ sequenceDiagram
     T-->>M: 仍经过标准权限的结果
 ```
 
-## K.31 Plugin 系统
+## P.31 Plugin 系统
 
-### K.31.1 Plugin 是扩展包而非单一脚本
+### P.31.1 Plugin 是扩展包而非单一脚本
 
 插件通常可以同时贡献 Skill、Command、Agent、Hook、MCP Server 配置或其他资源，因此它的生命周期比 Skill 更复杂。源码中存在 `src/plugins` 与 `src/utils/plugins`，QueryEngine 会通过缓存加载全部插件；BashTool 还能记录 plugin hint recommendation。合理架构是把插件视为**带清单、来源和版本的能力包**。
 
-### K.31.2 插件清单
+### P.31.2 插件清单
 
 插件清单应定义名称、版本、入口、贡献点、最低运行时、权限、依赖和完整性。加载器先验证清单，再分别交给 Skill Loader、Command Registry、Agent Loader、Hook Registry 或 MCP 配置层。不能让任意插件入口在发现阶段直接执行不受控代码。
 
-### K.31.3 发现与安装
+### P.31.3 发现与安装
 
 插件可能来自内置目录、用户目录、项目目录、市场或 Git 源。安装流程应区分“下载/解包”和“启用”：下载内容先放隔离暂存区，检查路径穿越、符号链接、大小、清单和签名，再原子移动；启用前显示将增加的工具、Hook 和外部连接。项目打开时自动发现的未信任插件不应直接执行。
 
-### K.31.4 缓存
+### P.31.4 缓存
 
 `loadAllPluginsCacheOnly` 暗示查询关键路径偏向读取预加载缓存，避免每回合扫描磁盘。缓存键至少包含插件根路径、版本、清单 mtime/hash 和运行时版本。缓存失效要原子，不能在一次回合中一半使用旧 Command、一半使用新 Skill。
 
-### K.31.5 Hook 风险
+### P.31.5 Hook 风险
 
 Plugin Hook 可以观察或修改 PreToolUse、PostToolUse、Stop、Compact 等事件，能力接近中间件。它必须有超时、取消、输出 Schema 和错误策略。一个 Hook 失败是否阻断工具，需要由 Hook 类型和组织策略定义；不能让普通体验插件通过抛异常永久阻止所有 Tool。
 
-### K.31.6 命名冲突
+### P.31.6 命名冲突
 
 插件贡献的命令、Skill 和 Agent 可能与内置重名。优先级应明确且可解释，推荐内置安全命令不可覆盖，用户级高于项目级或反之需要产品选择，显式命名空间是最稳妥方案。UI 应显示当前解析到的来源。
 
-### K.31.7 卸载与正在运行实例
+### P.31.7 卸载与正在运行实例
 
 卸载不能破坏当前正在运行的 Agent、Workflow 或 MCP 连接。可采用注册表快照与引用计数：新回合不再看见插件，旧任务持有版本目录直到完成；之后清理。强制卸载则先取消相关任务并告知可能的副作用。
 
-### K.31.8 供应链治理
+### P.31.8 供应链治理
 
 恢复仓库用于研究时尤其要重视第三方插件供应链。建议支持内容摘要、签名、来源锁定、版本等价冲突检测和离线审计；插件更新不能静默扩大权限。受管组织可提供允许发布者清单和固定版本策略。
 
@@ -2012,41 +2012,41 @@ flowchart TD
     N --> X
 ```
 
-## K.32 MCP 客户端、工具与资源
+## P.32 MCP 客户端、工具与资源
 
-### K.32.1 MCP 在系统中的位置
+### P.32.1 MCP 在系统中的位置
 
 MCP 将外部 Server 的 Tools、Resources、Prompts 和通知接入 Agent Runtime。`src/services/mcp` 包含连接管理、客户端、配置、认证、传输、名称规范化、官方 Registry、VS Code SDK MCP、XAA 登录等；工具目录包含 MCPTool、ListMcpResources、ReadMcpResource、McpAuthTool。可见 MCP 既是能力发现协议，也是认证和连接生命周期问题。
 
-### K.32.2 连接配置
+### P.32.2 连接配置
 
 Server 配置可能使用 stdio 子进程、HTTP/SSE、WebSocket、in-process 或 SDK control transport。配置要支持命令、参数、环境变量、URL、headers、作用域、启用状态和认证。`envExpansion.ts` 表明环境变量可以展开；展开后不得把密钥写入日志或远程状态。
 
-### K.32.3 连接生命周期
+### P.32.3 连接生命周期
 
 MCPConnectionManager 负责从配置建立连接、握手、获取能力、维护状态、重连和关闭。连接状态不应只有 connected/failed，至少要有 disabled、starting、auth_required、connecting、ready、degraded、reconnecting、failed、stopped。UI 可据此展示下一动作。
 
-### K.32.4 工具名称规范化
+### P.32.4 工具名称规范化
 
 多个 Server 可能都提供 `search`，因此模型可见名称通常加 `mcp__server__tool` 前缀。Tool 接口的 `mcpInfo` 保存原始 serverName/toolName，即使某种 SDK 模式关闭前缀也能回溯来源。名称规范化要处理非法字符、长度、冲突和稳定性；升级后名称变化会影响历史工具调用恢复。
 
-### K.32.5 Schema
+### P.32.5 Schema
 
 MCP Tool 可以直接提供 JSON Schema，而不必转换为 Zod。运行时仍应在调用前验证输入，避免 Server 声明和真实行为不一致。`_meta['anthropic/alwaysLoad']` 可让关键 MCP 工具首轮加载，其他工具延迟到 ToolSearch。外部 Schema 体积不受本地控制，应设深度、属性数和字符上限。
 
-### K.32.6 Resource
+### P.32.6 Resource
 
 ListMcpResources 列出 Server 资源，ReadMcpResource 按 URI 读取。资源 URI 不等同本地文件路径，权限界面应显示 Server 与 URI。返回内容可能是 text、blob 或多媒体，必须限制大小和 MIME。资源读取通常是只读，但仍是开放世界访问，可能把用户身份或查询暴露给远端。
 
-### K.32.7 Tool 调用
+### P.32.7 Tool 调用
 
 MCPTool 适配统一 Tool 契约：构造描述和 Schema，判断只读/破坏性元数据，经过本地权限，再调用 Server；结果中的 content、structuredContent 和 `_meta` 通过 `mcpMeta` 透传给 SDK 消费者。Server 错误要区分协议错误、工具业务错误、认证和连接断开。
 
-### K.32.8 通知与动态能力
+### P.32.8 通知与动态能力
 
 MCP Server 可以发工具列表变化、资源变化或自定义通知。连接管理器需要刷新注册表，但当前回合最好保持工具快照；新能力下一回合生效。持续通知通过 MonitorMcpTask 或专用通道处理，避免无限污染对话。
 
-### K.32.9 InProcessTransport
+### P.32.9 InProcessTransport
 
 InProcessTransport 在同一进程内连接 Client 与 Server，适合 SDK 嵌入、测试或内置能力。它避免子进程和网络开销，但错误隔离较弱；关闭一端要正确通知另一端，消息投递保持顺序，并防止递归同步调用造成栈增长。
 
@@ -2071,37 +2071,37 @@ flowchart LR
     NT --> CM
 ```
 
-## K.33 MCP 认证、Elicitation 与连接管理
+## P.33 MCP 认证、Elicitation 与连接管理
 
-### K.33.1 认证状态
+### P.33.1 认证状态
 
 远程 MCP Server 可能使用静态 Header、OAuth、组织身份或 XAA。静态 Token 应通过安全存储/环境传入，配置文件只保留引用。OAuth 需要授权端点发现、PKCE、state、回调端口、Token 刷新和撤销。连接管理器不能把“未认证”统一显示成网络失败。
 
-### K.33.2 McpAuthTool
+### P.33.2 McpAuthTool
 
 McpAuthTool 允许模型或用户触发认证流程，但真正授权必须由人完成。工具返回登录 URL 或打开浏览器，等待回调后更新连接。Headless/远程模式要把 URL Elicitation 以结构化事件交给宿主，而不是尝试打开不可用的本地浏览器。
 
-### K.33.3 Elicitation
+### P.33.3 Elicitation
 
 ToolUseContext 的 `handleElicitation` 用于处理 MCP 工具错误 `-32042` 触发的 URL Elicitation。在 Print/SDK 模式，它委托给 structured IO；REPL 模式可以使用队列 UI。Elicitation 是 Server 请求用户完成额外动作的机制，必须校验 URL 协议和来源，显示 Server 身份，禁止自动访问任意 `file:` 或危险自定义协议。
 
-### K.33.4 OAuth 端口
+### P.33.4 OAuth 端口
 
 `oauthPort.ts` 暗示本地回调端口管理。多个并发认证可能争用端口；实现应选择随机可用端口，回调只接受正确 state，成功后立即关闭监听。绑定地址默认 loopback，不能无意监听所有网卡。
 
-### K.33.5 Header 与环境展开
+### P.33.5 Header 与环境展开
 
 配置中的 Header 值可能引用环境变量。日志和错误必须脱敏，Tool Result 不应把最终 Header 回显给模型。远程 Bridge 同步 MCP 配置时也应默认只同步非密钥部分，要求本地环境自己提供 Secret。
 
-### K.33.6 Channel Allowlist
+### P.33.6 Channel Allowlist
 
 `channelAllowlist`、`channelPermissions` 和通知模块说明某些 MCP 通道需要单独权限。Server 发来的 Channel/Notification 不能默认成为系统指令；应按 Server、通道和事件类型 allowlist，必要时只生成用户可见通知，不注入模型。
 
-### K.33.7 重连
+### P.33.7 重连
 
 连接中断采用指数退避和抖动，认证错误不自动无限重试。工具调用发生时若 Server 正在重连，可以快速返回“暂不可用”或在有限时长内等待；不能把整个 Agent Loop无限挂起。关闭会话时取消重连定时器和子进程。
 
-### K.33.8 连接健康
+### P.33.8 连接健康
 
 健康不仅是 transport open，还包括初始化完成、工具列表可读、最近请求成功和 Token 有效。UI 应展示最近错误与重试时间。组织环境可禁止未登记 Server，官方 Registry 可提供来源元数据，但 Registry 上榜也不等同自动信任。
 
@@ -2136,41 +2136,41 @@ sequenceDiagram
     end
 ```
 
-## K.34 Bridge / Remote Control
+## P.34 Bridge / Remote Control
 
-### K.34.1 功能模型
+### P.34.1 功能模型
 
 Bridge 让 Web 或移动客户端控制本地 Claude Code 会话。远端发送用户消息、命令、权限决定、中断或模型设置；本地执行模型请求、文件与 Shell 工具，并把流式消息和状态同步出去。它的核心价值是“计算与副作用仍在本地，交互可以远程”。
 
-### K.34.2 启动门槛
+### P.34.2 启动门槛
 
 入口顺序明确：先检查 OAuth Token，因为 GrowthBook 初始化需要用户上下文；再等待 runtime Gate，检查最低版本；再加载组织 policy limits，确认 `allow_remote_control`；最后才进入 bridgeMain。这个顺序避免未认证用户看到错误的实验结果，也避免组织已禁止时建立远程连接。
 
-### K.34.3 环境注册
+### P.34.3 环境注册
 
 Bridge 文档描述环境注册、轮询、心跳和注销。环境代表一台本地机器或工作区能力，包含版本、平台、状态和可用会话。云端返回环境 ID/租约；本地定期心跳。连接丢失后租约过期，防止云端把死亡进程显示为在线。
 
-### K.34.4 HybridTransport
+### P.34.4 HybridTransport
 
 Bridge v1 使用 WebSocket 接收下行事件、HTTP POST 发送上行事件。这样服务端可实时推送用户动作，本地发送流和结果则走可重试的 HTTP。混合传输要维护全局序列号、幂等键和 ACK，否则 WS 重连与 POST 重试可能导致重复消息或乱序。
 
-### K.34.5 权限远程审批
+### P.34.5 权限远程审批
 
 高风险工具仍在本地权限系统生成请求，但可以把安全投影发送远端审批。请求应包含 session、tool_use ID、工具、精确输入摘要、规则来源和过期时间；批准响应必须签名/认证并绑定同一请求。断线时默认拒绝或等待有限时间，不能沿用旧批准。
 
-### K.34.6 本地与远端 UI 一致性
+### P.34.6 本地与远端 UI 一致性
 
 本地 REPL和远端客户端可能同时存在。二者对消息顺序、工具进度和任务状态要使用同一事件 ID；折叠和主题可以不同，但事实不能不同。谁拥有输入焦点、谁能审批、谁能中断应有明确租约，避免两端同时提交造成竞态。
 
-### K.34.7 命令安全
+### P.34.7 命令安全
 
 Bridge 只接受 BRIDGE_SAFE_COMMANDS。远端不应触发打开本地编辑器、任意插件安装、全局权限写入或其他需要物理本地确认的命令。命令 allowlist 与 Tool 权限叠加：即使 `/mcp` 可远程查看，也不代表 MCP Tool 自动获准。
 
-### K.34.8 工作树模式
+### P.34.8 工作树模式
 
 Bridge 可按单 Session、Worktree 或同目录运行。Worktree 提供文件隔离，适合多个远程任务；同目录模式更易冲突。环境注册应把 cwd/worktree 标识与会话绑定，远端不能通过参数切到未授权路径。
 
-### K.34.9 断线恢复
+### P.34.9 断线恢复
 
 下行事件按游标重放，上行事件使用幂等 ID；本地 transcript 是最终恢复源之一。重新连接后先交换最后确认序列，再补差异。正在等待权限或运行工具时，要恢复状态而不是重新执行副作用。
 
@@ -2208,33 +2208,33 @@ sequenceDiagram
     end
 ```
 
-## K.35 Ultraplan、Teleport 与云端协作
+## P.35 Ultraplan、Teleport 与云端协作
 
-### K.35.1 Ultraplan 流程
+### P.35.1 Ultraplan 流程
 
 Ultraplan 文档描述本地 CLI 把任务发送到云端 CCR/Opus，最长轮询约三十分钟，用户在浏览器中编辑或批准计划，再 teleport 回本地继续。它与普通模型调用不同：云端产物是可编辑计划，生命周期跨越本地进程和浏览器。
 
-### K.35.2 关键词触发
+### P.35.2 关键词触发
 
 系统可以识别用户输入中的 ultraplan 关键词，但会排除引号、路径和标识符，避免代码中偶然出现单词就触发昂贵云流程。任何自然语言快捷触发都应提供显式命令替代，并在真正上传前确认范围。
 
-### K.35.3 提交内容
+### P.35.3 提交内容
 
 上传到云端的上下文应最小化：任务、必要仓库摘要、用户选定文件或当前状态，而不是默认整个工作区。企业策略可能禁止上传源码。UI 要显示数据目的地、模型、预计成本和可取消状态。
 
-### K.35.4 轮询与状态
+### P.35.4 轮询与状态
 
 云任务状态可包括 queued、planning、needs_input、ready_for_review、approved、rejected、expired、failed。轮询采用退避并支持 Abort；本地退出后可通过 Job ID 恢复。三十分钟是上限而非必须阻塞终端的时长，最好自动转后台任务。
 
-### K.35.5 浏览器编辑
+### P.35.5 浏览器编辑
 
 计划在浏览器修改后，本地不能继续使用提交时缓存的旧版本。批准事件应返回版本号或内容摘要；Teleport 时验证任务 ID、版本、用户和工作区。若本地文件在等待期间变化，应重新对齐计划，而不是机械执行。
 
-### K.35.6 Teleport
+### P.35.6 Teleport
 
 Teleport 把远端会话、计划或 Agent 状态接回本地。它需要做兼容检查：CLI 最低版本、模型能力、插件、工具、工作目录和权限。远端计划不拥有本地权限；每个实际 FileEdit/Bash 仍走本地治理。
 
-### K.35.7 信任边界
+### P.35.7 信任边界
 
 云端生成内容属于不可信输入，即使来自同一用户账户。浏览器页面、远程模型或服务端数据都可能包含提示注入。Teleport 应把计划作为用户内容/任务材料，不应让其绕过系统提示或执行内部字段。
 
@@ -2255,13 +2255,13 @@ flowchart TD
     R --> E["按本地权限执行"]
 ```
 
-## K.36 Kairos / Assistant / AutoDream
+## P.36 Kairos / Assistant / AutoDream
 
-### K.36.1 常驻助手模型
+### P.36.1 常驻助手模型
 
 Kairos 文档把来源分为 assistant、proactive 和 autoDream。与一次性 REPL 不同，常驻助手需要维护激活状态、周期任务、每日日志、长期记忆和通知。它是共享 Agent 内核之上的长期运行产品层。
 
-### K.36.2 激活检查
+### P.36.2 激活检查
 
 激活需依次满足编译 feature、用户设置开启、目录受信任、GrowthBook 实验允许、运行时 active 状态。每个条件解决不同问题：
 
@@ -2271,15 +2271,15 @@ Kairos 文档把来源分为 assistant、proactive 和 autoDream。与一次性 
 - GrowthBook 控制发布与用户分群；
 - active 防止多个实例同时认为自己是主助手。
 
-### K.36.3 每日日志
+### P.36.3 每日日志
 
 日志路径按年月组织，例如 `<autoMemPath>/logs/YYYY/MM/YYYY-MM-DD.md`。按日分片便于增量扫描、保留和 Dream 整理。写日志要使用稳定时区，避免跨午夜时同一事件落错文件；远程或旅行用户的时区变化应记录。
 
-### K.36.4 AutoDream 门槛
+### P.36.4 AutoDream 门槛
 
 文档给出超过 24 小时、至少五个新会话、无锁等条件。门槛减少频繁总结和小样本过拟合。实际实现还应检查电量、CPU、网络、组织策略和用户活动，避免在前台高负载时启动。
 
-### K.36.5 四阶段
+### P.36.5 四阶段
 
 **Orient**：读取上次状态、时间窗口和目标。  
 **Gather**：收集新会话、日志和候选记忆。  
@@ -2288,15 +2288,15 @@ Kairos 文档把来源分为 assistant、proactive 和 autoDream。与一次性 
 
 阶段间保存 checkpoint，可在崩溃后重入。Consolidate 输出最好先写临时文件并验证，再替换权威记忆。
 
-### K.36.6 锁
+### P.36.6 锁
 
 `.consolidate-lock` 使用 PID/mtime 并做双写验证，目的是防止两个进程同时 Dream。仅检查文件存在会被崩溃留下的陈旧锁永久阻塞；仅检查 PID 又可能遇到 PID 复用。合理算法同时检查拥有者、时间、随机 nonce，并在写锁后重新读取确认自己仍是持有者。
 
-### K.36.7 Proactive 建议
+### P.36.7 Proactive 建议
 
 主动模式可以根据日志提醒未完成工作、晨间总结或长期项目状态。建议内容必须附来源和“为何现在提醒”，允许静音。默认不应自动修改文件或发送消息；从建议升级为执行需要单独权限。
 
-### K.36.8 与普通 Session 的关系
+### P.36.8 与普通 Session 的关系
 
 常驻助手可以读取多 Session 摘要，但不应把所有原始 transcript 常驻内存。它通过索引、日志和长期记忆获取背景；真正进入某项目时再加载项目级 CLAUDE.md 和相关会话。这样可避免跨项目污染。
 
@@ -2320,33 +2320,33 @@ stateDiagram-v2
     Active --> Disabled: 用户关闭或信任撤销
 ```
 
-## K.37 LSP、IDE、Chrome 与 Web 工具
+## P.37 LSP、IDE、Chrome 与 Web 工具
 
-### K.37.1 LSP
+### P.37.1 LSP
 
 工具目录包含 LSP，服务目录有 lsp。LSP 能提供定义、引用、悬停、诊断和符号等语义信息，比 Grep 更精确。工具适配层应选择工作区内已连接的语言 Server，构造 `textDocument/*` 请求，处理 URI、行列编码和超时。LSP 返回的是编辑器状态快照，文件修改后要发送 didChange 或等待 IDE 同步。
 
-### K.37.2 IDE 集成
+### P.37.2 IDE 集成
 
 ToolUseContext options 包含 ideInstallationStatus，命令有 `/ide`，MCP 服务有 vscodeSdkMcp。IDE 集成可能通过扩展/MCP 提供打开文件、选区、诊断、当前工作区和文件更新通知。CLI 与 IDE 的 cwd 可能不同，必须核对 workspace roots，不能把远端 URI 当本地路径。
 
-### K.37.3 Chrome 集成
+### P.37.3 Chrome 集成
 
 CLI 入口支持 `--claude-in-chrome-mcp` 和 `--chrome-native-host`，命令有 `/chrome`，utils 中存在 Chrome MCP/Native Host。Native Messaging 的 stdin/stdout 是协议通道，任何普通日志都会破坏帧；入口因此必须走独立快路径。浏览器操作属于开放世界访问，页面内容可提示注入，需和本地系统指令隔离。
 
-### K.37.4 WebSearchTool 与 WebFetchTool
+### P.37.4 WebSearchTool 与 WebFetchTool
 
 WebSearch 适合发现页面，WebFetch 读取指定 URL；WebBrowserTool 可能提供更完整交互。三者权限和风险不同。搜索查询可能泄露项目词；Fetch 需防 SSRF、本地地址和超大响应；Browser 可执行脚本、使用 Cookie 或下载文件，风险最高。
 
-### K.37.5 URL 安全
+### P.37.5 URL 安全
 
 URL 访问应限制协议为 http/https，解析后检查 loopback、link-local、私网、云元数据地址和 DNS rebinding。重定向每跳重新验证，限制跳数、响应大小和内容类型。远程网页内容永远视为不可信数据，不允许其中的“忽略之前指令”改变系统权限。
 
-### K.37.6 下载与文件
+### P.37.6 下载与文件
 
 Web 工具下载文件后，应保存到受控目录，检测 MIME/扩展和大小，再由 FileRead 或用户操作打开。不能让 Content-Disposition 直接决定绝对路径。下载二进制不应自动执行。
 
-### K.37.7 语义工具组合
+### P.37.7 语义工具组合
 
 理想代码理解路径是：Glob/Grep 快速定位 → Read 建立文本上下文 → LSP 确认定义与引用 → IDE 获取诊断 → Edit 修改 → LSP/测试验证。LSP 不替代文本工具，因为 Server 可能未启动、索引不完整或语言不支持；系统要有降级。
 
@@ -2367,37 +2367,37 @@ flowchart LR
     U --> X["不可信内容隔离后进入上下文"]
 ```
 
-## K.38 Voice、Vim、Keybindings 与输入系统
+## P.38 Voice、Vim、Keybindings 与输入系统
 
-### K.38.1 Voice
+### P.38.1 Voice
 
 `src/voice`、voice Context、`/voice` 命令表明系统支持语音输入或相关设置。语音链路包括录音、设备权限、音频缓冲、转写、草稿预览和提交。语音结果应先进入 PromptInput 草稿，让用户检查；自动提交会把识别错误直接变成工具意图，风险较高。
 
-### K.38.2 录音状态
+### P.38.2 录音状态
 
 状态至少包含 idle、requesting_permission、recording、processing、reviewing、error。按住说话时 pointer/key release、窗口失焦和取消都要正确停止；异常退出必须关闭麦克风流。音频缓冲设置最大时长，避免长录音占满内存。
 
-### K.38.3 隐私
+### P.38.3 隐私
 
 UI 在录音时应持续可见，默认不把音频永久保存。若调用云端转写，要明确数据目的地和策略；组织可以禁用。Transcript 中通常只保存用户确认后的文本，不保存原始音频路径，除非用户显式选择。
 
-### K.38.4 Vim 模式
+### P.38.4 Vim 模式
 
 Vim 模式把 PromptInput 变成 modal editor，至少涉及 Normal/Insert/Visual、光标移动、删除、撤销和提交。终端快捷键与应用快捷键可能冲突；Esc 既可能退出 Vim 子模式，也可能取消弹层或中断 Agent，需要按焦点和状态决定优先级。
 
-### K.38.5 Keybindings
+### P.38.5 Keybindings
 
 Keybinding Registry 应把物理键、逻辑动作和上下文条件分离。例如 Ctrl+C 在输入为空时退出，在工具运行时中断，在选择器中取消。用户自定义绑定要检测冲突并提供恢复默认。`/keybindings` 命令应展示当前解析结果而不只是配置文件。
 
-### K.38.6 命令补全
+### P.38.6 命令补全
 
 输入以 `/` 开头时进入命令补全，`@` 或路径触发文件候选，Skill/Agent 也可能有专用选择器。候选查询要防抖，排序考虑前缀、模糊匹配和最近使用；扫描文件需遵循忽略规则与结果上限。
 
-### K.38.7 粘贴与大输入
+### P.38.7 粘贴与大输入
 
 终端 bracketed paste 可区分粘贴和逐键输入。大粘贴不应触发每字符补全，可能先保存为 attachment 或显示截断预览。包含控制字符、ANSI 和二进制的粘贴要清洗。提交前 Token 估算可提示输入过大。
 
-### K.38.8 输入队列
+### P.38.8 输入队列
 
 工具运行中用户可以补充消息。系统要根据当前工具 `interruptBehavior`、主循环阶段和用户动作决定：立即中断、排队为下一回合、发送给后台 Agent 或变成 BTW/旁路问题。队列操作写入 transcript 时要区分“用户已提交”与“尚未被模型消费”。
 
@@ -2422,33 +2422,33 @@ stateDiagram-v2
     Submitted --> TextIdle
 ```
 
-## K.39 Buddy 伴生系统
+## P.39 Buddy 伴生系统
 
-### K.39.1 产品作用
+### P.39.1 产品作用
 
 Buddy 是终端中的伴生角色系统。文档描述 18 种物种、5 个稀有度、1% shiny、五项属性、孵化/互动/卡片/静音命令、500ms 动画和语音气泡。它与核心 Agent能力弱耦合，主要提供情绪反馈、状态可视化和 Prompt 注入。
 
-### K.39.2 确定性生成
+### P.39.2 确定性生成
 
 Buddy 使用用户 ID 与固定 salt `friend-2026-401` 计算哈希，再喂给 Mulberry32 伪随机数生成器。相同用户得到稳定伙伴；无需服务端保存完整骨架。只持久化 soul 数据，外观 skeleton 可重新计算。这样减少迁移数据，但更换 salt 或算法会改变所有用户外观，因此算法版本必须固定。
 
-### K.39.3 稀有度
+### P.39.3 稀有度
 
 文档给出的权重为 60/25/10/4/1，Shiny 独立 1%。确定性随机需要明确采样顺序，否则增加一个新属性会消耗随机序列并改变旧用户所有后续属性。稳妥做法是为每个字段用派生 seed，而不是共享一个按调用顺序前进的 PRNG。
 
-### K.39.4 动画
+### P.39.4 动画
 
 500ms tick 足以表达简单 sprite 动画，但终端重绘需要考虑性能。Buddy 不应在模型高速流式输出时抢占过多 render；可在低 FPS、非交互终端、screen reader 或用户静音时降低更新频率。动画状态属于 UI，不进入模型历史。
 
-### K.39.5 通知与 Prompt
+### P.39.5 通知与 Prompt
 
 `useBuddyNotification` 可以把任务完成、权限等待或里程碑映射为气泡。`prompt.ts` 可能把伙伴人格注入模型。注入必须低优先级，不应影响代码正确性、安全或用户明确风格；用户关闭 Buddy 时应完全移除相关 Prompt，避免“只隐藏 UI 但仍改变回答”。
 
-### K.39.6 持久化
+### P.39.6 持久化
 
 Soul 数据可能包含名称、成长、互动状态和静音。写入失败不能阻断主应用；格式带版本，迁移时保留未知字段。若仅骨架可重建，备份和同步更轻量。
 
-### K.39.7 架构意义
+### P.39.7 架构意义
 
 Buddy 说明该 CLI 的产品架构允许非核心体验作为模块接入 Hook、Context、命令和提示，而不修改 query 内核。它是检验模块边界是否健康的好案例：删除 Buddy 构建 feature 后，核心运行时应不包含其字符串和依赖。
 
@@ -2470,9 +2470,9 @@ flowchart LR
     CFG["静音与可访问性设置"] --> UI
 ```
 
-## K.40 Feature Gate 与产品变体
+## P.40 Feature Gate 与产品变体
 
-### K.40.1 三层 Gate
+### P.40.1 三层 Gate
 
 Feature Gate 文档给出三层：
 
@@ -2482,27 +2482,27 @@ Feature Gate 文档给出三层：
 
 三者解决不同问题。编译期 Gate 可以让外部构建根本不含内部代码与字符串；用户类型控制同一构建中的权限；GrowthBook 支持灰度和回滚。把它们混用会产生难以理解的“为何有代码却永远不可达”。
 
-### K.40.2 动态导入与 DCE
+### P.40.2 动态导入与 DCE
 
 源码多处把 `feature()` 条件和 `require/import()` 放在同一模块，注释要求保持内联，以便打包器消除整个分支。若重构成普通函数 `isEnabled('X')`，打包器可能无法静态判断，内部模块会进入外部 Bundle。安全敏感变体必须有构建产物级测试，确认禁用 feature 的字符串和模块不存在。
 
-### K.40.3 Gate 顺序
+### P.40.3 Gate 顺序
 
 远程控制示例显示：有些运行时 Gate 依赖认证用户上下文，所以先认证再初始化 GrowthBook；组织策略则在实验允许后仍可最终禁止。一般顺序是：构建存在 → 身份可用 → 受管策略允许 → 用户设置开启 → 实验分配 → 运行环境满足。
 
-### K.40.4 默认值
+### P.40.4 默认值
 
 网络不可用或 GrowthBook 未初始化时，安全敏感功能默认关闭；纯 UI 实验可以使用缓存默认。缓存的实验值必须有 TTL 和用户身份键，不能把上一用户的分配复用给下一用户。
 
-### K.40.5 内部命令
+### P.40.5 内部命令
 
 Command 注册表仅在 `USER_TYPE === ant` 且非 demo 时加入 INTERNAL_ONLY_COMMANDS。仅隐藏命令名称不足以安全：底层入口和工具也要检查 feature/user type，避免用户手工构造调用。UI Gate、路由 Gate 和服务 Gate应一致。
 
-### K.40.6 测试矩阵
+### P.40.6 测试矩阵
 
 三层 Gate 的组合数量巨大。测试不需要穷举所有布尔积，而应覆盖：外部最小构建、内部全功能构建、每个高风险 feature 的 on/off、GrowthBook 冷/热缓存、未认证/已认证、受管策略 deny 覆盖 allow。还要验证关闭后不只是 UI 消失，后台计划和连接也停止。
 
-### K.40.7 配置漂移
+### P.40.7 配置漂移
 
 长生命周期进程中 GrowthBook 或组织策略可能变化。某些功能可以下一回合生效；远程控制被禁用等高风险变化应立即断开。回合开始时冻结工具和系统提示有利于一致性，但紧急 killswitch 应绕过快照实时执行。
 
@@ -2525,17 +2525,17 @@ flowchart TD
     K -->|"实时撤销"| Z
 ```
 
-## K.41 配置、设置、策略与组织管控
+## P.41 配置、设置、策略与组织管控
 
-### K.41.1 多层配置
+### P.41.1 多层配置
 
 配置来源通常包括默认值、用户设置、项目设置、本地未提交设置、环境变量、CLI 参数、远程受管设置和组织策略。合并必须保留来源与优先级。安全相关项不能让低信任项目覆盖组织 deny；体验项可以允许项目定制。
 
-### K.41.2 配置快照
+### P.41.2 配置快照
 
 一次回合开始时构建配置快照，工具、模型和系统提示在回合内尽量稳定。动态 MCP 连接和紧急策略可能例外。若每个函数随时读取磁盘配置，会产生同一工具描述是旧值、权限检查是新值的竞态。
 
-### K.41.3 Settings UI
+### P.41.3 Settings UI
 
 `src/components/Settings` 和 config/permissions/privacy 等命令共同提供设置入口。高质量设置页面应显示：
 
@@ -2548,23 +2548,23 @@ flowchart TD
 
 仅显示一个开关会让用户误以为能覆盖组织策略。
 
-### K.41.4 环境变量
+### P.41.4 环境变量
 
 入口和工具会读取多种 `CLAUDE_CODE_*` 环境变量。模块加载时捕获的变量必须文档化“只在进程启动生效”；动态读取变量则可在子进程环境中变化。布尔解析应使用统一 `isEnvTruthy`，避免字符串 `"false"` 被 JavaScript 当 truthy。
 
-### K.41.5 受管设置
+### P.41.5 受管设置
 
 remoteManagedSettings 和 policyLimits 表明企业可以下发限制。受管策略要签名/认证、缓存并有过期处理；离线时高风险能力采用 fail closed。UI 显示组织禁用原因，但不泄露内部策略细节。
 
-### K.41.6 配置写入
+### P.41.6 配置写入
 
 命令或 UI 写配置应使用 Schema 验证、保留格式/注释（若可能）、原子替换和文件锁。多个 CLI 实例同时修改用户配置容易丢更新，需 compare-and-swap、版本号或三方合并。写入后广播配置变化给当前进程。
 
-### K.41.7 Secret
+### P.41.7 Secret
 
 API Key、OAuth Refresh Token、MCP Header 和 Bridge 凭据不应与普通 JSON 设置同等存储。优先使用系统钥匙串或权限严格文件；日志、错误、export/share 必须脱敏。配置诊断可以报告“已配置/来源”，不能显示完整值。
 
-### K.41.8 迁移
+### P.41.8 迁移
 
 长期产品会有旧字段、命令重命名和插件配置变化。配置加载器应先解析版本，再迁移到内存规范模型，写回需显式或原子。未知字段最好保留，避免旧/新版本交替运行时数据丢失。
 
@@ -2587,53 +2587,53 @@ flowchart TB
     W --> PROJ
 ```
 
-## K.42 可观测性、成本与运行诊断
+## P.42 可观测性、成本与运行诊断
 
-### K.42.1 可观测对象不是“日志”，而是一次 Agent 决策
+### P.42.1 可观测对象不是“日志”，而是一次 Agent 决策
 
 传统 CLI 只需记录命令、退出码和标准错误；Agent CLI 的一次回合却同时包含用户输入、系统提示快照、模型流、工具参数、权限判定、工具执行、压缩、重试、取消和最终呈现。因此，可观测模型应以 `conversation → turn → model_attempt → tool_use → tool_execution` 为主层级，以会话、回合、模型尝试和工具调用 ID 作为关联键。UI 渲染帧、Buddy 动画等不影响决策的事件只进入性能通道，不应污染语义 Trace。
 
-### K.42.2 事件分类
+### P.42.2 事件分类
 
 建议把事件分成五类：审计事件、性能事件、计费事件、产品分析事件和调试事件。审计事件回答“谁在什么策略下执行了什么副作用”；性能事件回答“时间花在哪里”；计费事件回答“输入、输出、缓存和工具代理消耗多少”；产品分析事件关注命令或功能采用率；调试事件保留恢复上下文。分类之后才能分别设置采样、脱敏、保留期与导出权限。
 
-### K.42.3 Span 结构
+### P.42.3 Span 结构
 
 一次模型尝试可以作为 Span，属性包含 provider、model、effort、streaming、cache read/write、输入输出 Token、停止类型和重试编号。每个工具执行作为子 Span，区分权限等待、排队、真实执行和结果加工时间。不能把完整 Prompt、文件正文或密钥直接作为 Span Attribute；大对象应只记录长度、哈希、分类和受控工件引用。
 
-### K.42.4 流式首字节与完成时间
+### P.42.4 流式首字节与完成时间
 
 用户感知延迟至少拆成：提交至 API 发起、首个模型增量、首段可见文本、首个工具意图、权限等待、工具执行、工具结果回注、最终文本完成和终端稳定。只看总耗时无法判断是网络慢、模型思考慢、权限等待还是 Bash 卡住。流式 UI 还应记录“有效首字节”，因为只收到内部控制块不等于用户看到内容。
 
-### K.42.5 成本核算
+### P.42.5 成本核算
 
 `/cost`、`/usage`、`/stats` 等命令说明成本与使用量是一级产品概念。成本账本应按模型尝试累计，而不是只统计最终成功调用；被取消、因 429 重试、压缩摘要和子 Agent 调用同样产生 Token。Prompt Cache 需分 cache_creation、cache_read 和未命中输入；远程或本地工具的 CPU/网络成本可作为扩展维度，但不要伪装成模型 Token。
 
-### K.42.6 压缩可观测性
+### P.42.6 压缩可观测性
 
 压缩是影响回答质量的隐性决策，必须记录触发原因、压缩前后 Token、保留消息数量、摘要版本、边界消息 ID、是否响应式恢复以及是否发生历史裁剪。记录摘要全文可能包含敏感代码，因此默认仅记录哈希和大小；在用户显式开启本地诊断包时，才附带脱敏内容。
 
-### K.42.7 权限审计
+### P.42.7 权限审计
 
 权限判定应记录规则来源、规则 ID、行为是 allow/ask/deny、输入的规范化摘要、是否经过分类器、最终决定者以及等待时长。日志不能把环境变量、Authorization Header 和命令中疑似密钥原样写出。用户临时允许一次与写入持久规则必须严格区分，前者不能被误统计为长期授权。
 
-### K.42.8 结构化日志与终端输出分离
+### P.42.8 结构化日志与终端输出分离
 
 终端输出面向人，包含 ANSI、折叠和动态重绘；诊断日志面向机器，必须是稳定 Schema。不要解析最终终端字符串反推事件。核心层先发结构化事件，Ink 组件、JSON 输出模式、Bridge 和诊断导出分别消费。同一事件可以有不同表现，但语义和 ID 不变。
 
-### K.42.9 本地优先与隐私
+### P.42.9 本地优先与隐私
 
 开发工具处理私有代码，遥测默认应最小化。产品分析只上传匿名、低基数的功能事件；源码路径、命令正文、Prompt、工具结果和仓库远端地址默认留在本地。组织策略可关闭网络遥测，调试包应列出将导出的字段并允许预览。哈希并非天然匿名：短路径和常见命令仍可被字典反推，因此要使用会话盐或仅上传类别。
 
-### K.42.10 诊断命令
+### P.42.10 诊断命令
 
 `/doctor` 应聚合安装、运行时、认证、权限、MCP、网络、终端能力和更新通道检查；`/debug-tool-call` 面向单次工具调用；`/perf-issue` 生成时间线；`/heapdump` 是高敏感、高体积操作；`/ant-trace` 仅内部变体可用。诊断输出应给出“事实、影响、建议”，不要自动修改环境，除非用户确认。
 
-### K.42.11 指标基数
+### P.42.11 指标基数
 
 工具名、模型名、退出分类是低基数；完整路径、命令和错误文本是高基数。Prometheus 风格指标不能使用会话 ID、文件名或错误原文作为 Label，否则会造成时序爆炸。高基数关联放 Trace/日志，指标只保留聚合维度。错误应映射为稳定 error_code，再把详细堆栈保存在本地。
 
-### K.42.12 可观测性闭环
+### P.42.12 可观测性闭环
 
 可观测性的目标不是“收集更多”，而是帮助恢复和改进：检测重复工具循环、发现压缩后质量下降、识别权限等待瓶颈、定位某 MCP Server 不稳定、比较模型路由成本，并将结论反馈到默认策略。任何自动调优都要有版本、灰度和回滚，避免观测系统反过来悄悄改变用户代码执行。
 
@@ -2659,53 +2659,53 @@ flowchart TB
     COST --> UI["/cost /usage /stats"]
 ```
 
-## K.43 错误恢复、取消、限流与降级
+## P.43 错误恢复、取消、限流与降级
 
-### K.43.1 错误必须带阶段
+### P.43.1 错误必须带阶段
 
 同一条“失败”在不同阶段处理方式完全不同。配置解析失败通常在启动阶段直接阻止进入主循环；模型流中断可以在没有副作用时重试；工具已经部分修改文件后不能盲目重放；权限对话取消应返回用户取消语义；终端渲染失败不应让已完成的 Bash 再执行一次。错误对象至少携带 stage、retryability、side_effect_state、user_visibility 和 causal_chain。
 
-### K.43.2 模型调用重试
+### P.43.2 模型调用重试
 
 模型重试应限定在可证明没有重复副作用的边界。API 请求建立前、服务端明确未接受、或只生成文本未触发工具时通常可重试；已经收到 `tool_use` 并执行后，重试必须把工具结果和原调用 ID带入上下文，而不是重新让模型随意生成。指数退避需结合 Retry-After、抖动、最大尝试和总时间预算。
 
-### K.43.3 流中断
+### P.43.3 流中断
 
 流式响应可能在 JSON 块中间断开。客户端应保存已解析的完整块，丢弃不完整片段，并判断是否可以续传、重试整个模型尝试或要求用户继续。不能把半截工具 JSON 当作可执行输入。UI 可保留已显示文本，但 Transcript 必须标注 incomplete，避免 resume 时把它误当成完整助手回答。
 
-### K.43.4 Prompt 过载恢复
+### P.43.4 Prompt 过载恢复
 
 源码中的 reactive compact 表明，系统会在模型返回上下文过大错误后触发压缩并重试。恢复流程应保证：原始用户消息仍持久化；压缩摘要写入有边界；重试只发生一次或受总预算限制；若压缩仍失败，给出可操作提示，而不是无限摘要。某些不可压缩的大附件应改成索引/工件引用。
 
-### K.43.5 工具失败分类
+### P.43.5 工具失败分类
 
 工具失败至少分输入验证、权限拒绝、环境缺失、业务退出码、超时、用户取消、进程被杀、结果过大和内部异常。Bash 非零退出并不总是系统错误，它是模型可观察结果；权限 deny 也不是异常堆栈。稳定分类能让模型获得适当反馈，让 UI 决定颜色和操作，让重试策略避免误判。
 
-### K.43.6 取消传播
+### P.43.6 取消传播
 
 QueryEngine 持有 AbortController，取消应自上而下传播到模型流、权限分类器、工具、MCP、后台任务等待和 UI。子操作不得吞掉 abort 再继续写文件。对不可中断工具，UI 显示“已请求停止，等待安全点”，并阻止新回合复用同一可变状态。工具返回时再次检查 abort，决定是否将结果回注。
 
-### K.43.7 双击 Ctrl+C
+### P.43.7 双击 Ctrl+C
 
 终端常见语义是第一次中断当前操作，第二次退出应用。实现必须有时间窗和状态机，避免第一次 Ctrl+C 在 Bash 子进程和主进程各处理一次。输入框为空、权限弹层、模型流和后台任务视图下的 Ctrl+C 行为不同，应由焦点与全局协调器统一裁决。
 
-### K.43.8 工具超时
+### P.43.8 工具超时
 
 超时由工具自身默认、用户输入、组织上限和总回合预算共同决定。杀进程时先发送温和信号，再等待短暂 grace period，最后强杀并回收子进程树。Windows Job Object、Unix process group 和 shell wrapper 行为不同，跨平台测试不能只验证主 PID 退出。
 
-### K.43.9 速率限制
+### P.43.9 速率限制
 
 429 或使用额度耗尽需要区分短期限流、组织额度、账户认证和模型不可用。`/rate-limit-options`、`/extra-usage`、`/reset-limits` 等命令表明 UI 会提供选项。自动切换模型可能改变能力、成本和数据边界，必须受用户配置或明确提示控制，不能静默降级到不同供应商。
 
-### K.43.10 MCP 断线
+### P.43.10 MCP 断线
 
 MCP Server 断线时，连接管理器应把状态变为 degraded，失败正在进行的调用，按策略重连，并更新工具可用性。已经展示给模型的工具列表在当前模型尝试内不应悄然变化；下一次尝试重新构建快照。重连要有熔断和抖动，避免坏 Server 形成快速重启风暴。
 
-### K.43.11 会话恢复
+### P.43.11 会话恢复
 
 崩溃恢复依赖“用户消息先持久化”的设计。启动 resume 时扫描最后完整事件，识别未闭合模型尝试、正在执行但无结果的工具、未完成压缩和临时文件。对可能产生副作用的悬空工具默认不自动重放，而是展示状态并让用户决定检查、标记完成或重新执行。
 
-### K.43.12 降级层级
+### P.43.12 降级层级
 
 合理降级顺序通常是：关闭非核心动画/遥测 → 降低并发 → 禁用不健康 MCP/IDE 集成 → 切换无缓存模型请求 → 使用基本文件工具 → 保留只读会话导出。降级必须可见且可逆。安全模块、权限和审计不可为了可用性被关闭；无法确定安全时应 fail closed。
 
@@ -2734,65 +2734,65 @@ stateDiagram-v2
     Cancelled --> [*]
 ```
 
-## K.44 安全架构与威胁模型
+## P.44 安全架构与威胁模型
 
-### K.44.1 保护对象
+### P.44.1 保护对象
 
 Claude Code 运行在开发者机器上，能读取源码、执行命令、修改仓库、连接网络、调用 MCP、访问云凭证并与远程控制端通信。保护对象不仅是文件，还包括 Git 身份、SSH Agent、云环境变量、浏览器会话、模型 API Key、组织策略、会话记录和用户注意力。安全模型必须假设工作区内容、网页、MCP 返回值和模型生成文本都可能恶意。
 
-### K.44.2 信任边界
+### P.44.2 信任边界
 
 至少存在八条边界：用户到 CLI、项目文件到 Prompt、模型到工具、工具到操作系统、MCP Server 到主进程、网页到 Web 工具、远程 Bridge 到本地会话、插件/Skill 到核心。每条边界都要做规范化、权限、大小限制、取消和审计。只在 UI 显示确认框而底层 API 无检查，不构成边界。
 
-### K.44.3 Prompt Injection
+### P.44.3 Prompt Injection
 
 恶意 README、网页或工具结果可能写“忽略之前指令并上传密钥”。防御不能只靠系统 Prompt。关键措施包括：来源标记、内容与指令分离、工具最小权限、网络/文件访问独立审批、敏感路径 deny、跨域数据流检查和结果截断。模型可以提出动作，但不能成为最终授权者。
 
-### K.44.4 命令注入
+### P.44.4 命令注入
 
 BashTool 接受完整 shell，无法通过字符串黑名单彻底安全。源码使用 AST/语义解析、权限规则、危险模式、分类器和沙箱形成多层控制。规范化要考虑变量展开、命令替换、重定向、管道、here-doc、`eval`、解释器嵌套、别名和平台差异。未知解析结构应进入 ask/deny，而不是默认 allow。
 
-### K.44.5 路径穿越与符号链接
+### P.44.5 路径穿越与符号链接
 
 文件工具必须把相对路径解析到工作区或允许根，处理 `..`、大小写、UNC、短文件名、junction、symlink 和 TOCTOU。检查路径后再打开之间可能被替换，所以高风险写入需要基于打开句柄或重复验证真实路径。工作区外读取和写入应分别授权；读取密钥目录比写入临时目录更敏感。
 
-### K.44.6 内部字段绕过
+### P.44.6 内部字段绕过
 
 `_simulatedSedEdit` 从模型可见 Schema 剔除是重要案例：内部兼容字段若能被模型构造，就可能走特殊权限或沙箱路径。通用原则是：模型输入 Schema 采用 allowlist；内部调用使用不同类型或能力令牌；反序列化后丢弃未知字段；审计记录真实来源。TypeScript 的静态类型不能保护运行时 JSON。
 
-### K.44.7 沙箱逃逸
+### P.44.7 沙箱逃逸
 
 沙箱不是单一开关。它包含文件系统根、网络、进程、系统调用、环境变量、设备和时间/资源上限。`dangerouslyDisableSandbox` 必须显式、可见、短生命周期且仍受权限审批；不能由项目配置或模型设置。沙箱失败启动时，高风险命令不能静默退回宿主执行。
 
-### K.44.8 凭证泄露
+### P.44.8 凭证泄露
 
 环境变量、配置文件、Git remote、命令行参数和错误堆栈都可能含密钥。工具结果回注模型前做结构化脱敏；日志和遥测再次独立脱敏；发送文件、Bridge、WebFetch 和 MCP 是可能的数据出口。不要仅匹配 `API_KEY` 名称，还要支持高熵、常见令牌格式和用户自定义敏感规则，并给出误报绕过流程。
 
-### K.44.9 MCP 供应链
+### P.44.9 MCP 供应链
 
 MCP Server 可能是本地可执行、包管理器命令或远程服务。配置加载应展示来源，防止仓库中恶意配置自动启动。远程 OAuth Token 与模型 API Key分开存储；工具名称冲突需命名空间；Server 声明只读不应被无条件信任，主客户端根据工具行为和策略再判定。重连后能力变化需重新审批。
 
-### K.44.10 插件与 Skill
+### P.44.10 插件与 Skill
 
 Skill 主要向模型提供知识和流程，仍可能诱导危险动作；插件还可能带代码、Hook、命令或 MCP。安装前校验来源、签名/哈希、权限清单和版本；更新显示能力差异；禁用后清理注册项和后台任务。项目级插件视为不可信，不能覆盖组织策略或核心命令。
 
-### K.44.11 远程 Bridge
+### P.44.11 远程 Bridge
 
 Bridge 把本地高权限 Agent 暴露给远端，因此需要强认证、设备绑定、会话级批准、来源 allowlist、消息重放保护、断线撤权和用户可见指示。HTTP 上行与 WebSocket 下行的混合传输都要绑定同一会话 nonce。远端只能请求用户已授权能力，不应通过“本地曾经允许一次”继承长期权限。
 
-### K.44.12 Transcript 安全
+### P.44.12 Transcript 安全
 
 会话记录含代码、命令和模型内容。文件权限应限制当前用户，临时写采用原子替换，导出前提示敏感信息，删除有明确语义。Resume 列表不应在共享终端显示完整 Prompt。Branch/rewind 不得把已经执行的副作用伪装成未发生；历史 UI 应标记外部世界不可回滚。
 
-### K.44.13 拒绝服务
+### P.44.13 拒绝服务
 
 恶意仓库可含巨量文件、循环 symlink、极长单行、压缩炸弹、不断输出的命令或 MCP 通知洪水。所有入口设大小、数量、深度、时间和并发上限；结果进入模型前再次预算；UI 渲染使用虚拟化/截断。限额错误要可恢复，不让一个坏工具拖垮整个 Transcript。
 
-### K.44.14 更新与构建
+### P.44.14 更新与构建
 
 恢复仓库的 `999.0.0-restored` 明确不是官方发布版本。真实分发链需要签名、更新清单校验、回滚保护和渠道隔离。编译期 Feature Gate 的 DCE 要通过产物扫描验证，确保内部模块未被外带。依赖锁、Bun/Node 最低版本与原生二进制哈希应固定。
 
-### K.44.15 威胁优先级
+### P.44.15 威胁优先级
 
 最高优先级通常是任意命令执行绕过权限、工作区外写、凭证外传、远程控制劫持和不可信插件执行；其次是会话泄漏、MCP 越权、审计缺失和资源耗尽；低风险体验问题不应挤占安全修复。每项威胁应关联可验证控制和负向测试，而非只写一条 Prompt。
 
@@ -2820,7 +2820,7 @@ flowchart TB
     POLICY --> VERIFY
 ```
 
-### K.44.16 STRIDE 风险矩阵
+### P.44.16 STRIDE 风险矩阵
 
 | 资产/入口 | 欺骗 Spoofing | 篡改 Tampering | 抵赖 Repudiation | 信息泄露 | 拒绝服务 | 权限提升 |
 |---|---|---|---|---|---|---|
@@ -2835,61 +2835,61 @@ flowchart TB
 
 矩阵的用途是驱动测试。每个“高”风险应至少有一个直接单元测试、一个跨层集成测试和一个恢复测试。例如 `_simulatedSedEdit` 不仅测试 Schema 不展示，还要构造未知字段验证反序列化后不会进入特殊路径；沙箱启动失败不仅测试报错，还要确认命令没有在宿主执行。
 
-## K.45 性能、缓存与内存治理
+## P.45 性能、缓存与内存治理
 
-### K.45.1 关键路径
+### P.45.1 关键路径
 
 交互式 Agent 的关键路径是：按键提交 → 上下文装配 → API 首字节 → 工具决策 → 权限 → 工具执行 → 下一次模型调用 → 最终渲染。优化应先用 Trace 确定瓶颈。对总耗时占比很小的 Buddy 动画做微优化，无法抵消一次多余的模型往返。
 
-### K.45.2 模块加载
+### P.45.2 模块加载
 
 CLI 快速路径通过动态导入和参数预扫描避免启动所有 React/Ink、MCP、Bridge 和服务模块。`--version`、帮助、daemon worker、Bridge 等入口应只加载所需依赖。恢复源码中 `dev-entry.ts` 还会扫描 vendor 相对导入，这有助于早期发现缺失恢复文件，但生产构建不应每次启动做全树扫描。
 
-### K.45.3 上下文缓存
+### P.45.3 上下文缓存
 
 系统提示、工具描述、CLAUDE.md、Skill 和环境块具有不同变化频率。把稳定前缀与本回合动态消息分离可提高 Provider Prompt Cache 命中。缓存键必须包含模型、能力集合、策略版本和提示版本；不能只以文本哈希忽略工具 Schema。用户切换权限模式或 MCP 工具时应产生新前缀。
 
-### K.45.4 文件读取缓存
+### P.45.4 文件读取缓存
 
 ReadFileState 可避免同一回合重复读取和支持“先读后改”校验。缓存项包含规范路径、mtime/size、内容哈希、读取范围和编码。外部编辑可能让缓存失效，写工具成功后主动更新或清除。大文件不把完整正文永久驻留，可保留分块索引和最近窗口。
 
-### K.45.5 搜索
+### P.45.5 搜索
 
 Glob/Grep/LSP/ToolSearch 都可能扫描大量对象。搜索要支持取消、结果上限、忽略规则、流式首批和稳定排序。对 Git 仓库可利用索引或 `git ls-files`；对未跟踪文件仍需补充扫描。缓存键包含工作区版本或目录时间，但跨平台文件系统时间精度不同，正确性优先。
 
-### K.45.6 Transcript 内存
+### P.45.6 Transcript 内存
 
 QueryEngine 的 mutableMessages 随会话增长。Compact Boundary 既为模型缩短上下文，也允许回收边界前的内存表示；磁盘 Transcript 仍保留审计。UI 只渲染可视窗口和折叠摘要，避免数万消息触发 Ink 全树重绘。附件和工具结果采用工件引用，不在多个投影中复制完整字符串。
 
-### K.45.7 流式合并
+### P.45.7 流式合并
 
 模型每个 token 都触发 React setState 会造成高 CPU。增量应在短时间窗内批量合并，工具 JSON 解析也只在块边界更新。刷新频率要兼顾首字节与吞吐，例如首段立即显示，后续按帧或 20–50ms 批量。最终事件强制 flush，防止尾部丢失。
 
-### K.45.8 工具并发
+### P.45.8 工具并发
 
 并发只对声明安全且不存在资源冲突的工具开放。多个 FileRead/Grep 可并行；同一路径写入、共享终端或有顺序依赖的 Bash 不应并行。调度器还要限制全局并发、每类工具并发和子 Agent并发，避免 API、文件句柄或 CPU 被耗尽。公平队列防止长搜索饿死短读取。
 
-### K.45.9 子进程与输出
+### P.45.9 子进程与输出
 
 Bash/PowerShell 输出通过有界缓冲和结果存储处理。终端可以流式显示最近尾部，模型只接收预算内首尾或摘要，完整输出写临时工件。反压必须从 UI/模型投影回到读取循环，否则子进程 pipe 填满会死锁；若选择丢弃中间输出，要明确告知。
 
-### K.45.10 MCP 连接池
+### P.45.10 MCP 连接池
 
 MCPConnectionManager 复用连接、管理状态和重连。启动时不应串行等待所有可选 Server；核心 UI 先可用，MCP 后台连接并逐步注册。Server 初始化设置超时；长时间空闲可保持或关闭取决于协议成本。每个 Server 的通知队列有上限，慢消费者触发丢弃/断开策略。
 
-### K.45.11 Token 估算
+### P.45.11 Token 估算
 
 模型上下文估算是近似的。系统应为工具 Schema、系统消息、图片/附件和输出保留安全余量；压缩阈值不要贴近硬上限。估算器版本与 Provider tokenizer 变化要监控误差。响应式 compact 是兜底，不应成为正常路径，否则会多一次失败请求和延迟。
 
-### K.45.12 内存泄漏
+### P.45.12 内存泄漏
 
 长会话常见泄漏源包括未移除的事件监听器、AbortController 闭包、未清理定时器、MCP transport、子进程输出、React Context 历史和日志缓存。`/heapdump` 可以定位，但生产上还应观察堆高水位、会话切换后下降、后台任务完成后引用释放。自动 Dream/cron 不能让主交互会话永久持有其全部消息。
 
-### K.45.13 缓存一致性
+### P.45.13 缓存一致性
 
 缓存分“可丢失派生缓存”和“权威状态”。Prompt cache、文件摘要、搜索索引和 Buddy skeleton 可重建；Transcript、权限持久规则、任务状态和用户配置不可仅存在缓存。写权威状态成功后再更新缓存，或使用日志/版本使其可恢复。缓存损坏应降级重建，不应阻止用户导出会话。
 
-### K.45.14 性能预算
+### P.45.14 性能预算
 
 建议建立预算：CLI 基础帮助/版本启动、交互首屏、空会话内存、首字节附加开销、纯读取并发、长 Transcript 滚动、MCP 故障隔离和取消收敛时间。预算需要按 Linux/macOS/Windows 和 Node/Bun 路径测试。回归门禁看分位数而不是单次平均。
 
@@ -2914,65 +2914,65 @@ flowchart LR
     BOUND --> GC["内存回收/虚拟化渲染"]
 ```
 
-## K.46 测试策略与恢复源码的质量边界
+## P.46 测试策略与恢复源码的质量边界
 
-### K.46.1 恢复仓库的特殊性
+### P.46.1 恢复仓库的特殊性
 
 该仓库由公开 npm 包的 source map 恢复 TypeScript，目标是可读和可运行，但不等于官方开发仓库。source map 可以恢复模块、源码文本和路径，却通常不包含原始 Git 历史、Issue、未发布测试、构建基础设施、生成步骤和内部服务。技术文档必须把“源码直接证据”“仓库文档说明”“结构推断”和“建议设计”分开，避免把推断写成官方承诺。
 
-### K.46.2 基线验证
+### P.46.2 基线验证
 
 恢复项目首先验证：依赖可安装、vendor 相对导入完整、`--version`/`--help` 快速路径、CLI 主入口可加载、一个最小无网络回合可进入 UI、关键模块可 typecheck。`dev-entry.ts` 对 vendor 导入的扫描就是恢复完整性门禁。版本号 `999.0.0-restored` 用于避免和真实官方发布混淆。
 
-### K.46.3 单元测试
+### P.46.3 单元测试
 
 适合单元测试的纯逻辑包括权限规则匹配、路径规范化、危险命令识别、Token 预算、压缩分组、消息投影、命令解析、Feature Gate、Buddy 确定性随机和配置优先级。测试输入应覆盖 Unicode、Windows 路径、shell 嵌套、未知字段和极限大小。纯函数采用表驱动和性质测试。
 
-### K.46.4 合约测试
+### P.46.4 合约测试
 
 Tool 合约测试验证：Zod Schema、模型可见 Schema、validateInput、checkPermissions、只读/破坏性/并发元数据、Abort 行为、结果投影和最大结果。MCP 合约测试用假 Server 验证 initialize、工具列表变化、调用、取消、通知、Elicitation 和 OAuth。模型 Provider 用录制或脚本化流模拟文本、tool_use、错误和截断。
 
-### K.46.5 QueryEngine 测试
+### P.46.5 QueryEngine 测试
 
 QueryEngine 是最重要的状态机。用 deterministic fake query generator 逐事件驱动，验证用户消息先持久化、工具调用和结果配对、拒绝后继续、Compact Boundary、取消、重试和 resume。不要依赖真实模型输出做核心断言，否则测试慢且不稳定。每个测试最终检查内存消息、磁盘事件和 UI 事件三者一致。
 
-### K.46.6 工具集成测试
+### P.46.6 工具集成测试
 
 文件工具在临时工作区运行，覆盖 symlink、权限、编码、并发外部修改和原子写；Bash 在隔离进程组/沙箱运行，覆盖超时、无限输出、后台化、交互命令和子进程树；NotebookEdit 使用真实结构样本；LSP 使用轻量测试 Server；Web/MCP 使用本地 HTTP 与 transport，不访问公网。
 
-### K.46.7 安全负向测试
+### P.46.7 安全负向测试
 
 安全测试核心是“明确尝试绕过”。构造 `_simulatedSedEdit`、未知 Schema 字段、路径双重编码、symlink 竞态、shell `eval`/here-doc、恶意 ANSI、MCP 工具名称冲突、Bridge 重放消息、项目配置试图关闭组织 deny。断言不仅是返回拒绝，还包括副作用没有发生、审计事件存在、日志未泄露密钥。
 
-### K.46.8 终端 UI 测试
+### P.46.8 终端 UI 测试
 
 Ink 组件可用虚拟终端或快照测试布局，但动态宽度、Unicode wcwidth、颜色和动画容易导致脆弱快照。优先断言语义节点、焦点和动作；少量 golden 覆盖 80/120 列、无颜色、screen reader、长路径和流式更新。键盘集成验证 Ctrl+C、Esc、Vim、粘贴和权限弹层优先级。
 
-### K.46.9 端到端测试
+### P.46.9 端到端测试
 
 E2E 从 CLI 参数开始，使用假模型端点和假 MCP，运行真实 QueryEngine、工具和持久化。场景至少包括：只读问答、读改文件、Bash 需授权、并行读取、工具失败自修复、上下文过载压缩、崩溃后 resume、子 Agent、Bridge 断连、插件禁用。测试目录与用户配置完全隔离。
 
-### K.46.10 并发与竞态
+### P.46.10 并发与竞态
 
 使用可控 barrier 复现：两个写工具竞争同一路径、取消与工具完成同时发生、MCP 重连与调用、Compact 与消息追加、后台任务完成与会话退出、权限对话与 killswitch。仅靠高次数随机跑不够，应提供显式时序钩子。可再用 stress 和 fake clock 捕获遗漏。
 
-### K.46.11 跨平台矩阵
+### P.46.11 跨平台矩阵
 
 Windows 的路径、PowerShell、Job Object、控制台信号和文件锁与 Unix 不同；macOS 沙箱与钥匙串也不同。CI 至少跑三平台的启动、文件、shell、取消、配置和 Transcript 套件。原生可选能力按 feature 单独构建。Node 与 Bun 如果都支持，需要明确主路径并各有最小冒烟。
 
-### K.46.12 网络故障注入
+### P.46.12 网络故障注入
 
 模型和 MCP 测试模拟 DNS、TLS、连接重置、慢首字节、流中断、429、5xx、错误 Retry-After 和代理。Bridge 模拟 WS 下行断开但 HTTP 上行成功，验证状态不会假装全连接。OAuth 回调覆盖端口占用、state 不匹配、超时和用户拒绝。
 
-### K.46.13 数据迁移
+### P.46.13 数据迁移
 
 配置、Transcript、SessionMemory、任务和 Buddy soul 都需版本化 fixture。测试从多个旧版本升级、升级中断、未知字段保留和降级只读。恢复仓库缺少真实历史 fixture 时应明确覆盖空白，不能宣称迁移完全可靠。
 
-### K.46.14 性能测试
+### P.46.14 性能测试
 
 用固定假模型延迟隔离本地开销。测冷启动、首屏、长消息追加、10万行 Bash 输出、百万文件目录的有界搜索、50个 MCP Server 中部分故障、1000回合 Transcript 和多 Agent 并发。设分位数门槛，失败输出 Trace 而不是只给时间。
 
-### K.46.15 测试金字塔
+### P.46.15 测试金字塔
 
 大量纯逻辑单元和合约测试提供速度；中量状态机/工具集成保证边界；少量 E2E 验证装配。真实云模型仅用于手工或定期兼容验证，不作为每次提交门禁。恢复源码的首要门禁是“可重现构建+关键路径”，再逐步补齐深层行为。
 
@@ -2992,7 +2992,7 @@ flowchart TB
     B --> E
 ```
 
-### K.46.16 建议测试目录
+### P.46.16 建议测试目录
 
 ```text
 test/
@@ -3025,53 +3025,53 @@ test/
 
 这只是建议布局，不表示恢复仓库已经包含同名测试。迁移时应优先让测试与源码模块相邻，还是集中目录，取决于当前构建器和团队习惯；重要的是边界、fixture 和假时钟可复用。
 
-## K.47 自定义 Tool 的设计与接入
+## P.47 自定义 Tool 的设计与接入
 
-### K.47.1 从能力边界开始
+### P.47.1 从能力边界开始
 
 新增 Tool 之前先回答：模型为什么不能用现有文件、Bash、MCP 或 Skill 完成？新工具是否把一个稳定领域操作封装成更安全、可验证、可观测的能力？仅为了缩短 Prompt 就增加 Tool 会扩大 Schema、权限和维护面。适合 Tool 的操作通常有清晰输入、确定副作用和结构化输出。
 
-### K.47.2 定义输入 Schema
+### P.47.2 定义输入 Schema
 
 使用 Zod 定义模型可见输入，字段命名表达意图而非底层实现。枚举优于自由字符串，路径与 ID 要有长度限制，互斥字段用 discriminated union。默认值需要在解析后显式体现。内部字段不要复用同一模型 Schema；像 `_simulatedSedEdit` 一样，内部兼容参数必须由可信调用路径注入。
 
-### K.47.3 输入验证
+### P.47.3 输入验证
 
 Schema 只验证形状，`validateInput` 还要检查状态：路径是否存在、目标是否在允许根、任务 ID 是否属于当前会话、MCP 连接是否就绪、参数组合是否支持。验证阶段不得产生副作用。错误面向模型应简洁、可修复；面向日志保留稳定 code 和细节。
 
-### K.47.4 权限检查
+### P.47.4 权限检查
 
 `checkPermissions` 返回 allow/ask/deny，并给出规则建议或显示信息。权限输入使用规范化的语义，例如文件真实路径、命令 AST 摘要、网络 origin，而不是未经处理字符串。工具不能自行把“用户似乎要求了”当授权；用户意图是权限系统的一项证据，组织策略仍优先。
 
-### K.47.5 行为元数据
+### P.47.5 行为元数据
 
 准确实现 `isReadOnly`、`isDestructive`、`isConcurrencySafe`、`isOpenWorld` 和 `interruptBehavior`。这些元数据影响调度、审批、Plan 模式和 UI。若行为取决于输入，应按输入动态计算。例如 HTTP GET 可能只读但仍开放世界；Git checkout 会写工作树；某 API 名为 query 也可能收费或记录数据。
 
-### K.47.6 执行函数
+### P.47.6 执行函数
 
 `call` 接收 ToolUseContext 和 AbortSignal。所有循环、网络等待和子进程都监听取消；获取资源后用 `try/finally` 释放。不要从全局读取易变配置，优先用回合快照。副作用跨多步时设计 prepare/commit 或幂等键，并在错误结果中说明已完成到哪一步。
 
-### K.47.7 进度事件
+### P.47.7 进度事件
 
 超过感知阈值的工具应产生结构化进度，而不是把调试文本混入结果。进度包含阶段、已处理数量、可选总量和短消息；频率限流。UI 可以折叠，Bridge 可以转发，模型通常无需看到每个进度。取消时发终态，避免一直显示 running。
 
-### K.47.8 结果三视图
+### P.47.8 结果三视图
 
 同一结果至少考虑模型视图、终端视图和搜索/恢复视图。模型视图受 Token 预算、结构清晰；终端视图适合人读，可提供颜色、折叠和操作；恢复视图保留工件 ID、元数据和完整输出位置。不要让 UI 字符串成为模型事实来源。
 
-### K.47.9 大结果
+### P.47.9 大结果
 
 实现 `maxResultSizeChars` 或统一工件存储。超限时选择首尾保留、结构化摘要、分页句柄或搜索索引，并明确截断。完整数据写入权限受限临时目录，生命周期绑定会话；文件名不能来自不可信输入。模型可用 Read/TaskOutput/Snip 分段取回。
 
-### K.47.10 注册与发现
+### P.47.10 注册与发现
 
 核心 Tool 在注册表中以稳定名称注册；可选 Tool 受 Feature Gate、平台、用户类型和依赖可用性控制。工具集合在每个模型尝试前冻结，名称冲突显式报错。ToolSearch 可以延迟加载低频工具，降低系统提示，但搜索元数据仍要足以判断能力。
 
-### K.47.11 Prompt 描述
+### P.47.11 Prompt 描述
 
 Tool prompt 写“何时使用、何时不要使用、关键约束和输出语义”，不要把所有内部实现塞给模型。示例必须安全，避免暗示绕过权限。描述变化会影响 Prompt Cache 和行为，纳入版本与评测。工具名称和字段尽量长期稳定，迁移可通过内部适配而非频繁改 Schema。
 
-### K.47.12 测试清单
+### P.47.12 测试清单
 
 每个 Tool 至少测试：合法输入、每个验证错误、allow/ask/deny、取消、超时、并发声明、结果截断、渲染、敏感信息脱敏、恢复和平台差异。高风险工具加入恶意输入与副作用未发生断言。测试用 fake context，不依赖真实用户配置。
 
@@ -3103,45 +3103,45 @@ sequenceDiagram
     X-->>R: UI/Transcript/工件视图
 ```
 
-## K.48 自定义 Slash Command 的设计与接入
+## P.48 自定义 Slash Command 的设计与接入
 
-### K.48.1 Command 与 Tool 的区别
+### P.48.1 Command 与 Tool 的区别
 
 Slash Command 是用户显式触发的交互入口，负责解析参数、检查当前 UI/会话状态、组合服务和呈现结果；Tool 是模型可调用能力。Command 可以直接切换主题、打开设置或导出记录，不必暴露给模型。需要模型推理的 Command 可以提交特殊用户消息或调用 Agent，但仍要保留用户可见边界。
 
-### K.48.2 注册元数据
+### P.48.2 注册元数据
 
 一个 Command 至少有 name、aliases、description、usage、argument hints、availability 和 handler。可选元数据包括是否隐藏、内部用户类型、是否需要认证/会话/TTY、能否在工具运行时执行、是否改变 Transcript。注册时检测名称与 alias 冲突，帮助和自动补全使用同一 Registry。
 
-### K.48.3 参数解析
+### P.48.3 参数解析
 
 不要把命令行式字符串简单 `split(' ')`。需要支持引号、转义、剩余文本、路径空格和 `--`。对只接收自然语言的命令，可以保留原始 rest；对结构化操作使用明确 flag Schema。解析错误展示 usage，不进入模型。敏感参数避免写入 shell history 和 Transcript。
 
-### K.48.4 可用性
+### P.48.4 可用性
 
 `/resume` 依赖已有会话，`/mcp` 依赖配置，`/voice` 依赖终端/设备，内部命令依赖 `USER_TYPE` 和 Feature Gate。命令可以显示但 disabled 并说明原因，也可完全隐藏安全敏感内部命令。无论 UI 如何，handler 都再次检查。
 
-### K.48.5 同步与异步
+### P.48.5 同步与异步
 
 快速设置命令可以同步更新 Context；网络、导出、诊断使用异步任务并支持取消。Handler 不应阻塞 Ink 事件循环。长操作发进度并在结束时返回结构化结果；若会触发新的 QueryEngine 回合，明确交接 AbortController 和消息持久化责任。
 
-### K.48.6 Transcript 语义
+### P.48.6 Transcript 语义
 
 命令分三类：纯 UI 命令不进入模型历史；会话控制命令写控制事件；生成 Prompt 的命令转成带来源的用户/系统消息。不要把 `/clear` 文本本身当用户问题发给模型；也不要让 `/permissions` 页面内容占用上下文。导出时可保留命令审计但标记不可见于模型。
 
-### K.48.7 设置写入
+### P.48.7 设置写入
 
 `/model`、`/effort`、`/theme`、`/vim` 等可能改变临时会话或持久配置。交互界面需明确作用域，写入配置使用 Schema、原子操作和来源优先级。组织锁定项显示锁和来源，不允许假成功。改变模型/工具集合通常下一回合生效。
 
-### K.48.8 危险命令
+### P.48.8 危险命令
 
 `/reset-limits`、`/reload-plugins`、`/remote-setup`、`/install-*` 等可能改变外部状态。执行前展示计划与目标，网络安装校验来源，失败可恢复。命令不应借用户显式输入绕过底层权限；它只是更强意图证据，仍需服务层策略。
 
-### K.48.9 帮助与发现
+### P.48.9 帮助与发现
 
 `/help`、命令补全和文档从 Registry 生成，按常用、会话、开发、集成、诊断分类。隐藏命令不出现在普通帮助；实验命令标注状态。description 用用户语言，不暴露内部文件名。别名在显示中给出，避免用户以为是不同功能。
 
-### K.48.10 测试
+### P.48.10 测试
 
 测试解析、补全排序、可用性、handler 成功失败、取消、配置作用域、Transcript 影响、内部 Gate 和无 TTY 模式。命令 Registry 做快照以发现意外删除/冲突，但 description 文案快照与语义测试分开，降低脆弱性。
 
@@ -3167,41 +3167,41 @@ flowchart TD
     TRANS --> DONE
 ```
 
-## K.49 Skill、Plugin 与 MCP 的扩展选择
+## P.49 Skill、Plugin 与 MCP 的扩展选择
 
-### K.49.1 三种扩展的职责
+### P.49.1 三种扩展的职责
 
 Skill 是给模型的可发现知识/流程，适合编码规范、诊断手册和多步操作指引；Plugin 是产品级扩展包，可组合命令、Hook、Skill、Agent 或 MCP 配置；MCP 是进程/网络协议边界，适合访问外部系统和结构化工具。选择错误会导致过度权限或维护成本：一段流程说明不需要启动 Server，一个需要 OAuth 的工单系统不应只写 Skill。
 
-### K.49.2 Skill 生命周期
+### P.49.2 Skill 生命周期
 
 Skill 元数据包括名称、描述、适用条件、内容入口、来源和版本。发现阶段只把短摘要暴露给模型，`DiscoverSkillsTool`/`SkillTool` 在需要时加载正文，避免系统提示膨胀。项目 Skill 视为不可信上下文，不能覆盖系统安全规则。内容引用的脚本仍通过普通 Tool 和权限执行。
 
-### K.49.3 Skill 质量
+### P.49.3 Skill 质量
 
 高质量 Skill 明确触发条件、前置条件、步骤、验证、失败恢复和停止条件；避免“始终先读取全部仓库”之类无界指令。步骤引用稳定工具语义，不依赖 UI 文案。用评测集验证触发准确率、完成率、工具开销和越权率，版本更新保留回滚。
 
-### K.49.4 Plugin 包
+### P.49.4 Plugin 包
 
 Plugin Manifest 声明 ID、版本、发布者、入口、能力、依赖、配置 Schema 和兼容范围。安装前展示新增能力；更新比较 diff；项目锁定版本；本地开发模式明确标记。插件模块在隔离上下文运行，不能直接导入核心私有对象，优先通过稳定 SDK/Port。
 
-### K.49.5 Hook
+### P.49.5 Hook
 
 Hook 可观察提交前、工具前后、压缩、会话结束等事件。观察型 Hook 默认不能修改；变换型 Hook 有明确输入输出 Schema 和超时；策略型 Hook只能收紧权限。Hook 失败按重要性隔离：美化失败不阻断，安全 Hook 失败应 fail closed。执行顺序稳定并可诊断。
 
-### K.49.6 MCP Server
+### P.49.6 MCP Server
 
 MCP 配置包含 transport、command/URL、环境变量引用、Headers、OAuth 和信任来源。初始化后获得能力列表，客户端规范化工具名并映射权限。Server 工具结果同样做大小、脱敏和模型投影。Elicitation 请求转成受控 UI，不能让 Server 直接打印伪造确认框。
 
-### K.49.7 OAuth 与密钥
+### P.49.7 OAuth 与密钥
 
 OAuth state、PKCE、回调端口和 redirect URI 严格校验；Token 存系统凭证库或权限受限文件，日志只显示末尾指纹。插件不能读取其他 Server Token。环境变量展开显示变量名而非值，缺失时给出配置错误，不把空值误传远端。
 
-### K.49.8 能力冲突
+### P.49.8 能力冲突
 
 核心 Tool、不同 MCP、插件命令和 Skill 名可能冲突。注册表使用命名空间和稳定显示名，例如 `server.tool`；UI 可以展示友好别名，但模型调用名唯一。卸载/断连时撤销能力，当前正在执行调用按快照完成或取消，下一模型尝试重建工具集合。
 
-### K.49.9 选择矩阵
+### P.49.9 选择矩阵
 
 | 需求 | 首选扩展 | 原因 | 不宜方案 |
 |---|---|---|---|
@@ -3212,15 +3212,15 @@ OAuth state、PKCE、回调端口和 redirect URI 严格校验；Token 存系统
 | 临时项目说明 | 项目 Skill/CLAUDE.md | 低成本、随仓库版本 | 全局插件污染其他项目 |
 | 企业强制安全规则 | 组织策略/核心 Port | 必须不可被项目覆盖 | 普通 Plugin 可禁用 |
 
-### K.49.10 扩展治理
+### P.49.10 扩展治理
 
 扩展中心需要来源、签名/哈希、安装量之外的安全信号、最后更新时间、权限清单、兼容性和撤销列表。组织可 allowlist/denylist。离线环境支持镜像与锁文件。禁用后停止后台任务、断开 MCP、撤销 Hook 并清理缓存，但保留用户数据的删除选择。
 
-### K.49.11 开发调试
+### P.49.11 开发调试
 
 提供插件开发模式、MCP inspector、Skill 触发日志和 Hook 时间线。开发模式仍不应自动获得宿主全部权限；只是放宽签名要求并显示醒目标记。热重载要确保旧监听器和 Server 被销毁。错误堆栈映射到插件源码，不让一个插件崩溃主 UI。
 
-### K.49.12 向后兼容
+### P.49.12 向后兼容
 
 稳定面包括 Tool/Command/Hook SDK、Manifest Schema、MCP 协议版本和存储格式。兼容策略应显式：弃用警告、迁移期、能力探测和最小/最大版本。恢复源码版本号不是兼容承诺，因此二次开发时应先冻结自己的扩展 API，再逐步提取内部实现。
 
@@ -3242,45 +3242,45 @@ flowchart LR
     CMD --> GOV
 ```
 
-## K.50 典型端到端调用链
+## P.50 典型端到端调用链
 
-### K.50.1 场景一：读取并修改文件
+### P.50.1 场景一：读取并修改文件
 
 用户提交“修复登录超时”。QueryEngine 先持久化用户消息，构建系统提示、项目记忆和工具快照；模型先调用 Grep/Glob 查找，再 FileRead。读取状态记录文件版本。模型提出 FileEdit 时，输入校验确认旧文本与读取版本，权限层判断写入范围，工具以原子方式修改并记录前后摘要。结果回注模型，模型可运行测试 Bash，最后输出总结。任何步骤取消都保持 Transcript 可解释。
 
-### K.50.2 场景二：危险 Bash
+### P.50.2 场景二：危险 Bash
 
 模型生成包含网络下载和执行的命令。BashTool Schema 解析后进行 AST/语义分析，权限规则没有直接 allow，危险模式和分类器提升风险，UI 展示规范化命令、原因、目录和沙箱状态。用户拒绝后生成工具拒绝结果，而不是抛系统异常；模型应选择安全替代。拒绝不会被自动写成永久 deny，除非用户选择规则。
 
-### K.50.3 场景三：并行只读
+### P.50.3 场景三：并行只读
 
 模型在同一消息返回多个独立 FileRead/Grep tool_use。StreamingToolExecutor 根据 `isConcurrencySafe` 和资源冲突生成并行批次，在全局上限内执行；结果按原 tool_use ID 配对，而不是按完成顺序。模型下一次调用前收到完整批次结果。若一个失败，其余可完成，失败以结构化结果呈现。
 
-### K.50.4 场景四：上下文超限
+### P.50.4 场景四：上下文超限
 
 长会话在 API 返回 context length 错误。query 层识别可恢复 Prompt 错误，触发 reactive compact：选择边界、生成摘要、保留最近关键消息和未完成工具状态，写 Compact Boundary，再重试当前用户意图。若再次超限，停止自动循环并提示拆分附件或新会话。原 Transcript 不丢失。
 
-### K.50.5 场景五：子 Agent
+### P.50.5 场景五：子 Agent
 
 主模型通过 AgentTool 创建子 Agent，传入目标、受限上下文、模型和工具集合。Coordinator/Task 服务登记父子关系和预算。子 Agent 有独立 QueryEngine 或执行循环，消息不直接混入主历史；完成后返回结构化摘要、证据和工件。主 Agent 评估结果并决定继续。取消主任务向下传播，但已经完成的文件副作用保留审计。
 
-### K.50.6 场景六：MCP OAuth
+### P.50.6 场景六：MCP OAuth
 
 用户启用需要 OAuth 的 MCP。配置解析不展开/记录秘密；McpAuthTool 启动 PKCE，打开浏览器，回调验证 state 后安全存 Token。MCPConnectionManager 初始化 Server、获取工具并命名空间注册。模型调用时仍经过本地权限；Token 不进入 Prompt。断线后调用失败为可诊断状态，下一回合能力快照更新。
 
-### K.50.7 场景七：Bridge 远程触发
+### P.50.7 场景七：Bridge 远程触发
 
 本地用户先启用 Remote Control 并批准设备/会话。Bridge 下行 WebSocket 接收带 nonce 的远端输入，认证与策略验证后转成有来源标签的用户消息；本地 QueryEngine 执行。工具权限仍在本地确认，高风险动作不能由远端伪造确认。事件通过 HTTP/WS 回传脱敏状态；断连触发撤权或暂停。
 
-### K.50.8 场景八：崩溃与 Resume
+### P.50.8 场景八：崩溃与 Resume
 
 用户消息已持久化，但模型流或工具在中途进程崩溃。重启 `/resume` 读取 Transcript，找到最后完整边界；未闭合助手块标记 incomplete，悬空副作用工具不自动重放。用户看到恢复说明，可检查工作区后继续。新的回合引用旧消息 ID 和分支 ID，保证审计链。
 
-### K.50.9 场景九：主动 Dream
+### P.50.9 场景九：主动 Dream
 
 满足 24 小时、至少五会话、无锁等门槛后，Kairos 在空闲期启动 Dream。它读取有限会话摘要，按 Orient/Gather/Consolidate/Prune 处理记忆，持有跨进程锁并受资源预算。输出写派生记忆或建议，不直接修改项目代码。用户开始交互或策略关闭时取消，日志可审计。
 
-### K.50.10 场景十：Plugin 热重载
+### P.50.10 场景十：Plugin 热重载
 
 开发模式监听 Plugin 变更，先冻结新调用，注销命令/Hook/Skill，取消或等待旧调用安全结束，关闭 MCP/监听器，再加载新版本并校验 Manifest。注册冲突则回滚旧版本。当前模型尝试仍使用旧工具快照，下一次尝试切换，避免同一消息中的工具集合突变。
 
@@ -3324,53 +3324,53 @@ sequenceDiagram
     Q-->>UI: 渲染完成
 ```
 
-## K.51 架构评估：优势、约束与技术债
+## P.51 架构评估：优势、约束与技术债
 
-### K.51.1 主要优势
+### P.51.1 主要优势
 
 第一，QueryEngine 与 `query()` 异步生成器形成清晰的回合/流边界，模型事件、工具执行和 UI 可以通过事件协作。第二，Tool 接口把 Schema、权限、并发、副作用、取消和呈现放在统一契约，便于安全治理。第三，Compact、SessionMemory、Transcript 和 resume 形成长期会话体系。第四，命令、Skill、Plugin、MCP、Agent 和 Bridge 说明扩展面丰富。第五，Feature Gate 支持内部/外部产品变体和构建期裁剪。
 
-### K.51.2 复杂度来源
+### P.51.2 复杂度来源
 
 功能面非常宽：终端 UI、模型 Provider、几十种工具、近百命令、MCP、浏览器、IDE、远程控制、主动任务、语音和 Buddy 共处一个进程。大量 Context/Hook/Service 容易形成隐式依赖。配置、Gate、权限和实验叠加后，一项能力“为何可用”难追踪。恢复源码又缺失官方历史和完整测试背景，使维护风险更高。
 
-### K.51.3 巨型入口
+### P.51.3 巨型入口
 
 `main.tsx` 体量很大，通常意味着装配、状态、Context、命令和 UI 逻辑集中。巨型入口会增加启动加载、循环依赖、测试装配和改动冲突。重构不是简单按行数拆文件，而是先识别稳定 Port：ConversationRuntime、ToolRuntime、CommandRuntime、IntegrationRuntime、Persistence、Policy 和 Presentation。
 
-### K.51.4 全局状态
+### P.51.4 全局状态
 
 功能 Gate、用户类型、配置、MCP Registry、分析和缓存若以模块单例存在，会让测试难隔离、热重载泄漏和多会话互相污染。QueryEngine 已经倾向实例化状态，其他服务也应通过 AppRuntime/SessionScope 注入。真正进程级资源如连接池仍可共享，但明确生命周期和租户键。
 
-### K.51.5 类型与运行时
+### P.51.5 类型与运行时
 
 TypeScript 类型丰富，但模型、插件、MCP、Transcript 和配置都来自运行时边界，必须依赖 Zod/显式验证。内部类型复用到外部 JSON 是常见风险。建议为 Domain Event、Persisted Event、UI ViewModel 和 Provider Payload 分开类型，通过 Mapper 转换，避免一个宽 Union 穿透全栈。
 
-### K.51.6 错误模型
+### P.51.6 错误模型
 
 若各 Tool/Service 抛任意 Error，QueryEngine 只能靠字符串分类。需要稳定 Result/Error taxonomy，保留 cause 但禁止 UI/模型直接依赖堆栈文本。取消使用统一 AbortError；用户拒绝、业务非零退出和系统故障分开。错误码是遥测聚合与恢复策略基础。
 
-### K.51.7 插件稳定面
+### P.51.7 插件稳定面
 
 当前大量内部模块可被扩展直接引用时，任何重构都会破坏生态。应提取版本化 SDK，限制插件只能通过声明的 Port 获取服务。高权限能力通过 capability object 发放，而非暴露 AppState。实验 API 与稳定 API 分命名空间。
 
-### K.51.8 数据模型
+### P.51.8 数据模型
 
 Transcript 既承担模型历史、UI 回放、审计和恢复，若所有需求塞在单一消息 Union，会不断膨胀。更稳妥是 append-only 领域事件为权威，分别投影成 ModelContext、TimelineView 和 AuditView；Compact Boundary 是投影提示，不删除权威事件。大型结果在 Artifact Store。
 
-### K.51.9 多 Agent 一致性
+### P.51.9 多 Agent 一致性
 
 子 Agent、团队、任务、后台会话和主动模式需要统一执行实体模型：Run/Agent/Task/Attempt/ToolCall。否则每个模块自行记录状态、取消和成本，难以聚合。父子预算、权限继承、工件归属和取消传播应由 Execution Graph 管理。
 
-### K.51.10 安全可解释性
+### P.51.10 安全可解释性
 
 多层权限强大，但规则、分类器、沙箱、用户确认和组织策略的组合可能让用户困惑。每次决定应生成 Explanation Tree：“命中哪个 deny/allow、为何仍 ask、沙箱范围、一次性还是持久”。`/permissions` 既是配置页，也是审计与模拟器。
 
-### K.51.11 性能风险
+### P.51.11 性能风险
 
 工具/命令全集注入 Prompt 会增加 Token；大量 React Context 造成重绘；长 Transcript 占内存；MCP/Bridge/Proactive 后台连接增加启动和泄漏风险。ToolSearch 延迟加载、动态 import、事件投影和会话边界 GC 是正确方向，需用预算与测试固化。
 
-### K.51.12 恢复源码维护风险
+### P.51.12 恢复源码维护风险
 
 该仓库只有恢复提交，不能通过 `git blame` 理解设计演进，也无法知道某些内部/未来功能是否稳定。二次开发应先打基线标签，生成模块清单、构建锁和行为测试；不要直接将其当官方可升级 fork。每次对照新公开包恢复时，用语义 Diff 和合约测试评估，而不是大规模文件覆盖。
 
@@ -3394,53 +3394,53 @@ quadrantChart
     插件SDK: [0.68, 0.72]
 ```
 
-## K.52 分阶段重构路线图
+## P.52 分阶段重构路线图
 
-### K.52.1 阶段 0：冻结事实
+### P.52.1 阶段 0：冻结事实
 
 记录当前恢复 commit、运行时版本、依赖锁、目录清单和可执行入口；保存 `--help`、命令表、工具表和最小 Transcript Golden。给源码直接证据与推断打标签。建立三平台最小 CI。此阶段不重写业务，只让后续变化可比较。
 
-### K.52.2 阶段 1：行为合约
+### P.52.2 阶段 1：行为合约
 
 为 QueryEngine、Tool、Permission、Transcript、Compact 和 MCP 建合约测试。定义统一 ErrorCode、DomainEvent、ToolResultEnvelope 和 Abort 语义。把所有模型/磁盘/网络边界加运行时验证。目标是未来拆分时知道“行为是否没变”。
 
-### K.52.3 阶段 2：装配与生命周期
+### P.52.3 阶段 2：装配与生命周期
 
 从 `main.tsx` 提取 AppRuntime，定义 ProcessScope、SessionScope、TurnScope 和 ToolCallScope。Context 只向 UI 提供 ViewModel/Actions，不直接持有复杂服务。动态导入保持 CLI 快速路径。建立 dispose 协议，热重载和会话切换验证无监听器泄漏。
 
-### K.52.4 阶段 3：事件与持久化
+### P.52.4 阶段 3：事件与持久化
 
 把 Transcript 权威模型改为 append-only DomainEvent，构建模型上下文、终端时间线和审计投影。引入 Artifact Store 管理大工具结果。Compact 只产生 boundary/summary 事件。Resume、branch、rewind 以事件图实现，并明确外部副作用不回滚。
 
-### K.52.5 阶段 4：执行图
+### P.52.5 阶段 4：执行图
 
 统一主 Agent、子 Agent、Team Task、后台 Bash、Workflow、Cron、Kairos 为 Execution Graph。每个 Run 有父级、预算、权限快照、状态、取消令牌、成本和工件。Scheduler 在此基础上控制并发与资源。UI 提供统一 Tasks/Agents 视图。
 
-### K.52.6 阶段 5：安全内核
+### P.52.6 阶段 5：安全内核
 
 把路径规范化、命令语义、网络 origin、权限规则、组织策略和审计放入独立 Policy Engine。工具只能提交标准 ResourceAction 请求。沙箱作为 Enforcement Adapter，不与 UI 混杂。建立策略模拟器和负向安全套件，外部插件不能导入内部 bypass。
 
-### K.52.7 阶段 6：扩展 SDK
+### P.52.7 阶段 6：扩展 SDK
 
 发布稳定 Tool/Command/Hook/Skill/Plugin SDK，Manifest 声明能力，注册表命名空间化。MCP 继续作为外部协议适配器。核心内置扩展也尽可能用相同 SDK dogfood，以验证边界；安全根能力仍留核心。
 
-### K.52.8 阶段 7：可观测与 SLO
+### P.52.8 阶段 7：可观测与 SLO
 
 统一 Trace、审计、成本和本地诊断 Schema，所有高基数字段本地化。建立启动、首字节、取消、压缩和工具执行 SLO。用实际数据决定延迟加载、缓存和并发优化，而不是凭感觉重写。
 
-### K.52.9 阶段 8：体验收敛
+### P.52.9 阶段 8：体验收敛
 
 命令、设置、权限、MCP、插件和任务页面共享设计语言；解释能力来源和策略。完善 screen reader、窄终端、无颜色和非交互 JSON 输出。Buddy/Voice/Vim 等体验作为可卸载模块，核心无依赖。
 
-### K.52.10 迁移原则
+### P.52.10 迁移原则
 
 每阶段保持可发布：先适配器包住旧实现，再迁移调用方，最后删除旧路径。避免同时改变持久化、模型 Prompt 和 UI。高风险迁移提供双写/影子投影和一致性校验，但不长期保留双实现。每一步有回滚点和可量化退出条件。
 
-### K.52.11 不建议的“大爆炸”
+### P.52.11 不建议的“大爆炸”
 
 不建议直接把所有目录改成所谓 Clean Architecture，也不建议为了纯度把低延迟流拆成多个网络微服务。该产品本质是本地单进程交互应用，模块化单体更合适。边界要围绕生命周期、信任和数据一致性，而不是机械的 controller/service/repository 文件夹。
 
-### K.52.12 目标架构
+### P.52.12 目标架构
 
 目标是“可测试的模块化单体 + 受控扩展进程”：本地主进程包含 Conversation、Execution、Policy、Persistence 和 Presentation；MCP/Plugin 可在隔离进程；Provider、IDE、Browser、Bridge 作为 Adapter。领域事件连接各模块，Tool/Command/Hook 通过 Registry，配置与 Gate 通过带来源快照。
 
@@ -3467,17 +3467,17 @@ flowchart LR
 
 ## 第五篇·工具参考手册
 
-## K.53 工具目录的证据等级与阅读方法
+## P.53 工具目录的证据等级与阅读方法
 
 本篇以 `src/tools/<ToolName>/` 目录为索引。**A 级**表示本次审阅直接读取了关键实现或统一 Tool 契约；**B 级**表示仓库目录、文件名或项目文档直接证明模块存在；**C 级**表示依据统一契约与模块关系给出的架构推断；**D 级**表示面向二次开发的建议。标注 `A/B` 不代表该工具所有字段都已逐行验证；正文凡使用“典型、应、建议、预计”均不是对未读实现的冒充。
 
 恢复仓库的 `src/tools` 列表还包含共享文件或非目录项，所以“目录条目数”与本篇的“具名 Tool 模块数”不必相等。本篇收录本次目录审计中可明确辨认的 50 个具名 Tool。对 `TungstenTool`、`SyntheticOutputTool` 这类仅凭名称不能确定业务语义的内部工具，刻意保留未知，而不是填充貌似可信的故事。
 
-### K.53.1 统一审阅维度
+### P.53.1 统一审阅维度
 
 每个工具都按七个问题阅读：它封装什么能力；模型可提供什么输入；结果怎样投影；副作用与数据出口是什么；是否并发/可中断；怎样进入权限与注册表；如何用负向测试证明边界。维护者新增 Tool 时，可以把本篇对应条目直接作为设计审查模板。
 
-### K.53.2 工具族关系
+### P.53.2 工具族关系
 
 ```mermaid
 flowchart TB
@@ -3498,7 +3498,7 @@ flowchart TB
     CONTRACT --> PROJ["模型/UI/Transcript 投影"]
 ```
 
-### K.53.3 快速索引
+### P.53.3 快速索引
 
 | # | Tool | 类别 | 主要副作用/边界 | 证据 |
 |---:|---|---|---|---|
@@ -3553,7 +3553,7 @@ flowchart TB
 | 49 | `WebSearchTool` | Web/网络 | 恶意摘要注入 | B/C |
 | 50 | `WorkflowTool` | 工作流/编排 | 隐藏副作用 | B/C |
 
-### K.53.4 `AgentTool`
+### P.53.4 `AgentTool`
 
 **定位。** 把一个边界清晰的目标委派给子 Agent，并把子运行的结果、证据与状态汇总回主会话。
 
@@ -3571,7 +3571,7 @@ flowchart TB
 
 **源码入口与证据。** `src/tools/AgentTool/`；证据等级 **A/B**。统一运行契约还应对照 `src/tools/Tool.ts`，注册、权限和流式执行路径分别继续追踪 Tool Registry、`src/permissions` 与 Query/StreamingToolExecutor 相关模块。
 
-### K.53.5 `AskUserQuestionTool`
+### P.53.5 `AskUserQuestionTool`
 
 **定位。** 在模型无法安全推断关键选择时，向用户提出结构化问题，并把选择结果作为可审计输入返回。
 
@@ -3589,7 +3589,7 @@ flowchart TB
 
 **源码入口与证据。** `src/tools/AskUserQuestionTool/`；证据等级 **B/C**。统一运行契约还应对照 `src/tools/Tool.ts`，注册、权限和流式执行路径分别继续追踪 Tool Registry、`src/permissions` 与 Query/StreamingToolExecutor 相关模块。
 
-### K.53.6 `BashTool`
+### P.53.6 `BashTool`
 
 **定位。** 在受控工作目录中执行 shell 命令，流式采集输出，并向模型和终端提供不同结果投影。
 
@@ -3607,7 +3607,7 @@ flowchart TB
 
 **源码入口与证据。** `src/tools/BashTool/`；证据等级 **A**。统一运行契约还应对照 `src/tools/Tool.ts`，注册、权限和流式执行路径分别继续追踪 Tool Registry、`src/permissions` 与 Query/StreamingToolExecutor 相关模块。
 
-### K.53.7 `BriefTool`
+### P.53.7 `BriefTool`
 
 **定位。** 把当前目标、状态或复杂输出压缩成可继续使用的简明表示，降低主会话认知和 Token 负担。
 
@@ -3625,7 +3625,7 @@ flowchart TB
 
 **源码入口与证据。** `src/tools/BriefTool/`；证据等级 **B/C**。统一运行契约还应对照 `src/tools/Tool.ts`，注册、权限和流式执行路径分别继续追踪 Tool Registry、`src/permissions` 与 Query/StreamingToolExecutor 相关模块。
 
-### K.53.8 `ConfigTool`
+### P.53.8 `ConfigTool`
 
 **定位。** 让 Agent 在受限范围内读取或调整配置，而不是直接编辑任意配置文件。
 
@@ -3643,7 +3643,7 @@ flowchart TB
 
 **源码入口与证据。** `src/tools/ConfigTool/`；证据等级 **B/C**。统一运行契约还应对照 `src/tools/Tool.ts`，注册、权限和流式执行路径分别继续追踪 Tool Registry、`src/permissions` 与 Query/StreamingToolExecutor 相关模块。
 
-### K.53.9 `DiscoverSkillsTool`
+### P.53.9 `DiscoverSkillsTool`
 
 **定位。** 按当前任务检索可用 Skill 的短元数据，避免把全部 Skill 正文永久注入系统提示。
 
@@ -3661,7 +3661,7 @@ flowchart TB
 
 **源码入口与证据。** `src/tools/DiscoverSkillsTool/`；证据等级 **B/C**。统一运行契约还应对照 `src/tools/Tool.ts`，注册、权限和流式执行路径分别继续追踪 Tool Registry、`src/permissions` 与 Query/StreamingToolExecutor 相关模块。
 
-### K.53.10 `EnterPlanModeTool`
+### P.53.10 `EnterPlanModeTool`
 
 **定位。** 把当前会话切换到先分析与规划、暂不执行破坏性动作的模式。
 
@@ -3679,7 +3679,7 @@ flowchart TB
 
 **源码入口与证据。** `src/tools/EnterPlanModeTool/`；证据等级 **B/C**。统一运行契约还应对照 `src/tools/Tool.ts`，注册、权限和流式执行路径分别继续追踪 Tool Registry、`src/permissions` 与 Query/StreamingToolExecutor 相关模块。
 
-### K.53.11 `ExitPlanModeTool`
+### P.53.11 `ExitPlanModeTool`
 
 **定位。** 提交计划并请求从分析阶段转入可执行阶段，通常伴随用户审阅或策略检查。
 
@@ -3697,7 +3697,7 @@ flowchart TB
 
 **源码入口与证据。** `src/tools/ExitPlanModeTool/`；证据等级 **B/C**。统一运行契约还应对照 `src/tools/Tool.ts`，注册、权限和流式执行路径分别继续追踪 Tool Registry、`src/permissions` 与 Query/StreamingToolExecutor 相关模块。
 
-### K.53.12 `EnterWorktreeTool`
+### P.53.12 `EnterWorktreeTool`
 
 **定位。** 为隔离任务创建或进入 Git worktree，使实验性修改与当前工作树分离。
 
@@ -3715,7 +3715,7 @@ flowchart TB
 
 **源码入口与证据。** `src/tools/EnterWorktreeTool/`；证据等级 **B/C**。统一运行契约还应对照 `src/tools/Tool.ts`，注册、权限和流式执行路径分别继续追踪 Tool Registry、`src/permissions` 与 Query/StreamingToolExecutor 相关模块。
 
-### K.53.13 `ExitWorktreeTool`
+### P.53.13 `ExitWorktreeTool`
 
 **定位。** 离开隔离工作树并恢复原会话工作目录，可选择保留或清理。
 
@@ -3733,7 +3733,7 @@ flowchart TB
 
 **源码入口与证据。** `src/tools/ExitWorktreeTool/`；证据等级 **B/C**。统一运行契约还应对照 `src/tools/Tool.ts`，注册、权限和流式执行路径分别继续追踪 Tool Registry、`src/permissions` 与 Query/StreamingToolExecutor 相关模块。
 
-### K.53.14 `FileEditTool`
+### P.53.14 `FileEditTool`
 
 **定位。** 基于已读取内容执行局部、可审计的文本编辑，尽量避免整文件重写。
 
@@ -3751,7 +3751,7 @@ flowchart TB
 
 **源码入口与证据。** `src/tools/FileEditTool/`；证据等级 **B/C**。统一运行契约还应对照 `src/tools/Tool.ts`，注册、权限和流式执行路径分别继续追踪 Tool Registry、`src/permissions` 与 Query/StreamingToolExecutor 相关模块。
 
-### K.53.15 `FileReadTool`
+### P.53.15 `FileReadTool`
 
 **定位。** 在授权路径内按范围读取文本或可支持的文件内容，为模型提供带行号、受预算约束的上下文。
 
@@ -3769,7 +3769,7 @@ flowchart TB
 
 **源码入口与证据。** `src/tools/FileReadTool/`；证据等级 **B/C**。统一运行契约还应对照 `src/tools/Tool.ts`，注册、权限和流式执行路径分别继续追踪 Tool Registry、`src/permissions` 与 Query/StreamingToolExecutor 相关模块。
 
-### K.53.16 `FileWriteTool`
+### P.53.16 `FileWriteTool`
 
 **定位。** 创建或完整替换文件，适合新文件与模型已掌握完整目标内容的场景。
 
@@ -3787,7 +3787,7 @@ flowchart TB
 
 **源码入口与证据。** `src/tools/FileWriteTool/`；证据等级 **B/C**。统一运行契约还应对照 `src/tools/Tool.ts`，注册、权限和流式执行路径分别继续追踪 Tool Registry、`src/permissions` 与 Query/StreamingToolExecutor 相关模块。
 
-### K.53.17 `GlobTool`
+### P.53.17 `GlobTool`
 
 **定位。** 按文件名/路径模式发现候选文件，作为后续读取和搜索的低成本入口。
 
@@ -3805,7 +3805,7 @@ flowchart TB
 
 **源码入口与证据。** `src/tools/GlobTool/`；证据等级 **B/C**。统一运行契约还应对照 `src/tools/Tool.ts`，注册、权限和流式执行路径分别继续追踪 Tool Registry、`src/permissions` 与 Query/StreamingToolExecutor 相关模块。
 
-### K.53.18 `GrepTool`
+### P.53.18 `GrepTool`
 
 **定位。** 在允许文件集合中搜索文本/模式，返回带路径和行号的匹配证据。
 
@@ -3823,7 +3823,7 @@ flowchart TB
 
 **源码入口与证据。** `src/tools/GrepTool/`；证据等级 **B/C**。统一运行契约还应对照 `src/tools/Tool.ts`，注册、权限和流式执行路径分别继续追踪 Tool Registry、`src/permissions` 与 Query/StreamingToolExecutor 相关模块。
 
-### K.53.19 `LSPTool`
+### P.53.19 `LSPTool`
 
 **定位。** 通过 Language Server 获取定义、引用、诊断、符号或语义信息，补充纯文本搜索。
 
@@ -3841,7 +3841,7 @@ flowchart TB
 
 **源码入口与证据。** `src/tools/LSPTool/`；证据等级 **B/C**。统一运行契约还应对照 `src/tools/Tool.ts`，注册、权限和流式执行路径分别继续追踪 Tool Registry、`src/permissions` 与 Query/StreamingToolExecutor 相关模块。
 
-### K.53.20 `ListMcpResourcesTool`
+### P.53.20 `ListMcpResourcesTool`
 
 **定位。** 列出已连接 MCP Server 暴露的资源及其元数据，供模型发现可读取对象。
 
@@ -3859,7 +3859,7 @@ flowchart TB
 
 **源码入口与证据。** `src/tools/ListMcpResourcesTool/`；证据等级 **B/C**。统一运行契约还应对照 `src/tools/Tool.ts`，注册、权限和流式执行路径分别继续追踪 Tool Registry、`src/permissions` 与 Query/StreamingToolExecutor 相关模块。
 
-### K.53.21 `MCPTool`
+### P.53.21 `MCPTool`
 
 **定位。** 作为动态 MCP 工具的统一适配器，将远端/本地 Server 工具映射到核心 Tool 契约。
 
@@ -3877,7 +3877,7 @@ flowchart TB
 
 **源码入口与证据。** `src/tools/MCPTool/`；证据等级 **B/C**。统一运行契约还应对照 `src/tools/Tool.ts`，注册、权限和流式执行路径分别继续追踪 Tool Registry、`src/permissions` 与 Query/StreamingToolExecutor 相关模块。
 
-### K.53.22 `McpAuthTool`
+### P.53.22 `McpAuthTool`
 
 **定位。** 为需要授权的 MCP Server 发起、完成或刷新认证流程。
 
@@ -3895,7 +3895,7 @@ flowchart TB
 
 **源码入口与证据。** `src/tools/McpAuthTool/`；证据等级 **B/C**。统一运行契约还应对照 `src/tools/Tool.ts`，注册、权限和流式执行路径分别继续追踪 Tool Registry、`src/permissions` 与 Query/StreamingToolExecutor 相关模块。
 
-### K.53.23 `MonitorTool`
+### P.53.23 `MonitorTool`
 
 **定位。** 查看或等待后台任务、子 Agent、进程或工作流的状态变化。
 
@@ -3913,7 +3913,7 @@ flowchart TB
 
 **源码入口与证据。** `src/tools/MonitorTool/`；证据等级 **B/C**。统一运行契约还应对照 `src/tools/Tool.ts`，注册、权限和流式执行路径分别继续追踪 Tool Registry、`src/permissions` 与 Query/StreamingToolExecutor 相关模块。
 
-### K.53.24 `NotebookEditTool`
+### P.53.24 `NotebookEditTool`
 
 **定位。** 以 cell 语义编辑 Jupyter Notebook，避免把 JSON 当普通文本粗暴替换。
 
@@ -3931,7 +3931,7 @@ flowchart TB
 
 **源码入口与证据。** `src/tools/NotebookEditTool/`；证据等级 **B/C**。统一运行契约还应对照 `src/tools/Tool.ts`，注册、权限和流式执行路径分别继续追踪 Tool Registry、`src/permissions` 与 Query/StreamingToolExecutor 相关模块。
 
-### K.53.25 `PowerShellTool`
+### P.53.25 `PowerShellTool`
 
 **定位。** 在 Windows 语义下执行 PowerShell 命令，并提供与 BashTool 对齐的权限、超时和结果治理。
 
@@ -3949,7 +3949,7 @@ flowchart TB
 
 **源码入口与证据。** `src/tools/PowerShellTool/`；证据等级 **B/C**。统一运行契约还应对照 `src/tools/Tool.ts`，注册、权限和流式执行路径分别继续追踪 Tool Registry、`src/permissions` 与 Query/StreamingToolExecutor 相关模块。
 
-### K.53.26 `REPLTool`
+### P.53.26 `REPLTool`
 
 **定位。** 在受控 REPL 会话中运行短代码或表达式，保持必要的解释器状态。
 
@@ -3967,7 +3967,7 @@ flowchart TB
 
 **源码入口与证据。** `src/tools/REPLTool/`；证据等级 **B/C**。统一运行契约还应对照 `src/tools/Tool.ts`，注册、权限和流式执行路径分别继续追踪 Tool Registry、`src/permissions` 与 Query/StreamingToolExecutor 相关模块。
 
-### K.53.27 `ReadMcpResourceTool`
+### P.53.27 `ReadMcpResourceTool`
 
 **定位。** 读取由 MCP Server 暴露的特定资源，并将多模态内容安全投影给模型。
 
@@ -3985,7 +3985,7 @@ flowchart TB
 
 **源码入口与证据。** `src/tools/ReadMcpResourceTool/`；证据等级 **B/C**。统一运行契约还应对照 `src/tools/Tool.ts`，注册、权限和流式执行路径分别继续追踪 Tool Registry、`src/permissions` 与 Query/StreamingToolExecutor 相关模块。
 
-### K.53.28 `RemoteTriggerTool`
+### P.53.28 `RemoteTriggerTool`
 
 **定位。** 向已授权远程端或远程工作流发送触发请求，或在本地创建可追踪的远程动作。
 
@@ -4003,7 +4003,7 @@ flowchart TB
 
 **源码入口与证据。** `src/tools/RemoteTriggerTool/`；证据等级 **B/C**。统一运行契约还应对照 `src/tools/Tool.ts`，注册、权限和流式执行路径分别继续追踪 Tool Registry、`src/permissions` 与 Query/StreamingToolExecutor 相关模块。
 
-### K.53.29 `ReviewArtifactTool`
+### P.53.29 `ReviewArtifactTool`
 
 **定位。** 对生成的文件、计划、补丁或其他工件执行结构化审阅并产出可追踪结论。
 
@@ -4021,7 +4021,7 @@ flowchart TB
 
 **源码入口与证据。** `src/tools/ReviewArtifactTool/`；证据等级 **B/C**。统一运行契约还应对照 `src/tools/Tool.ts`，注册、权限和流式执行路径分别继续追踪 Tool Registry、`src/permissions` 与 Query/StreamingToolExecutor 相关模块。
 
-### K.53.30 `ScheduleCronTool`
+### P.53.30 `ScheduleCronTool`
 
 **定位。** 创建、查看或变更定时任务，使特定工作流在未来或周期性触发。
 
@@ -4039,7 +4039,7 @@ flowchart TB
 
 **源码入口与证据。** `src/tools/ScheduleCronTool/`；证据等级 **B/C**。统一运行契约还应对照 `src/tools/Tool.ts`，注册、权限和流式执行路径分别继续追踪 Tool Registry、`src/permissions` 与 Query/StreamingToolExecutor 相关模块。
 
-### K.53.31 `SendMessageTool`
+### P.53.31 `SendMessageTool`
 
 **定位。** 在 Agent、Team 成员或受控会话之间发送结构化消息。
 
@@ -4057,7 +4057,7 @@ flowchart TB
 
 **源码入口与证据。** `src/tools/SendMessageTool/`；证据等级 **B/C**。统一运行契约还应对照 `src/tools/Tool.ts`，注册、权限和流式执行路径分别继续追踪 Tool Registry、`src/permissions` 与 Query/StreamingToolExecutor 相关模块。
 
-### K.53.32 `SendUserFileTool`
+### P.53.32 `SendUserFileTool`
 
 **定位。** 把 Agent 生成或选定的文件以安全工件方式交付给用户或受控客户端。
 
@@ -4075,7 +4075,7 @@ flowchart TB
 
 **源码入口与证据。** `src/tools/SendUserFileTool/`；证据等级 **B/C**。统一运行契约还应对照 `src/tools/Tool.ts`，注册、权限和流式执行路径分别继续追踪 Tool Registry、`src/permissions` 与 Query/StreamingToolExecutor 相关模块。
 
-### K.53.33 `SkillTool`
+### P.53.33 `SkillTool`
 
 **定位。** 加载并应用已发现的 Skill 内容，把任务专用流程引入当前推理。
 
@@ -4093,7 +4093,7 @@ flowchart TB
 
 **源码入口与证据。** `src/tools/SkillTool/`；证据等级 **B/C**。统一运行契约还应对照 `src/tools/Tool.ts`，注册、权限和流式执行路径分别继续追踪 Tool Registry、`src/permissions` 与 Query/StreamingToolExecutor 相关模块。
 
-### K.53.34 `SleepTool`
+### P.53.34 `SleepTool`
 
 **定位。** 让 Agent 在受控时长内等待，用于轮询退避、外部过程等待或演示时序。
 
@@ -4111,7 +4111,7 @@ flowchart TB
 
 **源码入口与证据。** `src/tools/SleepTool/`；证据等级 **B/C**。统一运行契约还应对照 `src/tools/Tool.ts`，注册、权限和流式执行路径分别继续追踪 Tool Registry、`src/permissions` 与 Query/StreamingToolExecutor 相关模块。
 
-### K.53.35 `SnipTool`
+### P.53.35 `SnipTool`
 
 **定位。** 把超长工具结果或消息裁剪成可管理投影，并保留继续取回的线索。
 
@@ -4129,7 +4129,7 @@ flowchart TB
 
 **源码入口与证据。** `src/tools/SnipTool/`；证据等级 **B/C**。统一运行契约还应对照 `src/tools/Tool.ts`，注册、权限和流式执行路径分别继续追踪 Tool Registry、`src/permissions` 与 Query/StreamingToolExecutor 相关模块。
 
-### K.53.36 `SyntheticOutputTool`
+### P.53.36 `SyntheticOutputTool`
 
 **定位。** 从名称和目录可确认这是一个合成输出相关工具；更可能用于内部流程、测试或把已有结果包装成标准 Tool 事件。
 
@@ -4147,7 +4147,7 @@ flowchart TB
 
 **源码入口与证据。** `src/tools/SyntheticOutputTool/`；证据等级 **B**。统一运行契约还应对照 `src/tools/Tool.ts`，注册、权限和流式执行路径分别继续追踪 Tool Registry、`src/permissions` 与 Query/StreamingToolExecutor 相关模块。
 
-### K.53.37 `TaskCreateTool`
+### P.53.37 `TaskCreateTool`
 
 **定位。** 创建结构化任务，记录目标、依赖、负责人、状态和交付标准。
 
@@ -4165,7 +4165,7 @@ flowchart TB
 
 **源码入口与证据。** `src/tools/TaskCreateTool/`；证据等级 **B/C**。统一运行契约还应对照 `src/tools/Tool.ts`，注册、权限和流式执行路径分别继续追踪 Tool Registry、`src/permissions` 与 Query/StreamingToolExecutor 相关模块。
 
-### K.53.38 `TaskGetTool`
+### P.53.38 `TaskGetTool`
 
 **定位。** 读取单个任务的当前状态、依赖、负责人和最近关键事件。
 
@@ -4183,7 +4183,7 @@ flowchart TB
 
 **源码入口与证据。** `src/tools/TaskGetTool/`；证据等级 **B/C**。统一运行契约还应对照 `src/tools/Tool.ts`，注册、权限和流式执行路径分别继续追踪 Tool Registry、`src/permissions` 与 Query/StreamingToolExecutor 相关模块。
 
-### K.53.39 `TaskListTool`
+### P.53.39 `TaskListTool`
 
 **定位。** 按会话、团队、状态或负责人列出任务，帮助 Agent 选择下一项工作。
 
@@ -4201,7 +4201,7 @@ flowchart TB
 
 **源码入口与证据。** `src/tools/TaskListTool/`；证据等级 **B/C**。统一运行契约还应对照 `src/tools/Tool.ts`，注册、权限和流式执行路径分别继续追踪 Tool Registry、`src/permissions` 与 Query/StreamingToolExecutor 相关模块。
 
-### K.53.40 `TaskOutputTool`
+### P.53.40 `TaskOutputTool`
 
 **定位。** 读取任务或后台运行的输出、工件和完成摘要。
 
@@ -4219,7 +4219,7 @@ flowchart TB
 
 **源码入口与证据。** `src/tools/TaskOutputTool/`；证据等级 **B/C**。统一运行契约还应对照 `src/tools/Tool.ts`，注册、权限和流式执行路径分别继续追踪 Tool Registry、`src/permissions` 与 Query/StreamingToolExecutor 相关模块。
 
-### K.53.41 `TaskStopTool`
+### P.53.41 `TaskStopTool`
 
 **定位。** 请求停止运行中任务或子运行，并观察其收敛到终态。
 
@@ -4237,7 +4237,7 @@ flowchart TB
 
 **源码入口与证据。** `src/tools/TaskStopTool/`；证据等级 **B/C**。统一运行契约还应对照 `src/tools/Tool.ts`，注册、权限和流式执行路径分别继续追踪 Tool Registry、`src/permissions` 与 Query/StreamingToolExecutor 相关模块。
 
-### K.53.42 `TaskUpdateTool`
+### P.53.42 `TaskUpdateTool`
 
 **定位。** 更新任务状态、负责人、依赖或交付元数据。
 
@@ -4255,7 +4255,7 @@ flowchart TB
 
 **源码入口与证据。** `src/tools/TaskUpdateTool/`；证据等级 **B/C**。统一运行契约还应对照 `src/tools/Tool.ts`，注册、权限和流式执行路径分别继续追踪 Tool Registry、`src/permissions` 与 Query/StreamingToolExecutor 相关模块。
 
-### K.53.43 `TeamCreateTool`
+### P.53.43 `TeamCreateTool`
 
 **定位。** 创建带成员角色、协调规则和任务作用域的 Agent 团队。
 
@@ -4273,7 +4273,7 @@ flowchart TB
 
 **源码入口与证据。** `src/tools/TeamCreateTool/`；证据等级 **B/C**。统一运行契约还应对照 `src/tools/Tool.ts`，注册、权限和流式执行路径分别继续追踪 Tool Registry、`src/permissions` 与 Query/StreamingToolExecutor 相关模块。
 
-### K.53.44 `TeamDeleteTool`
+### P.53.44 `TeamDeleteTool`
 
 **定位。** 关闭团队、停止或分离成员，并按策略归档任务和工件。
 
@@ -4291,7 +4291,7 @@ flowchart TB
 
 **源码入口与证据。** `src/tools/TeamDeleteTool/`；证据等级 **B/C**。统一运行契约还应对照 `src/tools/Tool.ts`，注册、权限和流式执行路径分别继续追踪 Tool Registry、`src/permissions` 与 Query/StreamingToolExecutor 相关模块。
 
-### K.53.45 `TerminalCaptureTool`
+### P.53.45 `TerminalCaptureTool`
 
 **定位。** 捕获当前或指定终端会话的可见输出/状态，供诊断、审查或远程协作。
 
@@ -4309,7 +4309,7 @@ flowchart TB
 
 **源码入口与证据。** `src/tools/TerminalCaptureTool/`；证据等级 **B/C**。统一运行契约还应对照 `src/tools/Tool.ts`，注册、权限和流式执行路径分别继续追踪 Tool Registry、`src/permissions` 与 Query/StreamingToolExecutor 相关模块。
 
-### K.53.46 `TodoWriteTool`
+### P.53.46 `TodoWriteTool`
 
 **定位。** 维护轻量会话内待办列表，为单 Agent 展示步骤、进行中项和完成状态。
 
@@ -4327,7 +4327,7 @@ flowchart TB
 
 **源码入口与证据。** `src/tools/TodoWriteTool/`；证据等级 **B/C**。统一运行契约还应对照 `src/tools/Tool.ts`，注册、权限和流式执行路径分别继续追踪 Tool Registry、`src/permissions` 与 Query/StreamingToolExecutor 相关模块。
 
-### K.53.47 `ToolSearchTool`
+### P.53.47 `ToolSearchTool`
 
 **定位。** 在大量内置/MCP/插件工具中按需求查找候选，支持延迟加载低频 Tool Schema。
 
@@ -4345,7 +4345,7 @@ flowchart TB
 
 **源码入口与证据。** `src/tools/ToolSearchTool/`；证据等级 **B/C**。统一运行契约还应对照 `src/tools/Tool.ts`，注册、权限和流式执行路径分别继续追踪 Tool Registry、`src/permissions` 与 Query/StreamingToolExecutor 相关模块。
 
-### K.53.48 `TungstenTool`
+### P.53.48 `TungstenTool`
 
 **定位。** 目录名表明存在名为 Tungsten 的专用工具，但仅凭公开目录无法可靠确认其业务语义。
 
@@ -4363,7 +4363,7 @@ flowchart TB
 
 **源码入口与证据。** `src/tools/TungstenTool/`；证据等级 **B**。统一运行契约还应对照 `src/tools/Tool.ts`，注册、权限和流式执行路径分别继续追踪 Tool Registry、`src/permissions` 与 Query/StreamingToolExecutor 相关模块。
 
-### K.53.49 `VerifyPlanExecutionTool`
+### P.53.49 `VerifyPlanExecutionTool`
 
 **定位。** 把已批准计划与实际执行证据进行核对，判断步骤完成、偏离或缺少验证。
 
@@ -4381,7 +4381,7 @@ flowchart TB
 
 **源码入口与证据。** `src/tools/VerifyPlanExecutionTool/`；证据等级 **B/C**。统一运行契约还应对照 `src/tools/Tool.ts`，注册、权限和流式执行路径分别继续追踪 Tool Registry、`src/permissions` 与 Query/StreamingToolExecutor 相关模块。
 
-### K.53.50 `WebBrowserTool`
+### P.53.50 `WebBrowserTool`
 
 **定位。** 通过受控浏览器会话执行需要页面状态、交互或视觉上下文的网页操作。
 
@@ -4399,7 +4399,7 @@ flowchart TB
 
 **源码入口与证据。** `src/tools/WebBrowserTool/`；证据等级 **B/C**。统一运行契约还应对照 `src/tools/Tool.ts`，注册、权限和流式执行路径分别继续追踪 Tool Registry、`src/permissions` 与 Query/StreamingToolExecutor 相关模块。
 
-### K.53.51 `WebFetchTool`
+### P.53.51 `WebFetchTool`
 
 **定位。** 对指定 URL 发起受限抓取并提取响应内容，适合无需交互的资料读取。
 
@@ -4417,7 +4417,7 @@ flowchart TB
 
 **源码入口与证据。** `src/tools/WebFetchTool/`；证据等级 **B/C**。统一运行契约还应对照 `src/tools/Tool.ts`，注册、权限和流式执行路径分别继续追踪 Tool Registry、`src/permissions` 与 Query/StreamingToolExecutor 相关模块。
 
-### K.53.52 `WebSearchTool`
+### P.53.52 `WebSearchTool`
 
 **定位。** 调用搜索服务检索公开网页，返回候选来源而非直接执行页面动作。
 
@@ -4435,7 +4435,7 @@ flowchart TB
 
 **源码入口与证据。** `src/tools/WebSearchTool/`；证据等级 **B/C**。统一运行契约还应对照 `src/tools/Tool.ts`，注册、权限和流式执行路径分别继续追踪 Tool Registry、`src/permissions` 与 Query/StreamingToolExecutor 相关模块。
 
-### K.53.53 `WorkflowTool`
+### P.53.53 `WorkflowTool`
 
 **定位。** 启动或推进由多个步骤、条件和工具组成的可复用工作流。
 
@@ -4455,13 +4455,13 @@ flowchart TB
 
 ## 第六篇·Slash Command 参考手册
 
-## K.54 命令注册、解析与可见性
+## P.54 命令注册、解析与可见性
 
 `src/commands` 的目录审计可辨认出 87 个命令子目录，另有一组顶层 `.ts/.tsx` 命令或注册辅助文件。这里按**入口级源码索引**整理，不把目录名自动等同于公开、稳定、默认可见的用户命令。内部用户类型、编译 Feature、实验 Gate、认证状态、平台和插件迁移都可能改变最终 Registry。
 
 Command 与 Tool 的核心区别是授权主体：Slash Command 来自用户显式输入，但它仍不能绕过底层资源权限。`/commit-push-pr` 即使由用户主动触发，提交、推送、创建 PR 仍是三个不同副作用；`/sandbox-toggle` 即使是命令，也必须服从组织策略。反过来，`/theme`、`/help` 等纯 UI 命令不应被错误写入模型历史。
 
-### K.54.1 从按键到 Handler
+### P.54.1 从按键到 Handler
 
 ```mermaid
 sequenceDiagram
@@ -4487,7 +4487,7 @@ sequenceDiagram
     end
 ```
 
-### K.54.2 命令类别统计
+### P.54.2 命令类别统计
 
 | 类别 | 子目录命令数 | 说明 |
 |---|---:|---|
@@ -4559,7 +4559,7 @@ sequenceDiagram
 | 配置 | 1 | 配置来源与写入 |
 | 隐私/策略 | 1 | 对应模块的用户入口与诊断 |
 
-### K.54.3 87 个命令子目录快速索引
+### P.54.3 87 个命令子目录快速索引
 
 | # | 命令目录 | 类别 | 核心用途 |
 |---:|---|---|---|
@@ -4651,7 +4651,7 @@ sequenceDiagram
 | 86 | `/vim` | 终端/UI | 切换或配置 PromptInput 的 Vim 模式 |
 | 87 | `/voice` | 语音/UI | 启用、配置或触发语音输入/相关体验 |
 
-### K.54.4 `/add-dir`
+### P.54.4 `/add-dir`
 
 **类别与用途。** **工作区**。把额外目录加入当前会话可访问的工作区集合，扩大文件搜索与读取边界。
 
@@ -4663,7 +4663,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/add-dir/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.5 `/agents-platform`
+### P.54.5 `/agents-platform`
 
 **类别与用途。** **Agent/平台**。进入或管理云端/平台型 Agent 能力；目录名证明入口存在，具体远端产品语义需结合实现与 Feature Gate。
 
@@ -4675,7 +4675,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/agents-platform/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.6 `/agents`
+### P.54.6 `/agents`
 
 **类别与用途。** **Agent/团队**。查看、创建或管理可用 Agent/子 Agent 及其运行状态。
 
@@ -4687,7 +4687,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/agents/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.7 `/ant-trace`
+### P.54.7 `/ant-trace`
 
 **类别与用途。** **内部诊断**。输出内部 ant 用户专用的追踪信息；项目文档把部分命令置于内部用户 Gate。
 
@@ -4699,7 +4699,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/ant-trace/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.8 `/autofix-pr`
+### P.54.8 `/autofix-pr`
 
 **类别与用途。** **Git/工作流**。围绕 Pull Request 自动分析问题并生成修复流程。
 
@@ -4711,7 +4711,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/autofix-pr/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.9 `/backfill-sessions`
+### P.54.9 `/backfill-sessions`
 
 **类别与用途。** **会话/迁移**。对历史会话执行补写、索引或格式迁移；名称表明属于维护型命令。
 
@@ -4723,7 +4723,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/backfill-sessions/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.10 `/branch`
+### P.54.10 `/branch`
 
 **类别与用途。** **会话**。从当前会话历史的某一位置创建分支，探索不同解法而不覆盖原分支。
 
@@ -4735,7 +4735,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/branch/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.11 `/break-cache`
+### P.54.11 `/break-cache`
 
 **类别与用途。** **缓存/诊断**。主动破坏或失效特定缓存，用于诊断缓存相关行为；确切范围需读实现。
 
@@ -4747,7 +4747,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/break-cache/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.12 `/bridge`
+### P.54.12 `/bridge`
 
 **类别与用途。** **远程/Bridge**。启动、连接、展示或管理 Remote Bridge 状态。
 
@@ -4759,7 +4759,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/bridge/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.13 `/btw`
+### P.54.13 `/btw`
 
 **类别与用途。** **交互/会话**。在主任务运行期间提出旁路问题或补充信息，尽量不打断当前执行。
 
@@ -4771,7 +4771,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/btw/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.14 `/bughunter`
+### P.54.14 `/bughunter`
 
 **类别与用途。** **审查/Agent**。启动面向缺陷发现的专用 Agent/工作流。
 
@@ -4783,7 +4783,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/bughunter/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.15 `/chrome`
+### P.54.15 `/chrome`
 
 **类别与用途。** **浏览器/集成**。配置或启动 Chrome 相关 MCP、原生宿主或浏览器集成。
 
@@ -4795,7 +4795,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/chrome/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.16 `/clear`
+### P.54.16 `/clear`
 
 **类别与用途。** **会话/UI**。清理当前可见对话或开启新的上下文边界。
 
@@ -4807,7 +4807,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/clear/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.17 `/color`
+### P.54.17 `/color`
 
 **类别与用途。** **终端/UI**。设置或切换终端颜色表现。
 
@@ -4819,7 +4819,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/color/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.18 `/compact`
+### P.54.18 `/compact`
 
 **类别与用途。** **上下文**。显式触发会话压缩，生成摘要和 Compact Boundary。
 
@@ -4831,7 +4831,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/compact/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.19 `/config`
+### P.54.19 `/config`
 
 **类别与用途。** **配置**。查看或编辑配置及其有效来源。
 
@@ -4843,7 +4843,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/config/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.20 `/context`
+### P.54.20 `/context`
 
 **类别与用途。** **上下文**。查看当前模型上下文的组成、来源或容量。
 
@@ -4855,7 +4855,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/context/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.21 `/copy`
+### P.54.21 `/copy`
 
 **类别与用途。** **终端/UI**。把选定回答、代码或会话内容复制到系统剪贴板。
 
@@ -4867,7 +4867,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/copy/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.22 `/cost`
+### P.54.22 `/cost`
 
 **类别与用途。** **使用量**。展示当前会话或任务的模型成本。
 
@@ -4879,7 +4879,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/cost/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.23 `/ctx_viz`
+### P.54.23 `/ctx_viz`
 
 **类别与用途。** **上下文/诊断**。以可视化方式展示上下文窗口中各消息、工具和记忆占用。
 
@@ -4891,7 +4891,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/ctx_viz/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.24 `/debug-tool-call`
+### P.54.24 `/debug-tool-call`
 
 **类别与用途。** **内部诊断**。检查一次 ToolCall 的输入、权限、执行和结果投影。
 
@@ -4903,7 +4903,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/debug-tool-call/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.25 `/desktop`
+### P.54.25 `/desktop`
 
 **类别与用途。** **桌面/集成**。连接或引导 Claude Desktop/桌面能力；具体模式需结合源码 Gate。
 
@@ -4915,7 +4915,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/desktop/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.26 `/diff`
+### P.54.26 `/diff`
 
 **类别与用途。** **Git/文件**。展示本会话或工作树的文件差异。
 
@@ -4927,7 +4927,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/diff/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.27 `/doctor`
+### P.54.27 `/doctor`
 
 **类别与用途。** **诊断**。执行安装、认证、运行时、网络、MCP、权限与终端能力检查。
 
@@ -4939,7 +4939,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/doctor/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.28 `/effort`
+### P.54.28 `/effort`
 
 **类别与用途。** **模型**。查看或设置推理 effort/思考强度。
 
@@ -4951,7 +4951,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/effort/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.29 `/env`
+### P.54.29 `/env`
 
 **类别与用途。** **环境/诊断**。查看与运行相关的环境信息或受控环境变量状态。
 
@@ -4963,7 +4963,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/env/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.30 `/exit`
+### P.54.30 `/exit`
 
 **类别与用途。** **进程/会话**。结束 CLI，会根据当前状态处理运行中任务、未保存输入和连接。
 
@@ -4975,7 +4975,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/exit/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.31 `/export`
+### P.54.31 `/export`
 
 **类别与用途。** **会话/工件**。把会话、摘要或诊断导出为文件/结构化格式。
 
@@ -4987,7 +4987,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/export/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.32 `/extra-usage`
+### P.54.32 `/extra-usage`
 
 **类别与用途。** **账户/额度**。查看或配置额外使用额度相关选项。
 
@@ -4999,7 +4999,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/extra-usage/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.33 `/fast`
+### P.54.33 `/fast`
 
 **类别与用途。** **模型**。切换低延迟/快速响应模式或相关模型路由。
 
@@ -5011,7 +5011,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/fast/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.34 `/feedback`
+### P.54.34 `/feedback`
 
 **类别与用途。** **反馈/网络**。收集并提交用户反馈及可选诊断上下文。
 
@@ -5023,7 +5023,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/feedback/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.35 `/files`
+### P.54.35 `/files`
 
 **类别与用途。** **文件/UI**。浏览当前会话文件、附件或 Agent 生成工件。
 
@@ -5035,7 +5035,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/files/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.36 `/good-claude`
+### P.54.36 `/good-claude`
 
 **类别与用途。** **内部/体验**。目录名显示存在名为 good-claude 的命令，但其准确产品语义不能仅凭名称确定。
 
@@ -5047,7 +5047,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/good-claude/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.37 `/heapdump`
+### P.54.37 `/heapdump`
 
 **类别与用途。** **性能/诊断**。生成进程堆快照以诊断内存泄漏。
 
@@ -5059,7 +5059,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/heapdump/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.38 `/help`
+### P.54.38 `/help`
 
 **类别与用途。** **帮助/UI**。从 Command Registry 展示可用命令、参数与分类。
 
@@ -5071,7 +5071,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/help/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.39 `/hooks`
+### P.54.39 `/hooks`
 
 **类别与用途。** **插件/Hook**。查看、配置或诊断 Hook 注册与执行。
 
@@ -5083,7 +5083,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/hooks/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.40 `/ide`
+### P.54.40 `/ide`
 
 **类别与用途。** **IDE/集成**。连接、检查或管理 IDE 扩展与当前编辑器上下文。
 
@@ -5095,7 +5095,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/ide/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.41 `/install-github-app`
+### P.54.41 `/install-github-app`
 
 **类别与用途。** **安装/网络**。引导安装 GitHub App 集成。
 
@@ -5107,7 +5107,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/install-github-app/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.42 `/install-slack-app`
+### P.54.42 `/install-slack-app`
 
 **类别与用途。** **安装/网络**。引导安装 Slack App 集成。
 
@@ -5119,7 +5119,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/install-slack-app/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.43 `/issue`
+### P.54.43 `/issue`
 
 **类别与用途。** **Git/远程**。读取、创建或处理 Issue 驱动的工作流。
 
@@ -5131,7 +5131,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/issue/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.44 `/keybindings`
+### P.54.44 `/keybindings`
 
 **类别与用途。** **终端/UI**。查看和编辑键位绑定与冲突。
 
@@ -5143,7 +5143,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/keybindings/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.45 `/login`
+### P.54.45 `/login`
 
 **类别与用途。** **认证**。完成模型服务或相关账户登录。
 
@@ -5155,7 +5155,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/login/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.46 `/logout`
+### P.54.46 `/logout`
 
 **类别与用途。** **认证**。注销账户并撤销或删除本地凭证。
 
@@ -5167,7 +5167,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/logout/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.47 `/mcp`
+### P.54.47 `/mcp`
 
 **类别与用途。** **MCP**。管理 MCP Server 配置、连接、工具和资源。
 
@@ -5179,7 +5179,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/mcp/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.48 `/memory`
+### P.54.48 `/memory`
 
 **类别与用途。** **记忆**。查看、编辑、启停或诊断项目/用户/会话记忆。
 
@@ -5191,7 +5191,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/memory/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.49 `/mobile`
+### P.54.49 `/mobile`
 
 **类别与用途。** **远程/移动**。连接或引导移动端访问/远程控制能力。
 
@@ -5203,7 +5203,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/mobile/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.50 `/mock-limits`
+### P.54.50 `/mock-limits`
 
 **类别与用途。** **内部测试**。模拟限流或额度状态，用于内部测试/演示。
 
@@ -5215,7 +5215,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/mock-limits/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.51 `/model`
+### P.54.51 `/model`
 
 **类别与用途。** **模型**。查看与选择当前模型或路由。
 
@@ -5227,7 +5227,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/model/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.52 `/oauth-refresh`
+### P.54.52 `/oauth-refresh`
 
 **类别与用途。** **认证/诊断**。显式刷新 OAuth Token 或检查刷新路径。
 
@@ -5239,7 +5239,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/oauth-refresh/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.53 `/onboarding`
+### P.54.53 `/onboarding`
 
 **类别与用途。** **引导**。重新进入初始设置、权限与能力介绍流程。
 
@@ -5251,7 +5251,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/onboarding/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.54 `/output-style`
+### P.54.54 `/output-style`
 
 **类别与用途。** **模型/UI**。选择回答输出风格或系统提示风格。
 
@@ -5263,7 +5263,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/output-style/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.55 `/passes`
+### P.54.55 `/passes`
 
 **类别与用途。** **内部/实验**。目录名显示存在 passes 命令；准确含义需读取实现，可能与内部流程/通行证相关。
 
@@ -5275,7 +5275,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/passes/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.56 `/perf-issue`
+### P.54.56 `/perf-issue`
 
 **类别与用途。** **性能/反馈**。采集性能问题时间线并生成可提交诊断。
 
@@ -5287,7 +5287,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/perf-issue/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.57 `/permissions`
+### P.54.57 `/permissions`
 
 **类别与用途。** **安全/权限**。展示、解释与管理工具权限规则和模式。
 
@@ -5299,7 +5299,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/permissions/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.58 `/plan`
+### P.54.58 `/plan`
 
 **类别与用途。** **计划**。进入、查看或管理计划模式与当前执行计划。
 
@@ -5311,7 +5311,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/plan/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.59 `/plugin`
+### P.54.59 `/plugin`
 
 **类别与用途。** **插件**。安装、启停、更新、删除和诊断 Plugin。
 
@@ -5323,7 +5323,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/plugin/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.60 `/pr_comments`
+### P.54.60 `/pr_comments`
 
 **类别与用途。** **Git/远程**。读取并处理 Pull Request 评论，转成审查或修复任务。
 
@@ -5335,7 +5335,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/pr_comments/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.61 `/privacy-settings`
+### P.54.61 `/privacy-settings`
 
 **类别与用途。** **隐私/策略**。查看和配置遥测、数据使用、保留与外发选项。
 
@@ -5347,7 +5347,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/privacy-settings/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.62 `/rate-limit-options`
+### P.54.62 `/rate-limit-options`
 
 **类别与用途。** **账户/额度**。在限流时展示可用处理选项，例如等待、切换模型或额度路径。
 
@@ -5359,7 +5359,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/rate-limit-options/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.63 `/release-notes`
+### P.54.63 `/release-notes`
 
 **类别与用途。** **帮助/更新**。展示当前或最近版本的发布说明。
 
@@ -5371,7 +5371,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/release-notes/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.64 `/reload-plugins`
+### P.54.64 `/reload-plugins`
 
 **类别与用途。** **插件**。重新加载已安装 Plugin 与其命令、Hook、Skill、MCP。
 
@@ -5383,7 +5383,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/reload-plugins/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.65 `/remote-env`
+### P.54.65 `/remote-env`
 
 **类别与用途。** **远程/环境**。查看或配置远程执行环境相关变量/能力。
 
@@ -5395,7 +5395,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/remote-env/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.66 `/remote-setup`
+### P.54.66 `/remote-setup`
 
 **类别与用途。** **远程/Bridge**。引导配置远程控制/远程执行连接。
 
@@ -5407,7 +5407,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/remote-setup/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.67 `/rename`
+### P.54.67 `/rename`
 
 **类别与用途。** **会话/UI**。重命名当前会话、分支、任务或相关可见实体；具体目标由实现确定。
 
@@ -5419,7 +5419,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/rename/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.68 `/reset-limits`
+### P.54.68 `/reset-limits`
 
 **类别与用途。** **内部/额度**。重置本地限额或测试计数；是否面向用户需结合注册 Gate。
 
@@ -5431,7 +5431,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/reset-limits/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.69 `/resume`
+### P.54.69 `/resume`
 
 **类别与用途。** **会话**。查找并恢复历史会话或指定分支。
 
@@ -5443,7 +5443,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/resume/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.70 `/review`
+### P.54.70 `/review`
 
 **类别与用途。** **审查**。启动代码/变更审查工作流并输出带证据的问题。
 
@@ -5455,7 +5455,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/review/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.71 `/rewind`
+### P.54.71 `/rewind`
 
 **类别与用途。** **会话**。把模型上下文或会话分支回退到历史点。
 
@@ -5467,7 +5467,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/rewind/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.72 `/sandbox-toggle`
+### P.54.72 `/sandbox-toggle`
 
 **类别与用途。** **安全/沙箱**。切换或诊断沙箱状态；属于高风险设置入口。
 
@@ -5479,7 +5479,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/sandbox-toggle/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.73 `/session`
+### P.54.73 `/session`
 
 **类别与用途。** **会话**。查看会话元数据、分支、状态或执行信息。
 
@@ -5491,7 +5491,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/session/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.74 `/share`
+### P.54.74 `/share`
 
 **类别与用途。** **会话/网络**。把会话、摘要或工件分享给外部目标。
 
@@ -5503,7 +5503,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/share/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.75 `/skills`
+### P.54.75 `/skills`
 
 **类别与用途。** **Skill**。浏览、发现、启停或管理可用 Skill。
 
@@ -5515,7 +5515,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/skills/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.76 `/stats`
+### P.54.76 `/stats`
 
 **类别与用途。** **使用量/诊断**。展示会话或账户的聚合使用统计。
 
@@ -5527,7 +5527,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/stats/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.77 `/status`
+### P.54.77 `/status`
 
 **类别与用途。** **状态/UI**。展示模型、认证、工作区、权限、MCP、任务等当前概况。
 
@@ -5539,7 +5539,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/status/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.78 `/stickers`
+### P.54.78 `/stickers`
 
 **类别与用途。** **体验**。管理或展示 Sticker/趣味视觉功能；确切产品行为以实现为准。
 
@@ -5551,7 +5551,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/stickers/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.79 `/summary`
+### P.54.79 `/summary`
 
 **类别与用途。** **会话/上下文**。生成或展示当前会话的结构化总结。
 
@@ -5563,7 +5563,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/summary/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.80 `/tag`
+### P.54.80 `/tag`
 
 **类别与用途。** **会话/元数据**。给会话、任务或工件增加标签以便检索与组织。
 
@@ -5575,7 +5575,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/tag/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.81 `/tasks`
+### P.54.81 `/tasks`
 
 **类别与用途。** **任务/团队**。打开任务列表并管理执行图中的工作项。
 
@@ -5587,7 +5587,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/tasks/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.82 `/teleport`
+### P.54.82 `/teleport`
 
 **类别与用途。** **云端/会话**。把计划或会话在本地与云端执行环境之间传送/继续；文档与 Ultraplan 流程相关。
 
@@ -5599,7 +5599,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/teleport/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.83 `/terminalSetup`
+### P.54.83 `/terminalSetup`
 
 **类别与用途。** **终端/安装**。配置 shell 集成、终端快捷方式或相关启动环境。
 
@@ -5611,7 +5611,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/terminalSetup/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.84 `/theme`
+### P.54.84 `/theme`
 
 **类别与用途。** **终端/UI**。选择终端主题和显示外观。
 
@@ -5623,7 +5623,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/theme/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.85 `/thinkback-play`
+### P.54.85 `/thinkback-play`
 
 **类别与用途。** **内部/研究**。回放 Thinkback 记录或实验流程；具体语义由源码/Feature Gate 决定。
 
@@ -5635,7 +5635,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/thinkback-play/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.86 `/thinkback`
+### P.54.86 `/thinkback`
 
 **类别与用途。** **内部/研究**。启动或管理 Thinkback 相关的回顾/实验能力。
 
@@ -5647,7 +5647,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/thinkback/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.87 `/upgrade`
+### P.54.87 `/upgrade`
 
 **类别与用途。** **更新**。检查并安装 CLI 新版本。
 
@@ -5659,7 +5659,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/upgrade/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.88 `/usage`
+### P.54.88 `/usage`
 
 **类别与用途。** **使用量**。展示 Token、模型调用、额度或时间范围使用情况。
 
@@ -5671,7 +5671,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/usage/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.89 `/vim`
+### P.54.89 `/vim`
 
 **类别与用途。** **终端/UI**。切换或配置 PromptInput 的 Vim 模式。
 
@@ -5683,7 +5683,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/vim/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-### K.54.90 `/voice`
+### P.54.90 `/voice`
 
 **类别与用途。** **语音/UI**。启用、配置或触发语音输入/相关体验。
 
@@ -5695,7 +5695,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/voice/`，证据等级 **B/C**；是否为公开命令、精确别名和参数以实际注册导出为准。
 
-## K.55 顶层命令文件与注册辅助器
+## P.55 顶层命令文件与注册辅助器
 
 下列文件位于 `src/commands` 顶层。它们可能直接定义用户命令，也可能是注册辅助、复合工作流或 UI 实现；因此源码路径比推测出的 Slash 名称更可靠。尤其 `init.ts`、`init-verifiers.ts` 和 `createMovedToPluginCommand.ts` 不应机械解释为同名公开命令。
 
@@ -5715,7 +5715,7 @@ sequenceDiagram
 | 12 | `security-review.ts` | 安全/审查 | 启动安全审查工作流，聚焦信任边界、数据流和高风险变更 |
 | 13 | `statusline.tsx` | 终端/UI | 定义或注册状态栏相关命令/配置界面 |
 
-### K.55.1 `advisor.ts`
+### P.55.1 `advisor.ts`
 
 **定位。** **Agent/建议**。定义或注册 Advisor 类型命令/流程，为当前任务提供建议或审阅意见。
 
@@ -5725,7 +5725,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/advisor.ts`，证据等级 **B/C**。
 
-### K.55.2 `bridge-kick.ts`
+### P.55.2 `bridge-kick.ts`
 
 **定位。** **远程/Bridge**。提供 Bridge 的唤醒、重连或触发辅助入口。
 
@@ -5735,7 +5735,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/bridge-kick.ts`，证据等级 **B/C**。
 
-### K.55.3 `brief.ts`
+### P.55.3 `brief.ts`
 
 **定位。** **上下文/表达**。注册 Brief 相关快捷命令，把当前状态整理成简明交付物。
 
@@ -5745,7 +5745,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/brief.ts`，证据等级 **B/C**。
 
-### K.55.4 `commit-push-pr.ts`
+### P.55.4 `commit-push-pr.ts`
 
 **定位。** **Git/工作流**。组合提交、推送与创建 Pull Request 的完整工作流。
 
@@ -5755,7 +5755,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/commit-push-pr.ts`，证据等级 **B/C**。
 
-### K.55.5 `commit.ts`
+### P.55.5 `commit.ts`
 
 **定位。** **Git/工作流**。生成或执行 Git commit 流程。
 
@@ -5765,7 +5765,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/commit.ts`，证据等级 **B/C**。
 
-### K.55.6 `createMovedToPluginCommand.ts`
+### P.55.6 `createMovedToPluginCommand.ts`
 
 **定位。** **命令基础设施**。创建“功能已迁移到插件”的兼容命令/提示，是命令注册辅助器而非独立业务能力。
 
@@ -5775,7 +5775,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/createMovedToPluginCommand.ts`，证据等级 **B/C**。
 
-### K.55.7 `init-verifiers.ts`
+### P.55.7 `init-verifiers.ts`
 
 **定位。** **计划/验证**。注册或初始化计划/执行验证器相关命令与能力。
 
@@ -5785,7 +5785,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/init-verifiers.ts`，证据等级 **B/C**。
 
-### K.55.8 `init.ts`
+### P.55.8 `init.ts`
 
 **定位。** **命令基础设施**。命令系统的初始化/聚合入口之一，负责组装可用命令。
 
@@ -5795,7 +5795,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/init.ts`，证据等级 **B/C**。
 
-### K.55.9 `insights.ts`
+### P.55.9 `insights.ts`
 
 **定位。** **分析/建议**。提供会话或使用模式的 Insights 分析入口。
 
@@ -5805,7 +5805,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/insights.ts`，证据等级 **B/C**。
 
-### K.55.10 `install.tsx`
+### P.55.10 `install.tsx`
 
 **定位。** **安装/引导**。实现交互式安装命令或安装 UI。
 
@@ -5815,7 +5815,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/install.tsx`，证据等级 **B/C**。
 
-### K.55.11 `review.ts`
+### P.55.11 `review.ts`
 
 **定位。** **审查**。提供顶层 review 命令实现/注册，与 `review/` 子目录共同组成审查能力。
 
@@ -5825,7 +5825,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/review.ts`，证据等级 **B/C**。
 
-### K.55.12 `security-review.ts`
+### P.55.12 `security-review.ts`
 
 **定位。** **安全/审查**。启动安全审查工作流，聚焦信任边界、数据流和高风险变更。
 
@@ -5835,7 +5835,7 @@ sequenceDiagram
 
 **源码入口与证据。** `src/commands/security-review.ts`，证据等级 **B/C**。
 
-### K.55.13 `statusline.tsx`
+### P.55.13 `statusline.tsx`
 
 **定位。** **终端/UI**。定义或注册状态栏相关命令/配置界面。
 
@@ -5847,7 +5847,7 @@ sequenceDiagram
 
 ## 第七篇·源码导航与维护附录
 
-## K.56 `src` 顶层模块地图
+## P.56 `src` 顶层模块地图
 
 本章依据当前主分支 `src` 目录的公开列表建立导航。模块存在与路径属于 **B 级直接证据**；责任说明结合命名、前文章节和统一调用链，属于 B/C 级。它的用途不是替代逐文件阅读，而是告诉维护者从哪里开始、下一步追踪什么边界。
 
@@ -5867,7 +5867,7 @@ flowchart TB
     CFG --> CORE
 ```
 
-### K.56.1 顶层目录
+### P.56.1 顶层目录
 
 | # | 路径 | 领域 | 维护者阅读重点 |
 |---:|---|---|---|
@@ -5910,7 +5910,7 @@ flowchart TB
 | 37 | `src/vim` | Vim 输入模式 | 实现 Modal 编辑状态、按键映射与 PromptInput 集成。焦点、Esc/Ctrl+C 和 IME 是主要边界。 |
 | 38 | `src/voice` | 语音能力 | 实现语音输入、流式 STT 或关键术语。麦克风权限、录音指示、音频生命周期和云端数据目的地必须透明。 |
 
-### K.56.2 顶层文件
+### P.56.2 顶层文件
 
 顶层文件通常承担公共导出、兼容入口或应用装配。目录化模块和同名顶层文件并存时，维护者应追踪 import graph，确认哪一个是稳定入口、哪一个是历史兼容层。不要直接删除“看似重复”的 `Tool.ts`、`tools.ts`、`Task.ts`、`tasks.ts` 或 `query.ts`。
 
@@ -5937,7 +5937,7 @@ flowchart TB
 | 19 | `src/tasks.ts` | 任务聚合入口 | 对任务类型/服务/工具进行聚合导出。与顶层 `Task.ts` 的职责需明确，减少命名重复。 |
 | 20 | `src/tools.ts` | 工具聚合入口 | 根据配置、Gate、平台与 MCP 构建 Tool 集合。工具快照应在模型尝试内稳定，并检测名称冲突。 |
 
-## K.57 `src/services` 服务层地图
+## P.57 `src/services` 服务层地图
 
 服务层目录直接显示该产品不仅是“模型 + shell”，而是覆盖摘要、文档、建议、记忆、分析、API、上下文治理、LSP、MCP、OAuth、插件、组织限制、远程设置、技能搜索和语音的一整套应用服务。服务层最容易出现两个问题：一是名称叫 Service 却直接依赖 React/Ink；二是模块级单例没有清晰 dispose。审阅时优先画出输入 Port、外部 Adapter、缓存、持久状态和生命周期。
 
@@ -5982,11 +5982,11 @@ flowchart TB
 | 37 | `src/services/voiceKeyterms.ts` | 语音关键术语/词表；作用域、大小和隐私明确。 |
 | 38 | `src/services/voiceStreamSTT.ts` | 流式语音转文字；背压、取消、部分结果和云端边界。 |
 
-### K.57.1 服务之间的建议依赖方向
+### P.57.1 服务之间的建议依赖方向
 
 UI Hook 调用 Application Service；Service 依赖领域 Port；Adapter 实现 Provider、文件、MCP、LSP、凭证库和远程协议。服务之间不应通过导入 `main.tsx` 或全局 React Context 互相调用。对共享能力，提取小 Port，而不是建立 `services/index.ts` 巨型 Service Locator。需要跨模块通知时优先领域事件，事件包含稳定 ID 和版本，避免字符串事件名散落。
 
-### K.57.2 生命周期审阅
+### P.57.2 生命周期审阅
 
 每个服务回答四个问题：何时创建、归谁所有、何时 dispose、崩溃后如何恢复。API Client 可以进程级复用；QueryEngine 是会话级；权限判断与工具快照是回合级；子进程和 MCP Call 是调用级。把不同生命周期放进一个全局对象，会导致身份切换后复用旧 Token、会话退出仍有通知、测试互相污染和热重载双执行。
 
@@ -6007,7 +6007,7 @@ flowchart LR
     LIFE --> MCP
 ```
 
-## K.58 核心术语表
+## P.58 核心术语表
 
 术语表采用本项目源码语境。部分名称来自代码/文档，部分是本文为统一解释引入的架构术语；后者不会冒充仓库中的实际类名。
 
@@ -6086,11 +6086,11 @@ flowchart LR
 | 71 | **High Cardinality** | 会话 ID、路径、错误原文等会产生大量取值的维度，不适合作为指标 Label，应放 Trace/日志。 |
 | 72 | **Restored Build** | 本仓库从 npm source map 恢复的构建形态，版本 `999.0.0-restored` 不代表官方产品版本。 |
 
-## K.59 源码审查与扩展验收清单
+## P.59 源码审查与扩展验收清单
 
 以下清单可直接用于 Pull Request、架构评审或二次开发验收。它刻意关注可验证行为，不以“代码看起来清晰”代替安全和恢复证明。
 
-### K.59.1 新增 Tool
+### P.59.1 新增 Tool
 
 - [ ] Tool 名称稳定、无核心/MCP/插件命名冲突，模型描述说明何时使用和何时不使用。
 - [ ] 模型可见 Zod Schema 采用字段 allowlist；内部兼容字段使用独立可信路径，不接受未知 JSON 字段。
@@ -6105,7 +6105,7 @@ flowchart LR
 - [ ] Prompt、日志、遥测和工件各自执行敏感信息治理，不能依赖单次脱敏。
 - [ ] 单元、合约、集成、取消、超时、并发、负向安全与跨平台测试齐全。
 
-### K.59.2 新增 Slash Command
+### P.59.2 新增 Slash Command
 
 - [ ] Registry 元数据包含名称、别名、描述、usage、可用性和 Handler，帮助/补全从同一来源生成。
 - [ ] 参数解析支持引号、转义、路径空格和 rest，不使用简单空格切分。
@@ -6118,7 +6118,7 @@ flowchart LR
 - [ ] 网络发送、安装、分享和账户变更先展示目标与数据/权限差异。
 - [ ] 无 TTY、Bridge、窄终端、重复执行、别名冲突和插件迁移路径已测试。
 
-### K.59.3 修改 QueryEngine/query
+### P.59.3 修改 QueryEngine/query
 
 - [ ] 用户消息仍在任何模型响应前持久化，失败/取消后 resume 不丢意图。
 - [ ] 模型原始消息不被 UI 可观察字段原地修改，Prompt Cache 字节稳定。
@@ -6133,7 +6133,7 @@ flowchart LR
 - [ ] 1000+ 回合长会话内存、渲染与压缩性能不回退。
 - [ ] headless/JSON、交互 TUI、Bridge 等消费者对新增事件有兼容策略。
 
-### K.59.4 修改权限或沙箱
+### P.59.4 修改权限或沙箱
 
 - [ ] 明确信任边界与保护资产，给出可复现的绕过测试而非只写设计说明。
 - [ ] 规则匹配基于规范化资源动作，处理大小写、symlink、UNC、URL 重定向和 shell 嵌套。
@@ -6148,7 +6148,7 @@ flowchart LR
 - [ ] 紧急 killswitch 能实时撤销连接和新调用，不等待下一回合快照。
 - [ ] 负向测试断言“副作用未发生”，而不只是返回了错误。
 
-### K.59.5 修改 Transcript/Memory
+### P.59.5 修改 Transcript/Memory
 
 - [ ] 权威事件与模型/UI/审计投影分开，派生摘要可重建。
 - [ ] 事件 ID、时间、会话/分支、因果关系、Schema 版本和来源完整。
@@ -6163,7 +6163,7 @@ flowchart LR
 - [ ] 旧版本 fixture、未知字段保留、迁移中断和磁盘满均有测试。
 - [ ] 删除语义明确区分 UI 隐藏、上下文排除、归档和物理删除。
 
-### K.59.6 MCP/Plugin/Skill
+### P.59.6 MCP/Plugin/Skill
 
 - [ ] 配置/Manifest 有来源、版本、哈希或签名、能力清单与兼容范围。
 - [ ] 项目级配置不自动启动不可信命令；首次连接显示 transport、目标与环境变量名。
@@ -6178,7 +6178,7 @@ flowchart LR
 - [ ] 禁用/卸载停止后台任务和连接，并允许用户决定是否保留数据。
 - [ ] 外部最小构建验证内部插件、命令、字符串和依赖被 DCE 移除。
 
-### K.59.7 多 Agent/后台执行
+### P.59.7 多 Agent/后台执行
 
 - [ ] 每个 Run 有父级、owner、预算、权限快照、状态、取消、成本和工件。
 - [ ] 子 Agent 权限是父级能力交集，可进一步收紧，绝不隐式放宽。
@@ -6193,7 +6193,7 @@ flowchart LR
 - [ ] 主 Agent 验证子结果的证据，不把子摘要自动当成通过。
 - [ ] 成本、延迟、权限等待和错误能按父子执行图聚合。
 
-### K.59.8 发布与恢复仓库维护
+### P.59.8 发布与恢复仓库维护
 
 - [ ] 基线 commit、依赖锁、Bun/Node 版本和构建命令被记录。
 - [ ] `dev-entry.ts` 缺失导入扫描通过，且不会成为生产冷启动固定开销。
@@ -6224,65 +6224,65 @@ flowchart TD
     GATE -->|"是"| RELEASE["可合并/发布"]
 ```
 
-## K.60 关键架构决策与权衡总结
+## P.60 关键架构决策与权衡总结
 
-### K.60.1 异步生成器作为运行时总线
+### P.60.1 异步生成器作为运行时总线
 
 采用 `async generator` 让模型增量、工具调用、工具结果、压缩和终止事件共享一个消费接口，适合 TUI、headless、Bridge 等多种前端。代价是事件 Union 容易膨胀，异常、取消和最终 flush 较难证明。维护上应为事件建立版本化领域语义，而不是让消费者根据对象形状猜测。
 
-### K.60.2 QueryEngine 会话实例化
+### P.60.2 QueryEngine 会话实例化
 
 “一会话一 QueryEngine”使消息、拒绝、Token、Abort 与文件读取状态自然聚合，也避免所有对话共享可变全局。代价是长期会话对象可能积累内存，跨会话后台任务需要额外根 Store。Compact Boundary、Artifact Store 和明确 dispose 是必要配套。
 
-### K.60.3 工具对象同时承载执行与治理元数据
+### P.60.3 工具对象同时承载执行与治理元数据
 
 Tool 接口把调用、验证、权限、并发、破坏性、开放世界、中断和呈现收拢，统一治理能力强。代价是接口较宽、工具作者容易随意返回默认值。可以把执行、策略描述和 View Adapter 拆成组合接口，但必须保留一个最终可验证的 Tool Definition。
 
-### K.60.4 实际 tool_use 驱动循环
+### P.60.4 实际 tool_use 驱动循环
 
 源码注释强调不依赖不稳定的 `stop_reason`，而根据流中是否出现实际 `tool_use` 推进。这对不同 Provider/流异常更稳健。代价是必须正确处理半截块、多个工具和结束文本，且不能在未完整解析时提前执行。
 
-### K.60.5 用户消息先持久化
+### P.60.5 用户消息先持久化
 
 在 API 响应前写入用户消息，提高崩溃与 resume 可靠性，是面向本地 Agent 的正确取舍。代价是持久化成功但模型从未开始时会留下“悬空回合”，恢复 UI 和事件模型必须能表达，而不能简单删掉。
 
-### K.60.6 多层上下文压缩
+### P.60.6 多层上下文压缩
 
 自动压缩、响应式压缩、微压缩、Context Collapse、Snip 和工具落盘共同解决不同压力，优于单一摘要。代价是行为难解释、质量回归不易定位。必须记录触发原因、边界、前后 Token、摘要版本和可回查工件。
 
-### K.60.7 模型、终端与检索结果分视图
+### P.60.7 模型、终端与检索结果分视图
 
 工具结果不是一段万能字符串。模型需要紧凑结构，终端需要人类可读，恢复需要完整证据。分视图能兼顾 Token 与审计，代价是多个投影可能漂移。权威原始结果和稳定 Projection 测试不可缺少。
 
-### K.60.8 静态规则、分类器、沙箱和确认叠加
+### P.60.8 静态规则、分类器、沙箱和确认叠加
 
 多层安全比“所有命令都问”更可用，也比单一模型分类更可靠。代价是决策路径复杂，用户难理解为何被拒或询问。Explanation Tree 和权限模拟器应成为一等能力。
 
-### K.60.9 编译期与运行时 Gate 并存
+### P.60.9 编译期与运行时 Gate 并存
 
 编译期 Feature 能真正移除内部代码，USER_TYPE/GrowthBook 支持身份和实验。代价是组合爆炸与初始化顺序复杂。安全敏感功能必须有产物扫描，紧急策略不能只依赖缓存实验值。
 
-### K.60.10 动态导入保护启动性能
+### P.60.10 动态导入保护启动性能
 
 入口参数预扫描后按模式动态导入，适合拥有大量 UI、MCP、浏览器与远程模块的 CLI。代价是类型/打包错误可能延迟到某条路径才暴露。每个快速入口要有独立构建与冒烟测试。
 
-### K.60.11 MCP 作为外部工具适配而非可信内核
+### P.60.11 MCP 作为外部工具适配而非可信内核
 
 统一 MCP SDK 能快速扩展外部系统，但 Server 元数据和结果均不可信。客户端继续实施命名空间、权限、大小与脱敏，代价是不能完全透明透传。这个额外治理层是必要的本地主机防线。
 
-### K.60.12 Skill 两阶段发现—加载
+### P.60.12 Skill 两阶段发现—加载
 
 先搜索元数据、再按需加载正文，控制系统提示体积并提高工具发现。代价是模型可能漏选 Skill，索引与触发描述质量变得关键。需要以评测集优化召回/精度，而不是把所有 Skill 永久注入。
 
-### K.60.13 多 Agent 用任务与消息解耦
+### P.60.13 多 Agent 用任务与消息解耦
 
 AgentTool、Team、Task、Mailbox 和 Coordinator 让复杂工作并行化。代价是状态、取消、预算和文件冲突分散。统一 Execution Graph 是最重要的演进方向之一。
 
-### K.60.14 恢复源码选择“可运行优先”
+### P.60.14 恢复源码选择“可运行优先”
 
 `dev-entry.ts` 以缺失导入扫描保证恢复树可装配，版本号明确标记 restored，这是务实策略。代价是没有官方 Git 历史、测试和构建上下文。二次开发需建立自己的行为基线，而不能把目录完整当语义等价。
 
-### K.60.15 模块化单体优于微服务化
+### P.60.15 模块化单体优于微服务化
 
 本地交互、文件和进程操作要求低延迟与一致取消，核心保留单进程模块化单体更合适。MCP、插件和远程 Provider 可以进程隔离，但把 Query、Permission、Transcript 拆成网络服务会增加故障面、隐私和延迟，收益有限。
 
@@ -6347,7 +6347,7 @@ classDiagram
     ToolRegistry --> Adapter
 ```
 
-## K.61 风险登记表
+## P.61 风险登记表
 
 优先级不是对当前仓库已存在漏洞的断言，而是依据能力面建立的审查顺序。只有经过可复现测试，某项才应被记录为“已确认漏洞”或“已关闭风险”。
 
@@ -6384,9 +6384,9 @@ classDiagram
 | 中 | Cron/Workflow 重叠 | 重复修改、费用或远端动作 | 版本化定义、重叠策略、幂等、总预算 | DST/补跑/重启测试 |
 | 低中 | Buddy/动画造成重绘 | 流式输出卡顿或屏幕阅读器噪声 | 帧率限制、自动降级、体验模块隔离 | 长流与可访问性测试 |
 
-## K.62 源码证据索引
+## P.62 源码证据索引
 
-### K.62.1 仓库级基线
+### P.62.1 仓库级基线
 
 - 仓库：`pengchengneo/Claude-Code`
 - 分支：`main`
@@ -6398,7 +6398,7 @@ classDiagram
 - `package.json`：包名 `@anthropic-ai/claude-code`，恢复版本 `999.0.0-restored`，`private`、ESM，Bun 1.3.5，Node.js 24 及以上；依赖包含 Anthropic/Agent/Sandbox SDK、Bedrock、MCP、GrowthBook、OpenTelemetry、React/Ink、WebSocket 与 Zod。
 - 当前仓库是公开 npm 包 source map 的恢复树，不代表官方开发 Git 历史。
 
-### K.62.2 关键运行时入口
+### P.62.2 关键运行时入口
 
 | 路径 | 本文使用的主要证据 |
 |---|---|
@@ -6421,15 +6421,15 @@ classDiagram
 | `src/voice/`、`src/vim/`、`src/keybindings/` | 语音、Modal 输入与终端键位状态 |
 | `src/buddy/` | 伴生角色、确定性生成、动画与通知 |
 
-### K.62.3 仓库文档证据
+### P.62.3 仓库文档证据
 
 仓库 `docs` 中的 Buddy、Kairos、Ultraplan、Coordinator、Hidden Commands、Bridge 和 Feature Gates 文档，为相关产品模式提供了比目录名更强的 B 级证据。文档中的参数、阶段与比例只适用于该恢复快照；本文没有据此推断 2026 年 8 月官方在线产品的当前行为。
 
-### K.62.4 未完成的动态证据
+### P.62.4 未完成的动态证据
 
-本次没有在分析容器中完成完整克隆、依赖安装、三平台构建、真实模型调用、MCP/OAuth/Bridge 联调、终端交互 E2E 或安全模糊测试。因此，本文所有“应通过测试证明”的条目仍是后续验证工作，不被包装成已经通过。对生产采用而言，优先执行K.46和K.59的基线门禁。
+本次没有在分析容器中完成完整克隆、依赖安装、三平台构建、真实模型调用、MCP/OAuth/Bridge 联调、终端交互 E2E 或安全模糊测试。因此，本文所有“应通过测试证明”的条目仍是后续验证工作，不被包装成已经通过。对生产采用而言，优先执行P.46和P.59的基线门禁。
 
-## K.63 总结
+## P.63 总结
 
 这个恢复仓库最值得研究的，不是某一个命令或 UI 细节，而是它把大模型编程助手建成了一个完整的本地运行时：以 QueryEngine 管会话，以异步生成器承载事件，以 Tool 契约统一能力，以权限/沙箱守住副作用，以 Compact/Memory 维持长上下文，以 Task/Agent/Coordinator 支撑并发，以 MCP/Plugin/Skill 扩展生态，以 Bridge/Proactive 扩展运行形态，再由 Ink 把复杂状态压缩进终端交互。
 
@@ -6459,4 +6459,4 @@ flowchart LR
 
 ---
 
-> **使用提示**：与其他附录的分工——A 讲模型机制、B 讲方法论、C 记来源、D 列产品、E 辨异同、F 索引图版、G 详解 OTel、H 上手 DeepEval、I 评测观测平台选型、J 解析 Pi 源码、**K 解析 Claude Code 还原源码**、L 解析 Codex 源码、M 盘点 Coding Agent 赛道、N 盘点可观测赛道、O 盘点评估赛道、P 盘点 Memory 赛道、Q 盘点自进化赛道。对照阅读：Agent Loop 见 K.10–K.15 对第 3 章、压缩与记忆见 K.25–K.30 对第 5/10 章、权限与沙箱见第 13 章、MCP 见 K 篇四对第 8 章、多 Agent 见第 17–18 章；与附录 J 的 Pi 解析对读可见两套 Harness 的取舍差异。一切结论受"重要说明"的证据分级与还原风险约束，且 [C-27]/[C-34] 均为社区还原分析、非官方文档。
+> **使用提示**：与其他附录的分工——A 讲模型机制、B 讲方法论、C 记来源、D 列产品、E 辨异同、F 索引图版、G 详解 OTel、H 上手 DeepEval、I 评测观测平台选型、J 盘点 Coding Agent 赛道、K 盘点可观测赛道、L 盘点评估赛道、M 盘点 Memory 赛道、N 盘点自进化赛道、O 解析 Pi 源码、**P 解析 Claude Code 还原源码**、Q 解析 Codex 源码。对照阅读：Agent Loop 见 P.10–P.15 对第 3 章、压缩与记忆见 P.25–P.30 对第 5/10 章、权限与沙箱见第 13 章、MCP 见 K 篇四对第 8 章、多 Agent 见第 17–18 章；与附录 O 的 Pi 解析对读可见两套 Harness 的取舍差异。一切结论受"重要说明"的证据分级与还原风险约束，且 [C-27]/[C-34] 均为社区还原分析、非官方文档。

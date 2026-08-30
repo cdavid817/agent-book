@@ -1,10 +1,10 @@
-# 附录 P：主流 Agent Memory 系统全景
+# 附录 M：主流 Agent Memory 系统全景
 
 > 定位：**Agent 记忆赛道的全景调研报告**（全文收录，信息基准 2026-08，各系统官方入口见 [C-39]）。与相邻内容的分工：第 10 章讲记忆的机制原理与本书实现（两级架构 × CoALA 四分类、写入/遗忘策略、远程记忆数据库），本附录是整个赛道的地图——定义边界（Memory ≠ Context ≠ RAG ≠ Checkpoint）、认知分类、通用架构与数据模型（MemoryRecord/三时间字段/作用域）、独立系统盘点（Mem0/Zep/Letta/Hindsight/LangMem/Cognee 等十二家）、框架原生与云厂商方案、Coding Agent 文件型记忆、研究演进路线、Benchmark 解读、企业参考架构与选型方法。名单会过期，认知分类与数据模型口径不过期。
 
 ---
 
-## P.1 核心结论
+## M.1 核心结论
 
 Agent Memory 已经从“把聊天记录写入向量数据库”演进为一套完整的状态与知识管理系统。一个成熟的 Memory 系统通常需要同时处理：
 
@@ -44,9 +44,9 @@ Agent Memory 已经从“把聊天记录写入向量数据库”演进为一套�
 
 ---
 
-## P.2 Agent Memory 的定义与边界
+## M.2 Agent Memory 的定义与边界
 
-### P.2.1 Context Window 不等于 Memory
+### M.2.1 Context Window 不等于 Memory
 
 Context Window 是模型单次推理时可见的输入集合，包括：
 
@@ -67,7 +67,7 @@ Context Window 是模型单次推理时可见的输入集合，包括：
 
 因此，Memory 的目标不是无限扩张上下文，而是在需要时将正确、可信、适用的信息重新注入有限上下文。
 
-### P.2.2 Session、Checkpoint、RAG 与 Memory 的区别
+### M.2.2 Session、Checkpoint、RAG 与 Memory 的区别
 
 | 机制 | 主要保存内容 | 是否主动演进 | 主要用途 | 是否属于完整 Agent Memory |
 |---|---|---:|---|---:|
@@ -80,7 +80,7 @@ Context Window 是模型单次推理时可见的输入集合，包括：
 | Skill / Prompt | 可复用操作方法与行为规则 | 可演进 | 程序性能力 | 属于程序性记忆 |
 | Fine-tuning | 模型参数中的知识和行为 | 离线演进 | 参数化学习 | 属于参数记忆 |
 
-### P.2.3 完整 Memory 系统需要回答的问题
+### M.2.3 完整 Memory 系统需要回答的问题
 
 一个完整的 Agent Memory 系统至少需要解决以下问题：
 
@@ -97,11 +97,11 @@ Context Window 是模型单次推理时可见的输入集合，包括：
 
 ---
 
-## P.3 Agent Memory 的认知分类
+## M.3 Agent Memory 的认知分类
 
 CoALA 等研究通常借鉴认知科学，将 Agent Memory 分为工作记忆、情景记忆、语义记忆和程序性记忆。
 
-### P.3.1 工作记忆（Working Memory）
+### M.3.1 工作记忆（Working Memory）
 
 保存当前任务正在使用的信息：
 
@@ -115,7 +115,7 @@ CoALA 等研究通常借鉴认知科学，将 Agent Memory 分为工作记忆、
 
 工作记忆一般位于 Context Window、Agent State 或 Checkpoint 中，生命周期较短。
 
-### P.3.2 情景记忆（Episodic Memory）
+### M.3.2 情景记忆（Episodic Memory）
 
 保存 Agent 或用户经历过的具体事件：
 
@@ -141,7 +141,7 @@ source_refs:
   - session_123/message_88
 ```
 
-### P.3.3 语义记忆（Semantic Memory）
+### M.3.3 语义记忆（Semantic Memory）
 
 保存相对稳定的事实、概念、偏好和关系：
 
@@ -153,7 +153,7 @@ source_refs:
 
 语义记忆往往需要去重、规范化、冲突更新和时间有效性处理。
 
-### P.3.4 程序性记忆（Procedural Memory）
+### M.3.4 程序性记忆（Procedural Memory）
 
 保存“如何做”的知识：
 
@@ -167,7 +167,7 @@ source_refs:
 
 程序性记忆对 Agent 的长期收益通常高于普通聊天摘要，但其风险也更高。错误程序一旦被反复调用，会持续放大失败。
 
-### P.3.5 关系记忆与时间记忆
+### M.3.5 关系记忆与时间记忆
 
 很多现实事实不是独立文本，而是关系和状态变化：
 
@@ -194,7 +194,7 @@ source_refs:
 
 ---
 
-## P.4 通用系统架构
+## M.4 通用系统架构
 
 ```mermaid
 flowchart LR
@@ -240,7 +240,7 @@ flowchart LR
     R --> F
 ```
 
-### P.4.1 写入链路
+### M.4.1 写入链路
 
 ```mermaid
 sequenceDiagram
@@ -268,7 +268,7 @@ sequenceDiagram
     M->>I: 生成全文、向量和图索引
 ```
 
-### P.4.2 检索链路
+### M.4.2 检索链路
 
 ```mermaid
 sequenceDiagram
@@ -298,7 +298,7 @@ sequenceDiagram
     C-->>A: Token Budget 内的结构化上下文
 ```
 
-### P.4.3 Memory 生命周期
+### M.4.3 Memory 生命周期
 
 ```mermaid
 stateDiagram-v2
@@ -321,9 +321,9 @@ stateDiagram-v2
 
 ---
 
-## P.5 核心数据模型
+## M.5 核心数据模型
 
-### P.5.1 推荐 MemoryRecord
+### M.5.1 推荐 MemoryRecord
 
 ```yaml
 MemoryRecord:
@@ -361,7 +361,7 @@ MemoryRecord:
   updated_at: datetime
 ```
 
-### P.5.2 为什么需要三个时间字段
+### M.5.2 为什么需要三个时间字段
 
 | 字段 | 含义 | 示例 |
 |---|---|---|
@@ -371,7 +371,7 @@ MemoryRecord:
 
 只有 `created_at` 无法正确表达迟到事件、历史导入、事实回溯和新旧状态替换。
 
-### P.5.3 作用域模型
+### M.5.3 作用域模型
 
 推荐至少支持以下作用域：
 
@@ -403,7 +403,7 @@ Tenant
 
 后者可能在搜索、重排、缓存、日志或遥测阶段暴露不应访问的数据。
 
-### P.5.4 记忆更新操作
+### M.5.4 记忆更新操作
 
 一个通用 Memory 更新器通常需要支持：
 
@@ -419,9 +419,9 @@ Tenant
 
 ---
 
-## P.6 主流独立 Agent Memory 系统
+## M.6 主流独立 Agent Memory 系统
 
-### P.6.1 总览对比
+### M.6.1 总览对比
 
 | 系统 | 核心路线 | 主要记忆类型 | 主要检索方式 | 部署形态 | 典型优势 | 主要限制 |
 |---|---|---|---|---|---|---|
@@ -439,7 +439,7 @@ Tenant
 
 ---
 
-### P.6.2 Mem0
+### M.6.2 Mem0
 
 ### 定位
 
@@ -486,7 +486,7 @@ flowchart TD
 
 ---
 
-### P.6.3 Zep / Graphiti
+### M.6.3 Zep / Graphiti
 
 ### 定位
 
@@ -531,7 +531,7 @@ valid_to   = null
 
 ---
 
-### P.6.4 Letta / MemGPT
+### M.6.4 Letta / MemGPT
 
 ### 定位
 
@@ -582,7 +582,7 @@ flowchart TB
 
 ---
 
-### P.6.5 Hindsight
+### M.6.5 Hindsight
 
 ### 定位
 
@@ -637,7 +637,7 @@ Hindsight 的检索可以组合：
 
 ---
 
-### P.6.6 LangMem
+### M.6.6 LangMem
 
 ### 定位
 
@@ -677,7 +677,7 @@ flowchart LR
 
 ---
 
-### P.6.7 Cognee
+### M.6.7 Cognee
 
 ### 定位
 
@@ -712,7 +712,7 @@ remember → recall → improve → forget
 
 ---
 
-### P.6.8 Supermemory
+### M.6.8 Supermemory
 
 ### 定位
 
@@ -743,7 +743,7 @@ Supermemory 将自身定位为统一 Context Infrastructure，覆盖长期和短
 
 ---
 
-### P.6.9 Backboard
+### M.6.9 Backboard
 
 ### 定位
 
@@ -770,7 +770,7 @@ Backboard 更接近统一 AI Runtime，而非单一 Memory 服务。其能力通
 
 ---
 
-### P.6.10 Memobase
+### M.6.10 Memobase
 
 ### 定位
 
@@ -798,7 +798,7 @@ Memobase 以 User Profile 为核心，将记忆组织为用户画像、主题、
 
 ---
 
-### P.6.11 Redis Agent Memory
+### M.6.11 Redis Agent Memory
 
 ### 定位
 
@@ -834,7 +834,7 @@ Redis 解决了高性能存储和检索底座，但以下问题仍需上层设�
 
 ---
 
-### P.6.12 MemOS
+### M.6.12 MemOS
 
 ### 定位
 
@@ -872,9 +872,9 @@ stateDiagram-v2
 
 ---
 
-## P.7 Agent 框架原生 Memory
+## M.7 Agent 框架原生 Memory
 
-### P.7.1 LlamaIndex Memory
+### M.7.1 LlamaIndex Memory
 
 LlamaIndex 的 Memory 抽象通常包括：
 
@@ -887,7 +887,7 @@ LlamaIndex 的 Memory 抽象通常包括：
 
 适合已经采用 LlamaIndex 进行文档处理、RAG 和 Agent 构建的系统。
 
-### P.7.2 CrewAI Memory
+### M.7.2 CrewAI Memory
 
 CrewAI 的 Memory 主要服务于 Crew 和多 Agent 协作，重点考虑：
 
@@ -899,7 +899,7 @@ CrewAI 的 Memory 主要服务于 Crew 和多 Agent 协作，重点考虑：
 
 其优势是与 Crew 调度和角色模型集成；限制是跨框架可移植性较弱。
 
-### P.7.3 AutoGen Memory
+### M.7.3 AutoGen Memory
 
 AutoGen 提供可扩展 Memory Protocol，典型方法包括：
 
@@ -913,7 +913,7 @@ close
 
 它更像框架级接口规范。开发者可以在其后端接入向量数据库、Redis 或第三方 Memory Provider。
 
-### P.7.4 OpenAI Agents SDK Sessions
+### M.7.4 OpenAI Agents SDK Sessions
 
 OpenAI Agents SDK 的 Sessions 负责跨多次 Agent Run 保存会话历史和工作上下文，可配合 SQLite、Redis、SQLAlchemy、Dapr、加密 Session、OpenAI Conversations 和压缩机制使用。
 
@@ -935,7 +935,7 @@ Sessions 主要解决持久化会话状态与连续对话，
 
 ---
 
-## P.8 云厂商 Agent Memory
+## M.8 云厂商 Agent Memory
 
 | 云平台 | 产品 | 核心特点 |
 |---|---|---|
@@ -943,7 +943,7 @@ Sessions 主要解决持久化会话状态与连续对话，
 | Google Cloud | Vertex AI Memory Bank | 托管长期记忆、Scope 隔离、TTL、主题控制，可与 Agent Runtime 集成 |
 | Microsoft Azure | Foundry Agent Service Memory | 托管记忆提取、合并、Memory Store 和 Scope 隔离 |
 
-### P.8.1 AWS AgentCore Memory
+### M.8.1 AWS AgentCore Memory
 
 典型模型：
 
@@ -963,7 +963,7 @@ flowchart LR
 
 适合已经在 AWS 上部署模型、Agent、日志和 IAM 的企业系统。
 
-### P.8.2 Google Vertex AI Memory Bank
+### M.8.2 Google Vertex AI Memory Bank
 
 主要关注：
 
@@ -974,7 +974,7 @@ flowchart LR
 - 与 Vertex Agent Runtime 组合；
 - 作为独立 Memory 服务调用。
 
-### P.8.3 Azure Foundry Agent Memory
+### M.8.3 Azure Foundry Agent Memory
 
 主要关注：
 
@@ -984,7 +984,7 @@ flowchart LR
 - Scope 分区；
 - 与 Foundry Agent Service 集成。
 
-### P.8.4 云 Memory 的共同优势
+### M.8.4 云 Memory 的共同优势
 
 - 托管扩缩容；
 - 云 IAM、审计和合规能力；
@@ -992,7 +992,7 @@ flowchart LR
 - 无需自行维护索引和后台任务；
 - 企业采购和运维路径相对清晰。
 
-### P.8.5 云 Memory 的共同限制
+### M.8.5 云 Memory 的共同限制
 
 - 云厂商绑定；
 - 数据迁移成本；
@@ -1003,11 +1003,11 @@ flowchart LR
 
 ---
 
-## P.9 Coding Agent 的文件型记忆
+## M.9 Coding Agent 的文件型记忆
 
 文件型记忆不完全等同于 Mem0、Zep 等 Memory 服务，但对 Coding Agent 非常实用。
 
-### P.9.1 Claude Code
+### M.9.1 Claude Code
 
 Claude Code 常见记忆形态包括：
 
@@ -1016,7 +1016,7 @@ Claude Code 常见记忆形态包括：
 
 其特点是项目绑定、本地可见、可直接编辑，并能在后续 Session 中重新加载。
 
-### P.9.2 Codex
+### M.9.2 Codex
 
 Codex 采用分层 `AGENTS.md` 表达项目指令，也可以结合历史会话记忆、Skills 和 MCP 构成长期上下文：
 
@@ -1027,7 +1027,7 @@ Skills     → 可复用操作流程
 MCP        → 外部系统与知识连接
 ```
 
-### P.9.3 文件型记忆的优势
+### M.9.3 文件型记忆的优势
 
 - 本地优先；
 - 用户可直接查看和编辑；
@@ -1036,7 +1036,7 @@ MCP        → 外部系统与知识连接
 - 迁移成本低；
 - 不依赖外部数据库。
 
-### P.9.4 文件型记忆的限制
+### M.9.4 文件型记忆的限制
 
 - 大规模语义检索较弱；
 - 时间和冲突建模能力有限；
@@ -1045,7 +1045,7 @@ MCP        → 外部系统与知识连接
 - 自动提取内容的质量难以系统评估；
 - 删除、权限和敏感信息治理需要额外机制。
 
-### P.9.5 文件与索引分离模式
+### M.9.5 文件与索引分离模式
 
 本地优先系统常采用：
 
@@ -1067,9 +1067,9 @@ SQLite / FTS / Vector / Graph
 
 ---
 
-## P.10 研究型 Memory 演进路线
+## M.10 研究型 Memory 演进路线
 
-### P.10.1 Generative Agents
+### M.10.1 Generative Agents
 
 Generative Agents 提出了经典的：
 
@@ -1085,7 +1085,7 @@ Observation → Memory Stream → Retrieval → Reflection → Planning
 
 随后周期性把低层经历归纳为高层 Reflection，用于未来规划。
 
-### P.10.2 Reflexion
+### M.10.2 Reflexion
 
 Reflexion 不直接更新模型参数，而是根据任务反馈生成文字反思，并将其写入情景记忆，在下一次尝试时重新注入上下文。
 
@@ -1102,7 +1102,7 @@ flowchart LR
 
 风险在于：反思模型可能对失败原因做出错误归因。因此反思内容不应直接作为高可信事实。
 
-### P.10.3 ExpeL
+### M.10.3 ExpeL
 
 ExpeL 从多个训练任务的成功和失败轨迹中提炼自然语言经验，并在新任务中召回：
 
@@ -1112,7 +1112,7 @@ ExpeL 从多个训练任务的成功和失败轨迹中提炼自然语言经验�
 
 它代表从“保存单次经历”向“跨任务提炼可迁移经验”演进。
 
-### P.10.4 A-MEM
+### M.10.4 A-MEM
 
 A-MEM 借鉴 Zettelkasten，将记忆组织为可链接、可更新的笔记网络，而不是彼此独立的向量条目。
 
@@ -1123,7 +1123,7 @@ A-MEM 借鉴 Zettelkasten，将记忆组织为可链接、可更新的笔记网�
 - 链接和标签可随新信息动态更新；
 - 检索不仅依赖向量相似度，也依赖记忆网络结构。
 
-### P.10.5 MemoryOS
+### M.10.5 MemoryOS
 
 MemoryOS 采用短期、中期和长期的分层结构，将原始对话逐步聚合为稳定记忆：
 
@@ -1134,7 +1134,7 @@ flowchart LR
     C --> D[后续个性化响应]
 ```
 
-### P.10.6 从检索到“检索—批判—重构”
+### M.10.6 从检索到“检索—批判—重构”
 
 前沿研究正在从简单的：
 
@@ -1164,9 +1164,9 @@ Observe
 
 ---
 
-## P.11 Benchmark 与排行榜解读
+## M.11 Benchmark 与排行榜解读
 
-### P.11.1 常见 LoCoMo 结果
+### M.11.1 常见 LoCoMo 结果
 
 公开材料中经常出现如下 LoCoMo 对比结果：
 
@@ -1183,7 +1183,7 @@ Observe
 
 > 注意：这类表格通常来自特定厂商仓库、特定模型、特定 Judge Prompt 和特定数据过滤条件，不能直接视为统一官方排行榜。
 
-### P.11.2 为什么不能只看 Overall
+### M.11.2 为什么不能只看 Overall
 
 不同测试可能存在以下差异：
 
@@ -1200,7 +1200,7 @@ Observe
 
 因此，排行榜更适合说明某个系统在特定条件下的表现，而不是直接证明其在所有生产场景中更优。
 
-### P.11.3 “OpenAI”基线的解释
+### M.11.3 “OpenAI”基线的解释
 
 部分论文和测试中的 “OpenAI” 指的是根据 ChatGPT Memory 机制构造的实验基线，并不等价于：
 
@@ -1211,7 +1211,7 @@ Observe
 
 比较时必须阅读原始实验设置。
 
-### P.11.4 主流 Memory Benchmark
+### M.11.4 主流 Memory Benchmark
 
 | Benchmark | 主要评估内容 |
 |---|---|
@@ -1222,7 +1222,7 @@ Observe
 | MemoryArena | Memory 是否真正改善后续 Agent 行动 |
 | MEMPROBE | 直接检查 Memory Artifact 是否恢复正确用户状态 |
 
-### P.11.5 工程评测指标
+### M.11.5 工程评测指标
 
 生产系统不应只测最终问答准确率，还应覆盖：
 
@@ -1241,7 +1241,7 @@ Observe
 | 反思质量 | 错误归因率、经验适用率、负迁移率 |
 | 鲁棒性 | 索引损坏恢复、Provider 故障降级、并发一致性 |
 
-### P.11.6 推荐评测矩阵
+### M.11.6 推荐评测矩阵
 
 ```mermaid
 flowchart TD
@@ -1274,9 +1274,9 @@ flowchart TD
 
 ---
 
-## P.12 企业级 Agent Memory 参考架构
+## M.12 企业级 Agent Memory 参考架构
 
-### P.12.1 架构原则
+### M.12.1 架构原则
 
 企业级系统更适合采用 Provider-neutral 架构，而不是让业务领域模型直接依赖某个 Memory 厂商。
 
@@ -1302,7 +1302,7 @@ flowchart TB
 4. 外部 Provider 故障时可以降级到本地或其他后端；
 5. 关键数据需要可导出、可迁移、可删除和可重建。
 
-### P.12.2 推荐 Memory Port
+### M.12.2 推荐 Memory Port
 
 ```rust
 pub trait MemoryPort {
@@ -1340,7 +1340,7 @@ pub trait MemoryPort {
 }
 ```
 
-### P.12.3 权威数据与派生索引分离
+### M.12.3 权威数据与派生索引分离
 
 推荐结构：
 
@@ -1361,7 +1361,7 @@ FTS / Vector Index / Graph Index / Summary Cache
 - 读取时可以检测索引漂移；
 - 支持重新嵌入和模型升级。
 
-### P.12.4 双路径写入
+### M.12.4 双路径写入
 
 ```mermaid
 flowchart TD
@@ -1400,7 +1400,7 @@ flowchart TD
 - 图关系构建；
 - 低优先级嵌入计算。
 
-### P.12.5 Context Compiler
+### M.12.5 Context Compiler
 
 Memory 不应简单按 Top-K 原样拼接。Context Compiler 应根据任务类型和 Token Budget 进行结构化编译。
 
@@ -1428,7 +1428,7 @@ Memory 不应简单按 Top-K 原样拼接。Context Compiler 应根据任务类�
 [是否允许覆盖]
 ```
 
-### P.12.6 程序性记忆的升级门禁
+### M.12.6 程序性记忆的升级门禁
 
 反思或经验不能直接升级为正式 Procedure。推荐流程：
 
@@ -1456,7 +1456,7 @@ flowchart LR
 - 使用的模型和工具版本；
 - 推广、回滚和过期记录。
 
-### P.12.7 可解释 Memory UI
+### M.12.7 可解释 Memory UI
 
 企业级 Memory 管理界面至少应展示：
 
@@ -1484,7 +1484,7 @@ flowchart LR
 - 查看召回历史；
 - 重新生成索引。
 
-### P.12.8 分阶段实施建议
+### M.12.8 分阶段实施建议
 
 ### Phase 1：Memory Core
 
@@ -1536,9 +1536,9 @@ flowchart LR
 
 ---
 
-## P.13 系统选型方法
+## M.13 系统选型方法
 
-### P.13.1 需求到方案映射
+### M.13.1 需求到方案映射
 
 | 需求 | 优先方案 |
 |---|---|
@@ -1557,7 +1557,7 @@ flowchart LR
 | Coding Agent 项目级规则 | 文件型记忆 + 本地索引 |
 | 研究文本、激活和参数统一记忆 | MemOS |
 
-### P.13.2 选型评分维度
+### M.13.2 选型评分维度
 
 建议按 1—5 分进行加权评分：
 
@@ -1574,7 +1574,7 @@ flowchart LR
 | 评测与可观测性 | 是否具备质量评测和运行监控 | 5% |
 | 生态与成熟度 | 文档、社区、版本稳定性和维护能力 | 5% |
 
-### P.13.3 选型决策树
+### M.13.3 选型决策树
 
 ```mermaid
 flowchart TD
@@ -1597,7 +1597,7 @@ flowchart TD
     O -->|是| P[自有领域模型 + Memory Port + Adapter]
 ```
 
-### P.13.4 PoC 必测项目
+### M.13.4 PoC 必测项目
 
 在决定采购或集成前，至少应完成：
 
@@ -1614,9 +1614,9 @@ flowchart TD
 
 ---
 
-## P.14 未来发展方向
+## M.14 未来发展方向
 
-### P.14.1 从被动存储到主动 Memory Management
+### M.14.1 从被动存储到主动 Memory Management
 
 Agent 将不再只是被动接收检索结果，而会主动决定：
 
@@ -1626,7 +1626,7 @@ Agent 将不再只是被动接收检索结果，而会主动决定：
 - 哪些内容应压缩、归档或遗忘；
 - 哪些经验值得升级为程序性知识。
 
-### P.14.2 从语义相似到任务效用
+### M.14.2 从语义相似到任务效用
 
 传统向量检索主要优化语义相似度，未来系统会同时考虑：
 
@@ -1640,7 +1640,7 @@ Memory Utility =
   ÷ Token 与延迟成本
 ```
 
-### P.14.3 从事实列表到可演化世界模型
+### M.14.3 从事实列表到可演化世界模型
 
 Memory 将逐步成为 Agent 的动态世界模型，包含：
 
@@ -1654,7 +1654,7 @@ Memory 将逐步成为 Agent 的动态世界模型，包含：
 - 观测来源；
 - 冲突版本。
 
-### P.14.4 Memory 与 Skill 融合
+### M.14.4 Memory 与 Skill 融合
 
 未来程序性记忆与 Skill 的边界会逐渐模糊：
 
@@ -1669,7 +1669,7 @@ Memory 将逐步成为 Agent 的动态世界模型，包含：
   → 更新或回滚
 ```
 
-### P.14.5 多 Agent 共享记忆
+### M.14.5 多 Agent 共享记忆
 
 多 Agent 系统需要区分：
 
@@ -1690,7 +1690,7 @@ Memory 将逐步成为 Agent 的动态世界模型，包含：
 - 贡献者身份；
 - 审批和发布流程。
 
-### P.14.6 隐私与可遗忘性
+### M.14.6 隐私与可遗忘性
 
 Memory 系统会越来越接近个人数据处理系统，必须支持：
 
@@ -1704,7 +1704,7 @@ Memory 系统会越来越接近个人数据处理系统，必须支持：
 - 跨区域治理；
 - 派生索引和备份删除证明。
 
-### P.14.7 标准化趋势
+### M.14.7 标准化趋势
 
 未来可能逐步出现跨系统标准：
 
@@ -1719,7 +1719,7 @@ Memory 系统会越来越接近个人数据处理系统，必须支持：
 
 ---
 
-## P.15 总结
+## M.15 总结
 
 主流 Agent Memory 系统可以概括为：
 
@@ -1813,4 +1813,4 @@ Provider-neutral Memory Port
 
 ---
 
-> **使用提示**：与其他附录的分工——A 讲模型机制、B 讲方法论、C 记来源、D 列产品、E 辨异同、F 索引图版、G 详解 OTel、H 上手 DeepEval、I 评测观测平台选型、J 解析 Pi 源码、K 解析 Claude Code 源码、L 解析 Codex 源码、M 盘点 Coding Agent 赛道、N 盘点可观测赛道、O 盘点评估赛道、**P 盘点 Memory 赛道**、Q 盘点自进化赛道。对照阅读：定义与边界（P.2）对附录 E.1 四机制辨析、认知分类（P.3）对第 10 章 CoALA 四分类、MemGPT/Letta（P.6.4）对第 10 章 2.3 与 [C-24]、文件型记忆（P.9）对第 6 章 CLAUDE.md 与第 23 章项目知识文件、记忆评测（P.11）对第 15 章与附录 O、参考架构（P.12）对第 10 章远程记忆数据库一节。信息基准 2026-08（[C-39]），发行前按附录 C 清单复核。
+> **使用提示**：与其他附录的分工——A 讲模型机制、B 讲方法论、C 记来源、D 列产品、E 辨异同、F 索引图版、G 详解 OTel、H 上手 DeepEval、I 评测观测平台选型、J 盘点 Coding Agent 赛道、K 盘点可观测赛道、L 盘点评估赛道、**M 盘点 Memory 赛道**、N 盘点自进化赛道、O 解析 Pi 源码、P 解析 Claude Code 源码、Q 解析 Codex 源码。对照阅读：定义与边界（M.2）对附录 E.1 四机制辨析、认知分类（M.3）对第 10 章 CoALA 四分类、MemGPT/Letta（M.6.4）对第 10 章 2.3 与 [C-24]、文件型记忆（M.9）对第 6 章 CLAUDE.md 与第 23 章项目知识文件、记忆评测（M.11）对第 15 章与附录 L、参考架构（M.12）对第 10 章远程记忆数据库一节。信息基准 2026-08（[C-39]），发行前按附录 C 清单复核。

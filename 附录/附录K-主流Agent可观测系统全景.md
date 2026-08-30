@@ -1,4 +1,4 @@
-# 附录 N：主流 Agent 可观测系统全景
+# 附录 K：主流 Agent 可观测系统全景
 
 > 定位：**Agent 可观测赛道的全景调研报告**（全文收录，信息基准 2026-08，各平台官方入口见 [C-37]）。与相邻内容的分工：第 14 章讲可观测的方法论与本书实现，附录 G 讲 OTel 本身的机制，附录 I 深评其中五个平台（Langfuse/Phoenix/MLflow 等），本附录是整个赛道的地图——标准与埋点生态（GenAI SemConv/OpenInference/OpenLLMetry）、开源自托管/商业专用/传统 APM/云厂商原生/框架原生五路平台盘点、指标体系、生产参考架构与成熟度模型。名单会过期，六类问题框架与成熟度模型不过期。
 
@@ -23,7 +23,7 @@ OpenTelemetry 正在成为 Agent 可观测的统一数据平面；OpenInference 
 
 ---
 
-## N.1 Agent 可观测的整体技术栈
+## K.1 Agent 可观测的整体技术栈
 
 ```mermaid
 flowchart TB
@@ -82,7 +82,7 @@ flowchart TB
 
 ---
 
-## N.2 Agent 可观测的核心数据模型
+## K.2 Agent 可观测的核心数据模型
 
 传统 APM 通常采用：
 
@@ -139,7 +139,7 @@ Project
 
 ---
 
-## N.3 标准与埋点生态
+## K.3 标准与埋点生态
 
 ### 1. OpenTelemetry GenAI Semantic Conventions
 
@@ -214,7 +214,7 @@ Agent Spec Tracing 尝试标准化不同 Agent Runtime 对 Agent、Flow 和多 A
 
 ---
 
-## N.4 开源与自托管 Agent 可观测平台
+## K.4 开源与自托管 Agent 可观测平台
 
 ### 1. Langfuse
 
@@ -366,7 +366,7 @@ TruLens 基于 OpenTelemetry 记录 Agent、Tool、Retrieval、Generation、MCP 
 
 ---
 
-## N.5 商业 AI Engineering 与 Agent 专用平台
+## K.5 商业 AI Engineering 与 Agent 专用平台
 
 ### 1. LangSmith
 
@@ -448,7 +448,7 @@ Arize AX 将生产 Trace、问题 Signal、评估、实验和发布验证组织�
 
 ---
 
-## N.6 传统 APM 厂商的 Agent 可观测
+## K.6 传统 APM 厂商的 Agent 可观测
 
 传统 APM 的优势不一定是 Prompt 或评测 UI，而是能够把：
 
@@ -558,7 +558,7 @@ Tempo / Jaeger + Prometheus + Loki
 
 ---
 
-## N.7 云厂商原生 Agent 可观测
+## K.7 云厂商原生 Agent 可观测
 
 ### 1. AWS Bedrock AgentCore Observability
 
@@ -621,7 +621,7 @@ Azure Monitor 还开始提供面向 Claude Code、Codex、OpenCode 等 Coding Ag
 
 ---
 
-## N.8 Agent Framework 原生可观测
+## K.8 Agent Framework 原生可观测
 
 ### 1. OpenAI Agents SDK Tracing
 
@@ -668,7 +668,7 @@ Claude Agent SDK 提供成本、使用情况和 OpenTelemetry 可观测能力；
 
 ---
 
-## N.9 各平台应该怎么选
+## K.9 各平台应该怎么选
 
 | 场景 | 优先考虑 |
 |---|---|
@@ -704,7 +704,7 @@ AI Engineering 平台
 
 ---
 
-## N.10 Agent 可观测指标体系
+## K.10 Agent 可观测指标体系
 
 Agent 系统不能只监控“请求量、错误率、延迟和 Token”。完整指标体系需要同时覆盖：
 
@@ -1797,7 +1797,7 @@ P2 阶段将指标从“观察信号”升级为“控制信号”：
 ```
 
 ---
-## N.11 推荐的生产参考架构
+## K.11 推荐的生产参考架构
 
 ```mermaid
 flowchart LR
@@ -1909,7 +1909,7 @@ OpenTelemetry 对 Prompt 和 Completion 全量内容采用可选采集方式；�
 
 ---
 
-## N.12 Agent 可观测成熟度模型
+## K.12 Agent 可观测成熟度模型
 
 | 等级 | 能力 |
 |---|---|
@@ -1936,7 +1936,7 @@ OpenTelemetry 对 Prompt 和 Completion 全量内容采用可选采集方式；�
 
 ---
 
-## N.13 未来发展方向
+## K.13 未来发展方向
 
 ### 1. OpenTelemetry 成为统一数据总线
 
@@ -2023,7 +2023,7 @@ OpenLIT、Azure Monitor、Arize 等平台已经开始提供 Coding Agent 专用�
 
 ---
 
-## N.14 总结
+## K.14 总结
 
 当前主流 Agent 可观测生态可以归纳为五个阵营：
 
@@ -2073,4 +2073,4 @@ Cost / Quality / Security / Business Outcome
 
 ---
 
-> **使用提示**：与其他附录的分工——A 讲模型机制、B 讲方法论、C 记来源、D 列产品、E 辨异同、F 索引图版、G 详解 OTel、H 上手 DeepEval、I 评测观测平台选型、J 解析 Pi 源码、K 解析 Claude Code 源码、L 解析 Codex 源码、M 盘点 Coding Agent 赛道、**N 盘点 Agent 可观测赛道**、O 盘点评估赛道、P 盘点 Memory 赛道、Q 盘点自进化赛道。对照阅读：数据模型与对象边界（N.2）对第 14 章 2.1 四层 Span、标准生态（N.3）对附录 G.7、平台盘点（N.4–N.8）中五家的深评见附录 I、指标体系（N.10）对第 14 章三类指标框架、参考架构（N.11）对附录 G.5 Collector。信息基准 2026-08（[C-37]），发行前按附录 C 清单复核。
+> **使用提示**：与其他附录的分工——A 讲模型机制、B 讲方法论、C 记来源、D 列产品、E 辨异同、F 索引图版、G 详解 OTel、H 上手 DeepEval、I 评测观测平台选型、J 盘点 Coding Agent 赛道、**K 盘点 Agent 可观测赛道**、L 盘点评估赛道、M 盘点 Memory 赛道、N 盘点自进化赛道、O 解析 Pi 源码、P 解析 Claude Code 源码、Q 解析 Codex 源码。对照阅读：数据模型与对象边界（K.2）对第 14 章 2.1 四层 Span、标准生态（K.3）对附录 G.7、平台盘点（K.4–K.8）中五家的深评见附录 I、指标体系（K.10）对第 14 章三类指标框架、参考架构（K.11）对附录 G.5 Collector。信息基准 2026-08（[C-37]），发行前按附录 C 清单复核。

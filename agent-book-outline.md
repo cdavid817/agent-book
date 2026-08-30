@@ -356,92 +356,92 @@
 - I.11–I.12 通用落地架构建议（推荐架构、DDD/Ports & Adapters、Span 类型、四工具职责）与统一评测模型设计（Case/Run/Result）
 - I.13–I.16 分阶段实施路线、风险与治理原则、最终建议、官方资料
 
-## 附录 J：Pi 源码架构全景解析
+## 附录 J：主流 Coding Agent 系统全景
+
+> 定位：Coding Agent 赛道全景调研·增强版（全文收录，信息基准 2026-08-30）——附录 D 管全品类速览与定位法，本附录深潜这一个赛道；名单会过期，四层分类与九维度框架不过期。
+
+- J.1–J.3 框架：核心结论（四层市场格局）、易混产品辨析、标准系统架构（对第 12 章六大件）
+- J.4–J.10 七类盘点：商业系统、开源系统与 Harness、国内系统、云端异步、多 Agent 工厂、代码审查 Agent、AI 应用构建平台
+- J.11 能力九维度：Context Engine / Harness / ACI / 执行环境 / 验证 / 记忆与技能 / 多 Agent 编排 / 安全治理 / 可观测与评估
+- J.12–J.17 增强版六专题：与通用平台 Agent 的关系和区别、代码理解（仓库认知）、LSP/AST/Symbol Index/Repo Map 详解、代码检索与上下文工程、沙箱与执行隔离、权限审批与安全治理（对第 23 章 2.5/2.6 与第 9/13 章）
+- J.18–J.19 标准与评测：MCP、ACP、AGENTS.md；评测体系（对第 15/24 章）
+- J.20–J.23 趋势、场景选型、统一多 Agent 平台参考架构、最终判断
+
+## 附录 K：主流 Agent 可观测系统全景
+
+> 定位：Agent 可观测赛道全景调研（全文收录，信息基准 2026-08）——第 14 章讲方法、附录 G 讲 OTel 机制、附录 I 深评五家平台，本附录是赛道地图；名单会过期，六类问题框架与成熟度模型不过期。
+
+- K.1–K.2 框架：整体技术栈、核心数据模型与对象边界（对第 14 章四层 Span）
+- K.3 标准与埋点生态：OTel GenAI SemConv、OpenInference、OpenLLMetry、Agent Spec Tracing
+- K.4–K.8 五路平台盘点：开源自托管（Langfuse/Phoenix/MLflow/OpenLIT/AgentOps/Helicone/TruLens）、商业专用（LangSmith/Weave/Braintrust/Arize AX）、传统 APM（Datadog/New Relic/Dynatrace/Splunk/通用后端）、云厂商原生、框架原生
+- K.9–K.10 选型与指标体系（对第 14 章三类指标框架）
+- K.11–K.14 生产参考架构（对附录 G.5）、成熟度模型、未来方向、总结
+
+## 附录 L：主流 Agent 评估系统全景
+
+> 定位：Agent 评估赛道全景调研·评估指标增强版（全文收录，v1.2，信息基准 2026-08-30）——第 15 章讲方法论、附录 H 上手 DeepEval、附录 I 深评五家平台，本附录是赛道地图；名单会过期，四类产品框架与指标分层口径不过期。
+
+- L.1–L.3 框架：核心结论、四类产品（持续评估平台/代码级框架/云厂商/Benchmark）、评估总体架构
+- L.4 评估对象与指标清单（增强版主体）：十八类核心维度；结果/轨迹/工具/记忆/安全六大评估域；指标分层与统一口径；业务价值、意图约束、计划轨迹、工具与 MCP、RAG、记忆、多轮体验、可靠性、性能成本、安全 Guardrail、可观测审计逐域指标；分类型专项指标；评估器与 Judge 质量指标
+- L.5–L.8 盘点：持续评估平台、代码级评估框架、云厂商评估系统、主流 Agent Benchmark
+- L.9–L.12 体系：Benchmark/框架/平台关系、多 Agent 系统评估、通用平台评估架构、工程闭环
+- L.13–L.16 落地：指标设计与发布门禁（对第 15 章）、选型建议、发展趋势、总结
+
+## 附录 M：主流 Agent Memory 系统全景
+
+> 定位：Agent 记忆赛道全景调研（全文收录，信息基准 2026-08）——第 10 章讲记忆机制与本书实现，本附录是赛道地图；名单会过期，认知分类与数据模型口径不过期。
+
+- M.1–M.3 框架：核心结论、定义与边界（Memory ≠ Context ≠ RAG ≠ Checkpoint，对附录 E.1）、认知分类（对第 10 章 CoALA 四分类）
+- M.4–M.5 架构与数据模型：写入/检索链路、生命周期、MemoryRecord、三时间字段、作用域、更新操作
+- M.6–M.9 盘点：独立系统十二家（Mem0/Zep/Graphiti/Letta/Hindsight/LangMem/Cognee/Supermemory/Backboard/Memobase/Redis/MemOS）、框架原生、云厂商、Coding Agent 文件型记忆（对第 6/23 章）
+- M.10–M.11 研究与评测：研究型演进路线、Benchmark 与排行榜解读（对附录 L）
+- M.12–M.15 落地：企业参考架构（对第 10 章远程记忆数据库）、选型方法、未来方向、总结
+
+## 附录 N：主流 Agent 自进化系统全景
+
+> 定位：Agent 自进化赛道全景调研（全文收录，信息基准 2026-08-30）——第 26 章讲克制判断（自进化 = 自动化的变更管理），本附录是赛道地图；成熟度分层：记忆与技能进化工程化中、工作流进化试点中、模型与代码自进化研究为主。
+
+- N.1–N.3 框架：自进化的定义、易混概念辨析、总体版图（六路进化）
+- N.4–N.10 六路盘点：经验与上下文进化、记忆型（对附录 M）、技能与工具（对第 6 章 Skill）、Prompt 与工作流与架构进化、模型参数与自博弈（对第 26 章后训练）、代码级递归自改进、多 Agent 群体进化
+- N.11–N.13 对比与治理：主流系统对比表、自进化评测体系（对第 15 章/附录 L）、主要风险（对第 13 章）
+- N.14–N.17 落地：生产参考架构、企业推荐路线、场景选型、最终判断
+## 附录 O：Pi 源码架构全景解析
 
 > 定位：开源 Coding Agent「Pi」（earendil-works/pi）整仓源码解析（全文收录，锁定 main@853a80d）——第六篇讲通用机制，本附录是一个真实实现的完整解剖。
 
-- J.1–J.4 分析基线与全局：阅读方法与结论可信度、项目定位与设计哲学、Monorepo 分层与控制权分配、构建与可复现性
-- J.5–J.11 pi-ai 模型层：统一领域对象、无副作用入口、Provider 工厂与兼容矩阵、认证与凭据、协议适配、流式事件、错误分类与重试
-- J.12–J.18 pi-agent-core：Agent Loop 双层循环与单轮状态机、工具调用（校验/钩子/并行/终止）、Steering 与 Follow-up、Agent 类与宿主可替换点、Harness、通用会话与后端、搜索扫描
-- J.19–J.30 pi-coding-agent：启动与多模式路由、AgentSession 协调器、Runtime 与 Services、JSONL 会话树（分支/Fork/Clone）、上下文压缩与保留尾部、设置与迁移、项目信任与两阶段加载、上下文文件与 Skill、扩展系统、模型注册表、内置文件工具、Bash 与进程取消
-- J.31–J.36 界面与远程：TUI 差分渲染与布局输入、交互模式与命令体系、Print/JSON/RPC/SDK 模式、严格 CBOR 协议、Client/Server 与会话租约
-- J.37–J.44 基础设施与评估：Telemetry 旁路、SQLite 后端与 FTS、测试与质量门禁、安全模型与提示注入、性能与容量规划、部署与跨平台、可扩展方案（MCP/子 Agent/权限层）、架构权衡与演进路线
-- J.45–J.50 附带工具书：文件级源码导读卡片、端到端运行链路、数据模型与事件词典、二次开发蓝图、排障决策树、术语表
+- O.1–O.4 分析基线与全局：阅读方法与结论可信度、项目定位与设计哲学、Monorepo 分层与控制权分配、构建与可复现性
+- O.5–O.11 pi-ai 模型层：统一领域对象、无副作用入口、Provider 工厂与兼容矩阵、认证与凭据、协议适配、流式事件、错误分类与重试
+- O.12–O.18 pi-agent-core：Agent Loop 双层循环与单轮状态机、工具调用（校验/钩子/并行/终止）、Steering 与 Follow-up、Agent 类与宿主可替换点、Harness、通用会话与后端、搜索扫描
+- O.19–O.30 pi-coding-agent：启动与多模式路由、AgentSession 协调器、Runtime 与 Services、JSONL 会话树（分支/Fork/Clone）、上下文压缩与保留尾部、设置与迁移、项目信任与两阶段加载、上下文文件与 Skill、扩展系统、模型注册表、内置文件工具、Bash 与进程取消
+- O.31–O.36 界面与远程：TUI 差分渲染与布局输入、交互模式与命令体系、Print/JSON/RPC/SDK 模式、严格 CBOR 协议、Client/Server 与会话租约
+- O.37–O.44 基础设施与评估：Telemetry 旁路、SQLite 后端与 FTS、测试与质量门禁、安全模型与提示注入、性能与容量规划、部署与跨平台、可扩展方案（MCP/子 Agent/权限层）、架构权衡与演进路线
+- O.45–O.50 附带工具书：文件级源码导读卡片、端到端运行链路、数据模型与事件词典、二次开发蓝图、排障决策树、术语表
 
-## 附录 K：Claude Code 源码架构深度解析
+## 附录 P：Claude Code 源码架构深度解析
 
 > 定位：Claude Code 还原源码整仓解析（全文收录，社区 source map 还原仓库 pengchengneo/Claude-Code、非官方，审阅基线 b78dd22）——证据按 [源码确认]/[结构推断]/[设计解读]/[改进建议]/[还原风险] 五级标注。
 
 - 重要说明与阅读导航：还原仓库的可信边界、静态审阅方法、三条阅读路径
-- 篇一（K.1–K.9）基线与全景：证据方法、还原机制、技术栈、设计原则、分层架构、目录地图、Bootstrap、CLI 多模式、REPL 与 Ink
-- 篇二（K.10–K.24）会话内核：QueryEngine、query() 异步生成器与 Agent Loop、消息模型与事件流、工具系统契约、权限与沙箱、Provider 适配
-- 篇三（K.25–K.34）上下文与恢复：压缩、记忆、Transcript、会话恢复
-- 篇四（K.35–K.52）扩展编排：Task/Agent/Coordinator 多 Agent、MCP、Plugin、Skill、Bridge 远程、重构路线图
-- 篇五/篇六（K.53–K.55）参考手册：50 个 Tool 条目（含证据等级）、87 个命令子目录与注册体系
-- 篇七（K.56–K.63）源码导航与维护：模块地图、服务层地图、术语表、验收清单、架构决策与权衡、风险登记表、证据索引、总结
+- 篇一（P.1–P.9）基线与全景：证据方法、还原机制、技术栈、设计原则、分层架构、目录地图、Bootstrap、CLI 多模式、REPL 与 Ink
+- 篇二（P.10–P.24）会话内核：QueryEngine、query() 异步生成器与 Agent Loop、消息模型与事件流、工具系统契约、权限与沙箱、Provider 适配
+- 篇三（P.25–P.34）上下文与恢复：压缩、记忆、Transcript、会话恢复
+- 篇四（P.35–P.52）扩展编排：Task/Agent/Coordinator 多 Agent、MCP、Plugin、Skill、Bridge 远程、重构路线图
+- 篇五/篇六（P.53–P.55）参考手册：50 个 Tool 条目（含证据等级）、87 个命令子目录与注册体系
+- 篇七（P.56–P.63）源码导航与维护：模块地图、服务层地图、术语表、验收清单、架构决策与权衡、风险登记表、证据索引、总结
 
-## 附录 L：Codex 源码架构深度解析
+## 附录 Q：Codex 源码架构深度解析
 
-> 定位：OpenAI Codex（openai/codex，Rust Workspace）整仓源码解析（全文收录，快照锁定 main@0ae94fd）——源码事实/设计解释/演进推断三级证据；与附录 J/K 三套 Coding Agent 运行时互为对照。
+> 定位：OpenAI Codex（openai/codex，Rust Workspace）整仓源码解析（全文收录，快照锁定 main@0ae94fd）——源码事实/设计解释/演进推断三级证据；与附录 O/K 三套 Coding Agent 运行时互为对照。
 
-- 篇一（L.1–L.4）全局认识：项目定位（本地 Agent 运行时）、Thread/Turn/Item 三名词、共享内核与宿主适配器、Rust 迁移动因、工作区全景与总体数据流
-- 篇二（L.5–L.12）入口与会话控制：MultitoolCli、TUI、Exec、App Server、Protocol、ThreadManager、Session、Agent Loop
-- 篇三（L.13–L.22）模型与工具执行：ModelClient、Prompt 与压缩、ToolRouter/Registry/Orchestrator、Shell、Patch、Code Mode
-- 篇四（L.23–L.28）安全纵深：PermissionProfile、审批策略、Guardian、跨平台 Sandbox、Network Proxy、威胁模型
-- 篇五（L.29–L.35）扩展与多 Agent：MCP、Skill、Plugin、Hook、Extension API、AgentControl 与角色协作
-- 篇六（L.36–L.41）持久化与一致性：ThreadStore、JSONL rollout、SQLite 派生索引、恢复/分叉/归档与故障矩阵
-- 篇七（L.42–L.49）配置认证与观测：Config、Profile、Auth、Model Provider、Realtime、OTEL、Analytics
-- 篇八（L.50–L.58）测试与工程治理：测试金字塔、CI、静态检查、资源生命周期、发布与贡献模式
-- 篇九（L.59）逐 crate 源码导读：覆盖固定提交全部 workspace member
-- 篇十（L.60）端到端场景与故障推演：29 条控制流/安全流/数据流联合场景
-- 篇十一（L.61–L.66）收尾：结论、阅读路线、二次开发原则、关键源码链接、术语表、质量门禁
+- 篇一（Q.1–Q.4）全局认识：项目定位（本地 Agent 运行时）、Thread/Turn/Item 三名词、共享内核与宿主适配器、Rust 迁移动因、工作区全景与总体数据流
+- 篇二（Q.5–Q.12）入口与会话控制：MultitoolCli、TUI、Exec、App Server、Protocol、ThreadManager、Session、Agent Loop
+- 篇三（Q.13–Q.22）模型与工具执行：ModelClient、Prompt 与压缩、ToolRouter/Registry/Orchestrator、Shell、Patch、Code Mode
+- 篇四（Q.23–Q.28）安全纵深：PermissionProfile、审批策略、Guardian、跨平台 Sandbox、Network Proxy、威胁模型
+- 篇五（Q.29–Q.35）扩展与多 Agent：MCP、Skill、Plugin、Hook、Extension API、AgentControl 与角色协作
+- 篇六（Q.36–Q.41）持久化与一致性：ThreadStore、JSONL rollout、SQLite 派生索引、恢复/分叉/归档与故障矩阵
+- 篇七（Q.42–Q.49）配置认证与观测：Config、Profile、Auth、Model Provider、Realtime、OTEL、Analytics
+- 篇八（Q.50–Q.58）测试与工程治理：测试金字塔、CI、静态检查、资源生命周期、发布与贡献模式
+- 篇九（Q.59）逐 crate 源码导读：覆盖固定提交全部 workspace member
+- 篇十（Q.60）端到端场景与故障推演：29 条控制流/安全流/数据流联合场景
+- 篇十一（Q.61–Q.66）收尾：结论、阅读路线、二次开发原则、关键源码链接、术语表、质量门禁
 
-## 附录 M：主流 Coding Agent 系统全景
-
-> 定位：Coding Agent 赛道全景调研·增强版（全文收录，信息基准 2026-08-30）——附录 D 管全品类速览与定位法，本附录深潜这一个赛道；名单会过期，四层分类与九维度框架不过期。
-
-- M.1–M.3 框架：核心结论（四层市场格局）、易混产品辨析、标准系统架构（对第 12 章六大件）
-- M.4–M.10 七类盘点：商业系统、开源系统与 Harness、国内系统、云端异步、多 Agent 工厂、代码审查 Agent、AI 应用构建平台
-- M.11 能力九维度：Context Engine / Harness / ACI / 执行环境 / 验证 / 记忆与技能 / 多 Agent 编排 / 安全治理 / 可观测与评估
-- M.12–M.17 增强版六专题：与通用平台 Agent 的关系和区别、代码理解（仓库认知）、LSP/AST/Symbol Index/Repo Map 详解、代码检索与上下文工程、沙箱与执行隔离、权限审批与安全治理（对第 23 章 2.5/2.6 与第 9/13 章）
-- M.18–M.19 标准与评测：MCP、ACP、AGENTS.md；评测体系（对第 15/24 章）
-- M.20–M.23 趋势、场景选型、统一多 Agent 平台参考架构、最终判断
-
-## 附录 N：主流 Agent 可观测系统全景
-
-> 定位：Agent 可观测赛道全景调研（全文收录，信息基准 2026-08）——第 14 章讲方法、附录 G 讲 OTel 机制、附录 I 深评五家平台，本附录是赛道地图；名单会过期，六类问题框架与成熟度模型不过期。
-
-- N.1–N.2 框架：整体技术栈、核心数据模型与对象边界（对第 14 章四层 Span）
-- N.3 标准与埋点生态：OTel GenAI SemConv、OpenInference、OpenLLMetry、Agent Spec Tracing
-- N.4–N.8 五路平台盘点：开源自托管（Langfuse/Phoenix/MLflow/OpenLIT/AgentOps/Helicone/TruLens）、商业专用（LangSmith/Weave/Braintrust/Arize AX）、传统 APM（Datadog/New Relic/Dynatrace/Splunk/通用后端）、云厂商原生、框架原生
-- N.9–N.10 选型与指标体系（对第 14 章三类指标框架）
-- N.11–N.14 生产参考架构（对附录 G.5）、成熟度模型、未来方向、总结
-
-## 附录 O：主流 Agent 评估系统全景
-
-> 定位：Agent 评估赛道全景调研·评估指标增强版（全文收录，v1.2，信息基准 2026-08-30）——第 15 章讲方法论、附录 H 上手 DeepEval、附录 I 深评五家平台，本附录是赛道地图；名单会过期，四类产品框架与指标分层口径不过期。
-
-- O.1–O.3 框架：核心结论、四类产品（持续评估平台/代码级框架/云厂商/Benchmark）、评估总体架构
-- O.4 评估对象与指标清单（增强版主体）：十八类核心维度；结果/轨迹/工具/记忆/安全六大评估域；指标分层与统一口径；业务价值、意图约束、计划轨迹、工具与 MCP、RAG、记忆、多轮体验、可靠性、性能成本、安全 Guardrail、可观测审计逐域指标；分类型专项指标；评估器与 Judge 质量指标
-- O.5–O.8 盘点：持续评估平台、代码级评估框架、云厂商评估系统、主流 Agent Benchmark
-- O.9–O.12 体系：Benchmark/框架/平台关系、多 Agent 系统评估、通用平台评估架构、工程闭环
-- O.13–O.16 落地：指标设计与发布门禁（对第 15 章）、选型建议、发展趋势、总结
-
-## 附录 P：主流 Agent Memory 系统全景
-
-> 定位：Agent 记忆赛道全景调研（全文收录，信息基准 2026-08）——第 10 章讲记忆机制与本书实现，本附录是赛道地图；名单会过期，认知分类与数据模型口径不过期。
-
-- P.1–P.3 框架：核心结论、定义与边界（Memory ≠ Context ≠ RAG ≠ Checkpoint，对附录 E.1）、认知分类（对第 10 章 CoALA 四分类）
-- P.4–P.5 架构与数据模型：写入/检索链路、生命周期、MemoryRecord、三时间字段、作用域、更新操作
-- P.6–P.9 盘点：独立系统十二家（Mem0/Zep/Graphiti/Letta/Hindsight/LangMem/Cognee/Supermemory/Backboard/Memobase/Redis/MemOS）、框架原生、云厂商、Coding Agent 文件型记忆（对第 6/23 章）
-- P.10–P.11 研究与评测：研究型演进路线、Benchmark 与排行榜解读（对附录 O）
-- P.12–P.15 落地：企业参考架构（对第 10 章远程记忆数据库）、选型方法、未来方向、总结
-
-## 附录 Q：主流 Agent 自进化系统全景
-
-> 定位：Agent 自进化赛道全景调研（全文收录，信息基准 2026-08-30）——第 26 章讲克制判断（自进化 = 自动化的变更管理），本附录是赛道地图；成熟度分层：记忆与技能进化工程化中、工作流进化试点中、模型与代码自进化研究为主。
-
-- Q.1–Q.3 框架：自进化的定义、易混概念辨析、总体版图（六路进化）
-- Q.4–Q.10 六路盘点：经验与上下文进化、记忆型（对附录 P）、技能与工具（对第 6 章 Skill）、Prompt 与工作流与架构进化、模型参数与自博弈（对第 26 章后训练）、代码级递归自改进、多 Agent 群体进化
-- Q.11–Q.13 对比与治理：主流系统对比表、自进化评测体系（对第 15 章/附录 O）、主要风险（对第 13 章）
-- Q.14–Q.17 落地：生产参考架构、企业推荐路线、场景选型、最终判断

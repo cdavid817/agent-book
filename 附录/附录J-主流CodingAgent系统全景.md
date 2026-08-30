@@ -1,10 +1,10 @@
-# 附录 M：主流 Coding Agent 系统全景
+# 附录 J：主流 Coding Agent 系统全景
 
-> 定位：**Coding Agent 赛道的全景调研报告·增强版**（全文收录，信息基准 2026-08-30，各产品官方入口见 [C-36]）。附录 D 是全品类产品速览与"坐标系定位法"，本附录只深潜 Coding Agent 一个赛道——商业/开源/国内/云端异步/多 Agent 工厂/审查 Agent/应用构建平台七类盘点，能力九维度，加上增强版六个专题：与通用平台 Agent 的关系与区别、代码理解（仓库认知建立）、LSP/AST/Symbol Index/Repo Map 详解、代码检索与上下文工程、沙箱与执行隔离、权限审批与安全治理，收尾于互操作标准（MCP/ACP/AGENTS.md）、评测体系与选型建议。第六篇（第 23–25 章）讲这一赛道的机制原理（技术专题与第 23 章 2.5/2.6 两节互为印证），附录 J/K/L 是其中三个系统的源码级解剖，本附录是"市场与技术专题"这一层的地图。名单与格局会过期，四层分类与九维度框架不过期。
+> 定位：**Coding Agent 赛道的全景调研报告·增强版**（全文收录，信息基准 2026-08-30，各产品官方入口见 [C-36]）。附录 D 是全品类产品速览与"坐标系定位法"，本附录只深潜 Coding Agent 一个赛道——商业/开源/国内/云端异步/多 Agent 工厂/审查 Agent/应用构建平台七类盘点，能力九维度，加上增强版六个专题：与通用平台 Agent 的关系与区别、代码理解（仓库认知建立）、LSP/AST/Symbol Index/Repo Map 详解、代码检索与上下文工程、沙箱与执行隔离、权限审批与安全治理，收尾于互操作标准（MCP/ACP/AGENTS.md）、评测体系与选型建议。第六篇（第 23–25 章）讲这一赛道的机制原理（技术专题与第 23 章 2.5/2.6 两节互为印证），附录 O/P/Q 是其中三个系统的源码级解剖，本附录是"市场与技术专题"这一层的地图。名单与格局会过期，四层分类与九维度框架不过期。
 
 ---
 
-## M.1 核心结论
+## J.1 核心结论
 
 CodingAgent 已经从“代码补全工具”演化为能够在真实工程环境中执行完整闭环的软件工程系统：
 
@@ -27,7 +27,7 @@ Claude Code、Codex、Copilot、Cursor 等正在补齐本地执行闭环；Antig
 
 ---
 
-## M.2 先区分几类容易混淆的产品
+## J.2 先区分几类容易混淆的产品
 
 | 类型 | 主要能力 | 人与 Agent 的关系 | 典型系统 |
 |---|---|---|---|
@@ -46,7 +46,7 @@ Claude Code、Codex、Copilot、Cursor 等正在补齐本地执行闭环；Antig
 
 ---
 
-## M.3 CodingAgent 的标准系统架构
+## J.3 CodingAgent 的标准系统架构
 
 ```mermaid
 flowchart TB
@@ -110,9 +110,9 @@ flowchart TB
 
 ---
 
-## M.4 主流商业 CodingAgent
+## J.4 主流商业 CodingAgent
 
-### M.4.1 第一梯队通用系统
+### J.4.1 第一梯队通用系统
 
 | 系统 | 主要形态 | 执行位置 | 系统定位与突出能力 |
 |---|---|---|---|
@@ -138,7 +138,7 @@ flowchart TB
 - [Kiro](https://kiro.dev/)
 - [Amazon Q Developer](https://aws.amazon.com/blogs/devops/amazon-q-developer-agentic-coding-experience/)
 
-### M.4.2 正在向 Agent 控制面发展的系统
+### J.4.2 正在向 Agent 控制面发展的系统
 
 | 系统 | 当前定位 |
 |---|---|
@@ -156,7 +156,7 @@ flowchart TB
 
 ---
 
-## M.5 主流开源 CodingAgent 与 Agent Harness
+## J.5 主流开源 CodingAgent 与 Agent Harness
 
 开源系统大致分成两派：
 
@@ -200,7 +200,7 @@ flowchart TB
 
 ---
 
-## M.6 国内主流 CodingAgent 系统
+## J.6 国内主流 CodingAgent 系统
 
 | 系统 | 主要形态 | 定位与特点 |
 |---|---|---|
@@ -231,7 +231,7 @@ flowchart TB
 
 ---
 
-## M.7 云端异步 CodingAgent
+## J.7 云端异步 CodingAgent
 
 云端 Agent 不是“把 CLI 放进服务器”这么简单，而是需要完整的远程执行基础设施：
 
@@ -282,9 +282,9 @@ flowchart TB
 
 ---
 
-## M.8 多 Agent Coding 系统
+## J.8 多 Agent Coding 系统
 
-### M.8.1 常见多 Agent 架构
+### J.8.1 常见多 Agent 架构
 
 #### 固定角色流水线
 
@@ -340,7 +340,7 @@ main
 
 参考：[Cursor Cloud Agent](https://cursor.com/docs/cloud-agent)
 
-### M.8.2 真正的多 Agent 系统需要解决什么
+### J.8.2 真正的多 Agent 系统需要解决什么
 
 多 Agent 并不是简单地同时启动多个 CLI，还必须解决：
 
@@ -363,7 +363,7 @@ Claude Code、Cursor、Antigravity、Amp、GitLab Duo 和 Qwen Code 都已支持
 
 ---
 
-## M.9 代码审查与验证 Agent
+## J.9 代码审查与验证 Agent
 
 随着代码生成速度提高，CodingAgent 的竞争重点正在从“能否生成代码”转向“能否证明生成结果可靠”。
 
@@ -407,7 +407,7 @@ Claude Code、Cursor、Antigravity、Amp、GitLab Duo 和 Qwen Code 都已支持
 
 ---
 
-## M.10 AI 应用构建类 CodingAgent
+## J.10 AI 应用构建类 CodingAgent
 
 这类系统经常被归入 CodingAgent，但它们实际上是面向新项目的垂直软件生产平台。
 
@@ -436,9 +436,9 @@ Claude Code、Cursor、Antigravity、Amp、GitLab Duo 和 Qwen Code 都已支持
 
 ---
 
-## M.11 决定 CodingAgent 能力的九个核心维度
+## J.11 决定 CodingAgent 能力的九个核心维度
 
-### M.11.1 Context Engine
+### J.11.1 Context Engine
 
 核心不是“能读取多少 Token”，而是能否找对信息。
 
@@ -455,7 +455,7 @@ Claude Code、Cursor、Antigravity、Amp、GitLab Duo 和 Qwen Code 都已支持
 
 代码库越大，Context Engine 对结果的影响越大。代码理解、索引与检索的完整设计见第十三至第十五章。
 
-### M.11.2 Agent Harness
+### J.11.2 Agent Harness
 
 Harness 负责控制模型怎样工作，包括：
 
@@ -474,7 +474,7 @@ Harness 负责控制模型怎样工作，包括：
 
 模型决定能力上限，Harness 决定能力能否稳定落地。
 
-### M.11.3 Agent-Computer Interface
+### J.11.3 Agent-Computer Interface
 
 工具设计会直接影响执行效果：
 
@@ -491,7 +491,7 @@ SWE-agent 等研究系统的一个重要价值，就是把 Agent-Computer Interf
 
 参考：[SWE-agent Background](https://github.com/princeton-nlp/SWE-agent/blob/main/docs/background/index.md)
 
-### M.11.4 Execution Environment
+### J.11.4 Execution Environment
 
 主要有四种方式：
 
@@ -508,7 +508,7 @@ SWE-agent 等研究系统的一个重要价值，就是把 Agent-Computer Interf
 
 沙箱层级、隔离维度与执行生命周期见第十六章。
 
-### M.11.5 Verification
+### J.11.5 Verification
 
 可靠 CodingAgent 至少需要支持：
 
@@ -524,7 +524,7 @@ SWE-agent 等研究系统的一个重要价值，就是把 Agent-Computer Interf
 
 没有 Verification 的 Agent，本质上只是概率性代码生成器。
 
-### M.11.6 Memory、Rules 与 Skills
+### J.11.6 Memory、Rules 与 Skills
 
 这三类能力不要混为一谈：
 
@@ -536,7 +536,7 @@ Claude Code、Cursor、Codex、Kiro、Qwen Code 和 VS Code 都在逐步采用�
 
 参考：[Claude Code Memory](https://docs.anthropic.com/en/docs/claude-code/memory)
 
-### M.11.7 多 Agent 编排
+### J.11.7 多 Agent 编排
 
 核心指标不是 Agent 数量，而是：
 
@@ -551,7 +551,7 @@ Claude Code、Cursor、Codex、Kiro、Qwen Code 和 VS Code 都在逐步采用�
 - 是否能够跨项目协作。
 - 是否有统一预算和最终验收。
 
-### M.11.8 安全与治理
+### J.11.8 安全与治理
 
 企业落地时通常比模型能力更重要：
 
@@ -569,7 +569,7 @@ Claude Code、Cursor、Codex、Kiro、Qwen Code 和 VS Code 都在逐步采用�
 
 权限、审批、策略和沙箱之间的边界见第十六、十七章。
 
-### M.11.9 可观测性与评估
+### J.11.9 可观测性与评估
 
 至少应记录：
 
@@ -587,7 +587,7 @@ Claude Code、Cursor、Codex、Kiro、Qwen Code 和 VS Code 都在逐步采用�
 ---
 
 
-## M.12 CodingAgent 与通用平台 Agent 的关系和区别
+## J.12 CodingAgent 与通用平台 Agent 的关系和区别
 
 “平台 Agent”在行业中经常有两种含义，必须先拆开：
 
@@ -598,7 +598,7 @@ Claude Code、Cursor、Codex、Kiro、Qwen Code 和 VS Code 都在逐步采用�
 
 因此，CodingAgent 并不是与通用 Agent 完全不同的物种，而是通用 Agent 架构在软件工程领域的深度垂直化。
 
-### M.12.1 共同底座与代码专用层
+### J.12.1 共同底座与代码专用层
 
 ```mermaid
 flowchart TB
@@ -630,7 +630,7 @@ flowchart TB
 
 > **在可隔离、可验证、可回滚的软件工程环境中，对一个持续变化的代码库实施受控变更。**
 
-### M.12.2 CodingAgent 与通用平台 Agent 对比
+### J.12.2 CodingAgent 与通用平台 Agent 对比
 
 | 维度 | CodingAgent | 通用平台 Agent |
 |---|---|---|
@@ -648,7 +648,7 @@ flowchart TB
 | 人工介入点 | Plan、危险命令、Diff、PR、上线 | 高风险业务动作、审批、异常分支 |
 | 典型评测 | SWE-bench、Terminal-Bench、内部 Issue 回放 | 任务完成率、工具成功率、事实正确率、业务 KPI |
 
-### M.12.3 CodingAgent 与 Code Interpreter 的区别
+### J.12.3 CodingAgent 与 Code Interpreter 的区别
 
 Code Interpreter 可以执行代码，但它通常不是完整 CodingAgent。
 
@@ -662,7 +662,7 @@ Code Interpreter 可以执行代码，但它通常不是完整 CodingAgent。
 | 验证闭环 | 运行脚本并查看结果 | 编译、测试、Lint、E2E、Review、回归 |
 | 交付物 | 图表、数据文件、计算结果 | 可审查、可合并的软件变更 |
 
-### M.12.4 CodingAgent 与 Computer-Use Agent 的区别
+### J.12.4 CodingAgent 与 Computer-Use Agent 的区别
 
 Computer-Use Agent 主要通过鼠标、键盘和视觉界面操作软件；CodingAgent 主要通过结构化代码工具、Shell 和 Git 操作工程。
 
@@ -675,7 +675,7 @@ Computer-Use Agent 主要通过鼠标、键盘和视觉界面操作软件；Codi
 
 但浏览器可以“看到页面”不等于理解代码；能够修改代码也不等于已经验证真实用户路径。
 
-### M.12.5 主流通用 Agent 开发与运行平台
+### J.12.5 主流通用 Agent 开发与运行平台
 
 | 平台或框架 | 主要定位 | 与 CodingAgent 的关系 |
 |---|---|---|
@@ -693,7 +693,7 @@ Computer-Use Agent 主要通过鼠标、键盘和视觉界面操作软件；Codi
 - [Amazon Bedrock AgentCore](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/what-is-bedrock-agentcore.html)
 - [Microsoft Foundry](https://learn.microsoft.com/en-us/azure/foundry/what-is-foundry)
 
-### M.12.6 三种组合方式
+### J.12.6 三种组合方式
 
 #### 方式一：CodingAgent 作为通用平台 Agent 的工具
 
@@ -727,7 +727,7 @@ flowchart TB
 
 CodingAgent 控制面管理多个代码执行器，同时通过 MCP、A2A、HTTP 或消息队列调用需求分析、知识查询、安全审查、发布审批等外部 Agent。
 
-### M.12.7 选型判断
+### J.12.7 选型判断
 
 以下情况更适合直接使用通用 Agent 平台：
 
@@ -747,11 +747,11 @@ CodingAgent 控制面管理多个代码执行器，同时通过 MCP、A2A、HTTP
 
 ---
 
-## M.13 代码理解：CodingAgent 如何建立仓库认知
+## J.13 代码理解：CodingAgent 如何建立仓库认知
 
 代码理解不是一次向量检索，也不是把整个仓库发送给模型。成熟 CodingAgent 会把多种证据组合成一个随任务变化的“仓库认知模型”。
 
-### M.13.1 代码理解的七层证据
+### J.13.1 代码理解的七层证据
 
 | 层次 | 主要信息 | 常用机制 | 能回答的问题 |
 |---|---|---|---|
@@ -772,7 +772,7 @@ CodingAgent 控制面管理多个代码执行器，同时通过 MCP、A2A、HTTP
 - Git 历史能解释设计原因，但不代表当前实现仍然一致。
 - 测试可以证明某些行为，却无法覆盖所有隐含约束。
 
-### M.13.2 代码理解参考架构
+### J.13.2 代码理解参考架构
 
 ```mermaid
 flowchart TB
@@ -803,7 +803,7 @@ flowchart TB
     VERIFY -->|验证通过| CHANGE[生成可审查变更]
 ```
 
-### M.13.3 CodingAgent 必须回答的六类问题
+### J.13.3 CodingAgent 必须回答的六类问题
 
 1. **定位问题**：相关代码在哪些文件和符号中？
 2. **结构问题**：模块、类、函数、接口和数据结构如何组织？
@@ -814,7 +814,7 @@ flowchart TB
 
 这六类问题对应不同工具。让模型只使用 `grep` 回答全部问题，会把“找到文本”误当成“理解程序”。
 
-### M.13.4 仓库初始化与增量更新
+### J.13.4 仓库初始化与增量更新
 
 一个可靠的代码理解服务通常需要两个阶段。
 
@@ -836,7 +836,7 @@ flowchart TB
 - 对当前会话的未提交修改维护 Overlay Index。
 - 在返回结果时标记索引对应的 Revision，避免读取陈旧结果。
 
-### M.13.5 基于任务的理解循环
+### J.13.5 基于任务的理解循环
 
 ```mermaid
 sequenceDiagram
@@ -865,7 +865,7 @@ sequenceDiagram
 
 成熟 Agent 的检索是迭代式的，而不是“开始前检索一次，之后只依赖模型记忆”。
 
-### M.13.6 静态理解与动态理解应互相校验
+### J.13.6 静态理解与动态理解应互相校验
 
 静态信息可以告诉 Agent：
 
@@ -886,7 +886,7 @@ sequenceDiagram
 
 > **静态分析负责缩小范围，动态执行负责验证假设。**
 
-### M.13.7 代码理解的置信度与来源
+### J.13.7 代码理解的置信度与来源
 
 每个进入上下文的证据最好带有：
 
@@ -912,7 +912,7 @@ confidence
 - 生成文件和源文件。
 - 第三方依赖和本仓库实现。
 
-### M.13.8 常见失败模式
+### J.13.8 常见失败模式
 
 | 失败模式 | 直接后果 | 改进方式 |
 |---|---|---|
@@ -927,7 +927,7 @@ confidence
 
 ---
 
-## M.14 LSP、AST、Symbol Index 与 Repo Map 详解
+## J.14 LSP、AST、Symbol Index 与 Repo Map 详解
 
 这几个概念都服务于代码理解，但解决的问题不同：
 
@@ -937,7 +937,7 @@ confidence
 - **Repo Map**：在有限 Token 内给模型提供仓库级结构摘要。
 - **代码搜索**：根据用户任务快速找到可能相关的文本、文件和符号。
 
-### M.14.1 LSP：在线语义服务
+### J.14.1 LSP：在线语义服务
 
 Language Server Protocol 定义了编辑器或其他客户端与 Language Server 之间的标准通信方式。对于 CodingAgent，客户端不一定是 IDE，也可以是 Agent Harness 中的代码智能服务。
 
@@ -1016,7 +1016,7 @@ LSP 很强，但它不是完整代码理解系统：
 
 参考：[Language Server Protocol 3.17 Specification](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/)
 
-### M.14.2 AST、CST 与 Tree-sitter
+### J.14.2 AST、CST 与 Tree-sitter
 
 #### AST 与 CST 的区别
 
@@ -1058,7 +1058,7 @@ flowchart LR
 
 参考：[Tree-sitter Introduction](https://tree-sitter.github.io/tree-sitter/)
 
-### M.14.3 Symbol Index：持久化代码语义
+### J.14.3 Symbol Index：持久化代码语义
 
 Symbol Index 把语言分析结果从“临时在线查询”变成“可持久化、可版本化、可快速检索的数据”。
 
@@ -1125,7 +1125,7 @@ flowchart TB
 - 用 Overlay 合并会话内变更。
 - 查询结果必须标记 Revision、来源和新鲜度。
 
-### M.14.4 Repo Map：面向模型的仓库压缩表示
+### J.14.4 Repo Map：面向模型的仓库压缩表示
 
 Repo Map 不是完整索引，而是把仓库的重要结构压缩到有限 Token 中。典型内容包括：
 
@@ -1172,7 +1172,7 @@ flowchart LR
 - [Aider Repository Map](https://aider.chat/docs/repomap.html)
 - [Building a Better Repository Map with Tree-sitter](https://aider.chat/2023/10/22/repomap.html)
 
-### M.14.5 各类代码智能能力对比
+### J.14.5 各类代码智能能力对比
 
 | 能力 | 精确文本匹配 | 语法结构 | 类型语义 | 跨文件关系 | 自然语言召回 | 更新成本 | 最适合 |
 |---|---:|---:|---:|---:|---:|---:|---|
@@ -1186,7 +1186,7 @@ flowchart LR
 | Repo Map | 低 | 中 | 中 | 中 | 间接支持 | 中 | 为模型提供全局结构摘要 |
 | 测试与 Trace | 无 | 无 | 运行时事实 | 高 | 低 | 高 | 验证真实行为与动态路径 |
 
-### M.14.6 推荐的混合代码智能架构
+### J.14.6 推荐的混合代码智能架构
 
 ```mermaid
 flowchart TB
@@ -1224,11 +1224,11 @@ flowchart TB
 
 ---
 
-## M.15 代码检索与上下文工程
+## J.15 代码检索与上下文工程
 
 代码检索的目标不是返回最多结果，而是用最小上下文找到足以完成任务的证据。
 
-### M.15.1 七类检索方式
+### J.15.1 七类检索方式
 
 #### 1. 路径与文件检索
 
@@ -1308,7 +1308,7 @@ flowchart TB
 - 验证真实执行路径。
 - 查找过去类似修复。
 
-### M.15.2 多阶段混合检索架构
+### J.15.2 多阶段混合检索架构
 
 ```mermaid
 flowchart TB
@@ -1336,7 +1336,7 @@ flowchart TB
     VERIFY -->|需要更多证据| DECOMP
 ```
 
-### M.15.3 Query Planner 应怎样拆任务
+### J.15.3 Query Planner 应怎样拆任务
 
 例如用户提出：
 
@@ -1372,7 +1372,7 @@ flowchart TB
 
 这样可以避免模型只命中包含“upload”字符串的表层 UI 文件。
 
-### M.15.4 检索结果排序
+### J.15.4 检索结果排序
 
 一个通用的候选评分可以写成：
 
@@ -1396,7 +1396,7 @@ Score =
 - UI 缺陷：提高组件树、状态流、浏览器日志和截图关联权重。
 - 性能问题：提高 Trace、Profiler 和调用图权重。
 
-### M.15.5 Context Packing
+### J.15.5 Context Packing
 
 检索命中后，仍需要把结果组织成模型可以稳定使用的上下文。
 
@@ -1424,7 +1424,7 @@ retrieval_reason
 content
 ```
 
-### M.15.6 Token Budget 策略
+### J.15.6 Token Budget 策略
 
 不应按“文件是否相关”做二元选择，而应分配不同信息密度：
 
@@ -1439,7 +1439,7 @@ content
 | 生成文件 | 默认排除，只保留来源指针 |
 | 外部依赖 | API 签名和版本，不复制全部源码 |
 
-### M.15.7 大型 Monorepo 的检索设计
+### J.15.7 大型 Monorepo 的检索设计
 
 大型仓库需要分层和分片：
 
@@ -1463,7 +1463,7 @@ Organization
 - 未提交工作区使用 Overlay，不污染共享基线索引。
 - 每次 Checkout、Rebase 或依赖锁文件变化都要触发一致性检查。
 
-### M.15.8 代码检索不是一次性 RAG
+### J.15.8 代码检索不是一次性 RAG
 
 普通文档 RAG 常采用：
 
@@ -1489,7 +1489,7 @@ stateDiagram-v2
 
 测试错误、编译诊断和运行日志是下一轮检索的高价值 Query，不应只当作给模型看的普通文本。
 
-### M.15.9 检索与编辑的联动
+### J.15.9 检索与编辑的联动
 
 检索系统还应服务于编辑范围控制：
 
@@ -1501,7 +1501,7 @@ stateDiagram-v2
 - 根据 UI 状态链定位组件、Store、Backend 和 E2E 用例。
 - 根据历史修改识别容易回归的文件。
 
-### M.15.10 代码检索质量指标
+### J.15.10 代码检索质量指标
 
 | 指标 | 含义 |
 |---|---|
@@ -1516,7 +1516,7 @@ stateDiagram-v2
 | Context Cost | 每个成功任务用于代码上下文的 Token 和费用 |
 | False Dependency Rate | 错误推断调用或依赖关系的比例 |
 
-### M.15.11 常见反模式
+### J.15.11 常见反模式
 
 - 把所有文件向量化后就宣称完成“代码理解”。
 - 每轮都注入一份固定的大型 Repo Map。
@@ -1539,11 +1539,11 @@ GitHub Copilot 的仓库索引说明明确区分了语义代码搜索与仅依�
 
 ---
 
-## M.16 沙箱与执行隔离
+## J.16 沙箱与执行隔离
 
 CodingAgent 会运行模型生成的命令、构建脚本、测试、安装脚本和外部工具。即使模型本身没有恶意，错误命令、Prompt Injection、恶意依赖或仓库内脚本也可能造成破坏。因此，沙箱不是附加功能，而是 CodingAgent 的基础运行时。
 
-### M.16.1 沙箱、权限和审批不是同一件事
+### J.16.1 沙箱、权限和审批不是同一件事
 
 - **沙箱（Sandbox）**：从技术上限制进程能访问哪些文件、网络、系统调用和资源。
 - **权限（Permission）**：声明某个 Agent 或工具被允许执行哪些动作。
@@ -1556,7 +1556,7 @@ CodingAgent 会运行模型生成的命令、构建脚本、测试、安装脚�
 
 OpenAI Codex 的官方安全文档将二者明确分开：Sandbox 决定命令技术上能触达什么，Approval Policy 决定什么时候必须暂停并请求批准。Claude Code 也将 Permission Mode、Permission Rule 与 Bash Sandbox 作为不同层次。
 
-### M.16.2 沙箱的八个隔离维度
+### J.16.2 沙箱的八个隔离维度
 
 | 维度 | 需要控制的内容 |
 |---|---|
@@ -1569,7 +1569,7 @@ OpenAI Codex 的官方安全文档将二者明确分开：Sandbox 决定命令�
 | 资源 | CPU、内存、磁盘、进程数、文件句柄、执行时长 |
 | 租户与工作区 | 不同用户、任务、Agent、仓库之间的隔离 |
 
-### M.16.3 常见隔离层级
+### J.16.3 常见隔离层级
 
 | 层级 | 方式 | 隔离强度 | 启动成本 | 适合场景 |
 |---|---|---:|---:|---|
@@ -1583,7 +1583,7 @@ OpenAI Codex 的官方安全文档将二者明确分开：Sandbox 决定命令�
 
 这里的层级不是绝对安全等级。容器配置错误可能弱于正确配置的 OS 沙箱；VM 也可能因为共享凭证和开放网络而失去实际隔离效果。
 
-### M.16.4 Worktree 不是安全沙箱
+### J.16.4 Worktree 不是安全沙箱
 
 Git Worktree 解决的是：
 
@@ -1606,7 +1606,7 @@ Git Worktree 解决的是：
 
 > **Worktree 是代码并发隔离，不是安全隔离。**
 
-### M.16.5 Container 也不自动等于安全
+### J.16.5 Container 也不自动等于安全
 
 普通容器仍可能存在：
 
@@ -1636,7 +1636,7 @@ no host socket
 automatic teardown
 ```
 
-### M.16.6 本地沙箱与云端沙箱
+### J.16.6 本地沙箱与云端沙箱
 
 | 维度 | 本地沙箱 | 云端沙箱 |
 |---|---|---|
@@ -1649,7 +1649,7 @@ automatic teardown
 | 恢复 | 依赖本地进程状态 | 可使用快照、持久卷和任务状态 |
 | 运维 | 用户承担环境复杂度 | 平台承担镜像、安全和成本 |
 
-### M.16.7 推荐的控制面与执行面分离
+### J.16.7 推荐的控制面与执行面分离
 
 ```mermaid
 flowchart TB
@@ -1688,7 +1688,7 @@ flowchart TB
 
 控制面不应把高权限长期凭证直接交给沙箱。执行面也不应能够修改自己的策略或审计记录。
 
-### M.16.8 沙箱生命周期
+### J.16.8 沙箱生命周期
 
 ```mermaid
 sequenceDiagram
@@ -1714,7 +1714,7 @@ sequenceDiagram
     S-->>C: 返回销毁证明与最终状态
 ```
 
-### M.16.9 网络隔离
+### J.16.9 网络隔离
 
 推荐默认策略：
 
@@ -1729,7 +1729,7 @@ sequenceDiagram
 
 OpenAI 的 Codex 云端网络文档明确提示，开放网络会引入 Prompt Injection、代码或 Secret 外泄、恶意依赖和许可证等风险。GitHub Copilot Cloud Agent 也默认使用防火墙限制互联网访问。
 
-### M.16.10 Secret 与身份隔离
+### J.16.10 Secret 与身份隔离
 
 不要把开发者完整环境变量复制给 Agent。更安全的模式是：
 
@@ -1756,7 +1756,7 @@ Identity Broker
 - 外部工具优先使用 OAuth 委托或工作负载身份，而不是长期 API Key。
 - 审批记录应绑定实际身份、动作参数和凭证作用域。
 
-### M.16.11 进程与资源治理
+### J.16.11 进程与资源治理
 
 CodingAgent 的 Shell Manager 至少应支持：
 
@@ -1773,7 +1773,7 @@ CodingAgent 的 Shell Manager 至少应支持：
 - 磁盘水位和日志轮转。
 - 崩溃后可以判定任务是否可恢复。
 
-### M.16.12 CodingAgent 威胁模型
+### J.16.12 CodingAgent 威胁模型
 
 | 威胁 | 示例 | 主要缓解措施 |
 |---|---|---|
@@ -1788,7 +1788,7 @@ CodingAgent 的 Shell Manager 至少应支持：
 | 多租户污染 | 一个任务读取另一个任务缓存 | 独立卷、缓存分区、租户密钥和销毁验证 |
 | 供应链污染 | 修改发布脚本或依赖源 | Branch Protection、签名、Review、制品溯源 |
 
-### M.16.13 产品实践
+### J.16.13 产品实践
 
 - **OpenAI Codex**：将 Sandbox Mode 与 Approval Policy 分开；常见模式包括只读、工作区可写和危险的完全访问，并对工作区外写入或网络访问实施审批。
 - **Claude Code**：提供 Permission Mode、Allow/Ask/Deny Rule 和 OS 级 Bash Sandbox；其文档还区分每命令沙箱、整个进程隔离、Dev Container、自定义容器和 VM。
@@ -1804,7 +1804,7 @@ CodingAgent 的 Shell Manager 至少应支持：
 - [GitHub Copilot Cloud and Local Sandboxes](https://docs.github.com/copilot/concepts/about-cloud-and-local-sandboxes)
 - [GitHub Copilot Agent Risks and Mitigations](https://docs.github.com/en/copilot/concepts/agents/cloud-agent/risks-and-mitigations)
 
-### M.16.14 沙箱验收测试
+### J.16.14 沙箱验收测试
 
 不能只检查“配置项存在”，还应执行破坏性边界测试：
 
@@ -1825,9 +1825,9 @@ CodingAgent 的 Shell Manager 至少应支持：
 
 ---
 
-## M.17 权限、审批与安全治理
+## J.17 权限、审批与安全治理
 
-### M.17.1 权限系统应控制“能力”，而不是只匹配命令字符串
+### J.17.1 权限系统应控制“能力”，而不是只匹配命令字符串
 
 仅通过 Shell 字符串黑名单无法覆盖：
 
@@ -1858,7 +1858,7 @@ subagent.delegate
 
 然后把具体命令、工具和 API 映射到这些能力。
 
-### M.17.2 推荐的权限决策模型
+### J.17.2 推荐的权限决策模型
 
 ```mermaid
 flowchart TB
@@ -1888,7 +1888,7 @@ flowchart TB
 
 Claude Code 当前权限规则采用 Deny、Ask、Allow 的顺序评估。通用平台可采用类似的“拒绝优先”原则，避免宽泛 Allow 覆盖关键禁止规则。
 
-### M.17.3 权限作用域
+### J.17.3 权限作用域
 
 权限不应只有“允许”和“不允许”，还必须绑定作用域。
 
@@ -1908,7 +1908,7 @@ Claude Code 当前权限规则采用 Deny、Ask、Allow 的顺序评估。通用
 
 审批 UI 应明确展示“批准的动作”和“批准的范围”。“本次允许”“本会话允许”“本项目允许”不应被混成同一个按钮。
 
-### M.17.4 风险分级
+### J.17.4 风险分级
 
 一个可解释的风险分数可以考虑：
 
@@ -1959,7 +1959,7 @@ Risk =
 - 关闭审计、安全扫描或分支保护。
 - 无限制网络、宿主机或管理员权限。
 
-### M.17.5 自动审批与 Reviewer Agent
+### J.17.5 自动审批与 Reviewer Agent
 
 自动审批的价值是减少审批疲劳，但必须明确：
 
@@ -1987,7 +1987,7 @@ Risk =
 
 Codex 的 Auto-review 设计明确说明，自动审查只是审批者替换，不会增加可写目录、开启网络或削弱受保护路径。
 
-### M.17.6 通用策略示例
+### J.17.6 通用策略示例
 
 下面是一个概念性策略，不绑定具体产品：
 
@@ -2050,7 +2050,7 @@ rules:
 
 真实系统还需要签名、版本、继承、租户覆盖、冲突解析和审计字段。
 
-### M.17.7 Prompt Injection 防护
+### J.17.7 Prompt Injection 防护
 
 CodingAgent 会读取大量不可信内容：
 
@@ -2077,7 +2077,7 @@ CodingAgent 会读取大量不可信内容：
 8. 在执行前向 Reviewer 提供实际参数，而不是模型的自然语言摘要。
 9. 让沙箱承担最后边界，不能只依赖 Prompt 防护。
 
-### M.17.8 MCP 与外部工具权限
+### J.17.8 MCP 与外部工具权限
 
 MCP 扩大了 CodingAgent 的能力，也扩大了攻击面。平台应管理：
 
@@ -2107,7 +2107,7 @@ reversible
 external_side_effect
 ```
 
-### M.17.9 多 Agent 权限传播
+### J.17.9 多 Agent 权限传播
 
 父 Agent 不应把自己的全部权限自动传给子 Agent。
 
@@ -2134,7 +2134,7 @@ flowchart TB
     ORCH -->|人工批准后| RELEASE[Release：受限发布]
 ```
 
-### M.17.10 Git 与交付权限
+### J.17.10 Git 与交付权限
 
 Git 操作应按风险拆分：
 
@@ -2155,7 +2155,7 @@ Git 操作应按风险拆分：
 
 云端 Agent 最好只拥有单一任务 Branch 的受限写权限，而不是通用仓库 Token。
 
-### M.17.11 权限体验设计
+### J.17.11 权限体验设计
 
 糟糕的权限体验会导致两种极端：
 
@@ -2187,7 +2187,7 @@ Agent 正要做什么
 - 拒绝并将原因反馈给 Agent。
 - 由独立 Reviewer Agent 先做风险分析。
 
-### M.17.12 企业治理
+### J.17.12 企业治理
 
 企业级控制面至少需要：
 
@@ -2205,7 +2205,7 @@ Agent 正要做什么
 - 高风险操作双人审批。
 - 定期权限回顾和过期授权回收。
 
-### M.17.13 安全基线
+### J.17.13 安全基线
 
 #### 本地交互式 CodingAgent
 
@@ -2246,9 +2246,9 @@ Agent 正要做什么
 
 ---
 
-## M.18 CodingAgent 互操作标准
+## J.18 CodingAgent 互操作标准
 
-### M.18.1 MCP
+### J.18.1 MCP
 
 **Model Context Protocol** 解决：
 
@@ -2269,7 +2269,7 @@ MCP 已成为多个 CodingAgent 共同采用的工具扩展协议。
 
 参考：[Model Context Protocol](https://modelcontextprotocol.io/docs/2026-07-28/getting-started/intro)
 
-### M.18.2 ACP
+### J.18.2 ACP
 
 **Agent Client Protocol** 解决：
 
@@ -2283,7 +2283,7 @@ ACP 允许同一个 Agent 被 Zed、JetBrains、桌面控制台或其他客户�
 
 参考：[Agent Client Protocol](https://agentclientprotocol.com/get-started/introduction)
 
-### M.18.3 A2A
+### J.18.3 A2A
 
 **Agent2Agent Protocol（A2A）** 解决：
 
@@ -2298,7 +2298,7 @@ A2A 与 MCP 的边界可以概括为：
 
 参考：[Agent2Agent Protocol Specification](https://a2a-protocol.org/latest/specification/)
 
-### M.18.4 AGENTS.md
+### J.18.4 AGENTS.md
 
 AGENTS.md 是放在仓库里的 Agent 指令文件，类似“给 Agent 阅读的 README”，用于描述：
 
@@ -2313,7 +2313,7 @@ AGENTS.md 是放在仓库里的 Agent 指令文件，类似“给 Agent 阅读�
 
 参考：[AGENTS.md](https://agents.md/)
 
-### M.18.5 Agent Skills
+### J.18.5 Agent Skills
 
 Agent Skills 通常以包含 `SKILL.md`、脚本、参考资料和资源文件的目录形式存在，解决：
 
@@ -2331,7 +2331,7 @@ Agent Skills 通常以包含 `SKILL.md`、脚本、参考资料和资源文件�
 
 参考：[Agent Skills Specification](https://agentskills.io/specification)
 
-### M.18.6 七类标准与机制之间的关系
+### J.18.6 七类标准与机制之间的关系
 
 | 标准或机制 | 连接对象 | 解决的问题 |
 |---|---|---|
@@ -2347,9 +2347,9 @@ Agent Skills 通常以包含 `SKILL.md`、脚本、参考资料和资源文件�
 
 ---
 
-## M.19 CodingAgent 评测体系
+## J.19 CodingAgent 评测体系
 
-### M.19.1 主流 Benchmark
+### J.19.1 主流 Benchmark
 
 | Benchmark | 主要评测内容 | 局限 |
 |---|---|---|
@@ -2363,7 +2363,7 @@ Agent Skills 通常以包含 `SKILL.md`、脚本、参考资料和资源文件�
 
 参考：[SWE-bench](https://github.com/swe-bench/SWE-bench)
 
-### M.19.2 为什么不能只看 SWE-bench 排名
+### J.19.2 为什么不能只看 SWE-bench 排名
 
 排行榜无法完整反映：
 
@@ -2378,7 +2378,7 @@ Agent Skills 通常以包含 `SKILL.md`、脚本、参考资料和资源文件�
 - 云端环境是否真实可复现。
 - 生成的代码是否容易审查和维护。
 
-### M.19.3 企业内部更值得关注的指标
+### J.19.3 企业内部更值得关注的指标
 
 建议使用自己的历史 Issue、PR 和回归缺陷构建内部评测集，并关注：
 
@@ -2395,9 +2395,9 @@ Agent Skills 通常以包含 `SKILL.md`、脚本、参考资料和资源文件�
 
 ---
 
-## M.20 2026 年 CodingAgent 的关键趋势
+## J.20 2026 年 CodingAgent 的关键趋势
 
-### M.20.1 IDE 正在变成 Agent 控制台
+### J.20.1 IDE 正在变成 Agent 控制台
 
 未来 IDE 的核心不只是代码编辑，而是管理：
 
@@ -2412,13 +2412,13 @@ VS Code 的多 Agent Session、Antigravity Agent Manager 和 Devin Desktop 都�
 
 参考：[VS Code Multi-Agent Development](https://code.visualstudio.com/blogs/2026/02/05/multi-agent-development)
 
-### M.20.2 本地与云端形成混合架构
+### J.20.2 本地与云端形成混合架构
 
 本地 Agent 适合高频交互、快速修改和使用现有开发环境；云端 Agent 适合长任务、并行任务、自动化和后台队列。
 
 成熟产品正在同时提供两种运行方式，而不是只选择其中一种。
 
-### M.20.3 Worktree、Container 和 VM 成为基础设施
+### J.20.3 Worktree、Container 和 VM 成为基础设施
 
 多 Agent 没有环境隔离就很容易出现：
 
@@ -2431,7 +2431,7 @@ VS Code 的多 Agent Session、Antigravity Agent Manager 和 Devin Desktop 都�
 
 因此，环境管理将逐渐独立为 CodingAgent Platform 的核心子系统。
 
-### M.20.4 Agent 与模型进一步解耦
+### J.20.4 Agent 与模型进一步解耦
 
 Junie BYOK、OpenCode、Cline、Qwen Code、Pi 和 DeepSeek Harness 都在加强多 Provider 或插件化能力。未来团队会分别选择：
 
@@ -2443,7 +2443,7 @@ Junie BYOK、OpenCode、Cline、Qwen Code、Pi 和 DeepSeek Harness 都在加强
 
 参考：[Junie Model Selection](https://junie.jetbrains.com/docs/junie-cli-model-selection.html)
 
-### M.20.5 Verification 将成为主要壁垒
+### J.20.5 Verification 将成为主要壁垒
 
 单纯生成代码越来越容易，真正困难的是：
 
@@ -2456,7 +2456,7 @@ Junie BYOK、OpenCode、Cline、Qwen Code、Pi 和 DeepSeek Harness 都在加强
 
 因此，测试 Agent、Reviewer Agent、浏览器验证和 Artifact Review 会越来越重要。
 
-### M.20.6 从 Prompt-Driven 转向 Spec-Driven
+### J.20.6 从 Prompt-Driven 转向 Spec-Driven
 
 一句自然语言通常不足以约束大型任务。越来越多系统开始引入：
 
@@ -2472,7 +2472,7 @@ Kiro 是这一方向较明确的产品之一；Junie、Augment、Qoder 和企业
 
 参考：[Kiro IDE](https://kiro.dev/ide/)
 
-### M.20.7 从固定角色转向动态 Agent 图
+### J.20.7 从固定角色转向动态 Agent 图
 
 早期多 Agent 常预设 Architect、Coder、Tester、Reviewer。未来更可能由 Orchestrator 根据任务动态创建：
 
@@ -2486,7 +2486,7 @@ Kiro 是这一方向较明确的产品之一；Junie、Augment、Qoder 和企业
 
 Agent 生命周期会随任务动态创建和回收，而不是长期固定。
 
-### M.20.8 软件开发正在出现“生产 Agent + 验证 Agent”双层结构
+### J.20.8 软件开发正在出现“生产 Agent + 验证 Agent”双层结构
 
 未来企业不会只采购一个 CodingAgent，而会形成：
 
@@ -2506,7 +2506,7 @@ CI/CD 与生产环境
 
 ---
 
-## M.21 按使用场景选择系统
+## J.21 按使用场景选择系统
 
 | 使用场景 | 优先考虑 |
 |---|---|
@@ -2537,7 +2537,7 @@ CI/CD 与生产环境
 
 ---
 
-## M.22 统一多 CodingAgent 平台的通用架构参考
+## J.22 统一多 CodingAgent 平台的通用架构参考
 
 当组织需要同时使用 Claude Code、Codex、OpenCode、Cline、Qwen Code 等多个 CodingAgent 时，平台价值不应建立在重新实现一个绑定单一模型的 Agent 上，而应建立在：
 
@@ -2545,7 +2545,7 @@ CI/CD 与生产环境
 
 建议形成以下十个核心子系统。
 
-### M.22.1 Agent Adapter Layer
+### J.22.1 Agent Adapter Layer
 
 为不同 CodingAgent 建立统一 Adapter，屏蔽：
 
@@ -2576,7 +2576,7 @@ supports_cloud_execution
 supports_permission_callback
 ```
 
-### M.22.2 统一领域模型
+### J.22.2 统一领域模型
 
 至少统一：
 
@@ -2601,7 +2601,7 @@ Usage
 
 一个 Task 可以有多次 Run；一次 Run 可以包含多个 Agent；一个 Agent 可以产生多个 Artifact。
 
-### M.22.3 Environment Manager
+### J.22.3 Environment Manager
 
 统一管理：
 
@@ -2617,7 +2617,7 @@ Usage
 - 崩溃恢复。
 - 任务结束清理。
 
-### M.22.4 Context Service
+### J.22.4 Context Service
 
 统一提供：
 
@@ -2631,7 +2631,7 @@ Usage
 - Context Budget 和 Compaction。
 - 来源引用与可追踪性。
 
-### M.22.5 Policy Engine
+### J.22.5 Policy Engine
 
 策略对象不应和某个 Agent CLI 绑定，而应抽象为：
 
@@ -2652,7 +2652,7 @@ Secret 策略
 
 然后由不同 Adapter 翻译为对应 Agent 的权限模式。
 
-### M.22.6 Orchestration Engine
+### J.22.6 Orchestration Engine
 
 需要同时支持：
 
@@ -2669,7 +2669,7 @@ Secret 策略
 - Deadlock 和 Loop Detection。
 - 人工审批节点。
 
-### M.22.7 Artifact 与 Review Layer
+### J.22.7 Artifact 与 Review Layer
 
 不要只展示聊天记录，还应把下面内容提升为一等对象：
 
@@ -2687,7 +2687,7 @@ Secret 策略
 
 用户审查 CodingAgent 的主要入口，最终会从“聊天消息”转向“结构化交付产物”。
 
-### M.22.8 Observability
+### J.22.8 Observability
 
 建议统一成：
 
@@ -2704,7 +2704,7 @@ Task Trace
 
 同时记录 Token、费用、延迟、重试、错误、Compaction、权限审批和人工介入。
 
-### M.22.9 Evaluation
+### J.22.9 Evaluation
 
 平台应支持：
 
@@ -2718,7 +2718,7 @@ Task Trace
 - 长任务恢复评测。
 - 跨平台评测。
 
-### M.22.10 协议层
+### J.22.10 协议层
 
 优先兼容：
 
@@ -2731,7 +2731,7 @@ Task Trace
 
 ---
 
-## M.23 最终判断
+## J.23 最终判断
 
 CodingAgent 的竞争正在从第一阶段走向第二阶段。
 
@@ -2759,4 +2759,4 @@ CodingAgent 的竞争正在从第一阶段走向第二阶段。
 
 ---
 
-> **使用提示**：与其他附录的分工——A 讲模型机制、B 讲方法论、C 记来源、D 列产品、E 辨异同、F 索引图版、G 详解 OTel、H 上手 DeepEval、I 评测观测平台选型、J 解析 Pi 源码、K 解析 Claude Code 源码、L 解析 Codex 源码、**M 盘点 Coding Agent 赛道**、N 盘点可观测赛道、O 盘点评估赛道、P 盘点 Memory 赛道、Q 盘点自进化赛道。与附录 D 的分工：D 管全品类速览与定位法，M 管 Coding Agent 单赛道深潜；重叠产品以各自官方页面为准（[C-36]）。对照阅读：标准系统架构（M.3）对第 12 章六大件、能力九维度（M.11）对第六篇三章、平台 Agent 对比（M.12）与代码理解/LSP/检索/沙箱/权限六专题（M.13–M.17）对第 23 章 2.1/2.5/2.6 与第 9/13 章、互操作标准（M.18）对第 8/18 章、评测体系（M.19）对第 15/24 章。信息基准 2026-08-30，发行前按附录 C 清单复核。
+> **使用提示**：与其他附录的分工——A 讲模型机制、B 讲方法论、C 记来源、D 列产品、E 辨异同、F 索引图版、G 详解 OTel、H 上手 DeepEval、I 评测观测平台选型、**J 盘点 Coding Agent 赛道**、K 盘点可观测赛道、L 盘点评估赛道、M 盘点 Memory 赛道、N 盘点自进化赛道、O 解析 Pi 源码、P 解析 Claude Code 源码、Q 解析 Codex 源码。与附录 D 的分工：D 管全品类速览与定位法，M 管 Coding Agent 单赛道深潜；重叠产品以各自官方页面为准（[C-36]）。对照阅读：标准系统架构（J.3）对第 12 章六大件、能力九维度（J.11）对第六篇三章、平台 Agent 对比（J.12）与代码理解/LSP/检索/沙箱/权限六专题（J.13–J.17）对第 23 章 2.1/2.5/2.6 与第 9/13 章、互操作标准（J.18）对第 8/18 章、评测体系（J.19）对第 15/24 章。信息基准 2026-08-30，发行前按附录 C 清单复核。
