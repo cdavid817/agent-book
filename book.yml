@@ -284,3 +284,8 @@ appendices:
     title: Codex 源码架构深度解析
     path: 附录/附录L-Codex源码架构深度解析.md
     status: draft
+  - id: appendix-m
+    letter: M
+    title: 主流 Coding Agent 系统全景
+    path: 附录/附录M-主流CodingAgent系统全景.md
+    status: draft

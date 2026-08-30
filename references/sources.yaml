@@ -333,6 +333,15 @@ sources:
     expires_at: "2026-11-30"
     status: verified
     url: "https://github.com/openai/codex"
+  - id: C-36
+    title: "主流 Coding Agent 产品与项目官方页面（附录 M 全景盘点，信息基准 2026-08-30）"
+    publisher: "各产品供应商与开源社区"
+    source_type: vendor-page
+    claim_scope: [appendix-m]
+    verified_at: "2026-08-30"
+    expires_at: "2026-11-30"
+    status: verified
+    url: "https://github.com/anthropics/claude-code"
 
 # 协议版本一致性锚点：check_sources 校验 C-03.version 与第 8 章 PROTOCOL_VERSION 常量相等。
 version_anchors:
