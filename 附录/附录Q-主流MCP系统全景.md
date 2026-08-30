@@ -1,10 +1,10 @@
-# 附录 P：主流 MCP 系统全景
+# 附录 Q：主流 MCP 系统全景
 
 > 定位：**MCP 生态赛道的全景调研报告**（全文收录，信息基准 2026-08-30，协议规范见 [C-03]、生态官方入口见 [C-42]）。与相邻内容的分工：第 8 章讲 MCP 协议本身的机制（三角色三原语三传输、2026-07-28 无状态化、描述投毒防御、与原生工具的取舍），本附录是整个生态的地图——协议演进动态、Host 与客户端、SDK 与开发框架、Server 生态、Registry/Marketplace、企业 Gateway、与其他协议的关系、安全风险全景与企业基线、工具数量与上下文膨胀治理、参考架构与选型、开发测试与可观测体系、成熟度判断。名单会过期，"协议机制 → 生态四层（Host/Server/Registry/Gateway）"的框架不过期；协议版本以 [C-03] 的 pin 纪律为准。
 
 ---
 
-## P.1 结论先行
+## Q.1 结论先行
 
 当前 MCP 生态已经形成七层结构：
 
@@ -38,7 +38,7 @@ flowchart TB
 
 ---
 
-## P.2 MCP 到底是什么
+## Q.2 MCP 到底是什么
 
 MCP，即 Model Context Protocol，是 Host、Client 与 Server 之间交换上下文和能力的开放协议。
 
@@ -76,13 +76,13 @@ flowchart LR
 
 ---
 
-## P.3 2026 年 MCP 协议发生了什么变化
+## Q.3 2026 年 MCP 协议发生了什么变化
 
 当前主线规范版本为 **2026-07-28**。相较 2024—2025 年的 MCP，它已经不只是一次增量升级，而是一次面向大规模远程部署的架构调整。
 
 参考：[MCP 2026-07-28 Release](https://blog.modelcontextprotocol.io/posts/2026-07-28/)
 
-### P.3.1 从会话协议转向无状态请求
+### Q.3.1 从会话协议转向无状态请求
 
 新版核心协议取消了对初始化握手和长期协议会话的强依赖：
 
@@ -93,7 +93,7 @@ flowchart LR
 
 这使 MCP 更容易部署在负载均衡器、Serverless、边缘网络和弹性容器环境中，也降低了连接迁移和实例故障时的状态恢复复杂度。
 
-### P.3.2 引入统一能力发现
+### Q.3.2 引入统一能力发现
 
 新版要求 Server 支持 `server/discover`，客户端可以按需获取 Server 能力，而不必一次性把所有工具定义塞入模型上下文。
 
@@ -108,7 +108,7 @@ flowchart LR
 
 同时，协议增加了 `ttlMs`、`cacheScope` 等缓存提示，使工具目录和资源目录更适合 CDN、Gateway 和多级缓存。
 
-### P.3.3 Server 主动回调转向可恢复请求
+### Q.3.3 Server 主动回调转向可恢复请求
 
 早期协议中的 Server 主动请求容易产生双向连接、路由和横向扩展问题。新版通过 **MCP Request-To-Request，MRTR** 思路，把需要补充输入、用户审批或异步恢复的流程表达为：
 
@@ -119,7 +119,7 @@ flowchart LR
 
 这比维持复杂的双向会话更适合 HTTP 基础设施。
 
-### P.3.4 正式扩展机制
+### Q.3.4 正式扩展机制
 
 部分并非所有 Server 都需要的能力被移入正式 Extension 体系，例如：
 
@@ -130,21 +130,21 @@ flowchart LR
 
 这样可以保持核心协议精简，同时允许企业和特定 Host 协商更高级的功能。
 
-### P.3.5 授权模型进一步强化
+### Q.3.5 授权模型进一步强化
 
 远程 MCP 的授权方向建立在 OAuth 2.1、受保护资源元数据、授权服务器发现和发行方校验之上。新版进一步推动 Client ID Metadata Documents，并弱化早期动态客户端注册模式，以降低错误注册、发行方混淆和凭证误用风险。
 
 参考：[MCP Authorization](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization)
 
-### P.3.6 旧能力进入弃用轨道
+### Q.3.6 旧能力进入弃用轨道
 
 新版对部分旧机制启动了明确的弃用周期，包括旧式 HTTP+SSE 传输，以及部分早期客户端/服务端原语。规范强调弃用需要保留迁移窗口，而不是立即删除，以减少不同 Host、SDK 和 Server 之间的断层。
 
 ---
 
-## P.4 主流 MCP Host 与客户端系统
+## Q.4 主流 MCP Host 与客户端系统
 
-### P.4.1 Anthropic 体系
+### Q.4.1 Anthropic 体系
 
 #### Claude Desktop / Claude Code
 
@@ -167,7 +167,7 @@ Anthropic 还提供 API 侧 MCP Connector，使应用可以直接配置远程 MC
 
 参考：[Anthropic MCP Connector](https://docs.anthropic.com/en/docs/agents-and-tools/mcp-connector)
 
-### P.4.2 OpenAI 体系
+### Q.4.2 OpenAI 体系
 
 OpenAI 已将 MCP 扩展到多个产品面，包括 Responses API、Agents SDK、Codex 以及 ChatGPT Apps/Connectors 场景。Responses API 能够调用 Remote MCP Server，并可针对敏感工具设置显式审批。
 
@@ -183,7 +183,7 @@ Secure MCP Tunnel 采用客户环境主动建立出站 HTTPS 连接的方式，�
 
 参考：[OpenAI Connectors and Remote MCP](https://developers.openai.com/api/docs/guides/tools-connectors-mcp)
 
-### P.4.3 Microsoft 与 GitHub 体系
+### Q.4.3 Microsoft 与 GitHub 体系
 
 #### Visual Studio Code / GitHub Copilot
 
@@ -215,7 +215,7 @@ GitHub MCP Registry 则作为精选 MCP Server 目录公开预览，并提供面
 
 参考：[GitHub MCP Server](https://docs.github.com/en/copilot/how-tos/provide-context/use-mcp-in-your-ide/set-up-the-github-mcp-server)
 
-### P.4.4 Google 体系
+### Q.4.4 Google 体系
 
 #### Gemini CLI
 
@@ -231,7 +231,7 @@ Google Cloud 提供托管 MCP Server 和企业 API 到 MCP 的集成能力；Api
 
 参考：[Google Cloud MCP Overview](https://docs.cloud.google.com/mcp/overview)
 
-### P.4.5 独立 Coding Agent 与 IDE
+### Q.4.5 独立 Coding Agent 与 IDE
 
 主流 Coding Agent 基本都已提供不同程度的 MCP 支持：
 
@@ -251,9 +251,9 @@ Google Cloud 提供托管 MCP Server 和企业 API 到 MCP 的集成能力；Api
 
 ---
 
-## P.5 MCP SDK 与开发框架全景
+## Q.5 MCP SDK 与开发框架全景
 
-### P.5.1 官方 SDK
+### Q.5.1 官方 SDK
 
 2026 年 MCP 官方重点维护的 Tier 1 SDK 包括：
 
@@ -277,7 +277,7 @@ Rust SDK 处于 Beta 阶段。官方生态中还可以看到 Java、Kotlin、PHP
 
 参考：[MCP 2026-07-28 Release](https://blog.modelcontextprotocol.io/posts/2026-07-28/)
 
-### P.5.2 FastMCP
+### Q.5.2 FastMCP
 
 FastMCP 是 Python 生态中影响较大的 MCP Server、Client 和 App 开发框架，提供：
 
@@ -293,7 +293,7 @@ FastMCP 4 已开始面向 2026-07-28 规范演进，但相关新版能力仍需�
 
 参考：[FastMCP](https://gofastmcp.com/getting-started/welcome)
 
-### P.5.3 LangChain MCP Adapters
+### Q.5.3 LangChain MCP Adapters
 
 LangChain 通过 `langchain-mcp-adapters` 将 MCP Server 转换为 LangChain Tool，并提供 `MultiServerMCPClient` 聚合多个 Server。它更适合已经使用 LangGraph 或 LangChain Agent Runtime 的系统。
 
@@ -310,19 +310,19 @@ flowchart LR
 
 参考：[LangChain MCP](https://docs.langchain.com/oss/python/langchain/mcp)
 
-### P.5.4 Spring AI MCP
+### Q.5.4 Spring AI MCP
 
 Spring AI 提供同步和异步 MCP Client/Server、Spring Boot Starter、注解式工具定义，以及 `stdio`、SSE、Streamable HTTP 等传输支持，适合 Java 企业服务和现有 Spring Security、Spring Cloud 体系。
 
 参考：[Spring AI MCP](https://docs.spring.io/spring-ai/reference/api/mcp/mcp-overview.html)
 
-### P.5.5 Semantic Kernel
+### Q.5.5 Semantic Kernel
 
 Semantic Kernel 可以把本地或远程 MCP Server 导入为 Kernel Plugin，适合 .NET、Azure 和企业 Copilot 类应用。
 
 参考：[Semantic Kernel MCP Plugins](https://learn.microsoft.com/en-us/semantic-kernel/concepts/plugins/adding-mcp-plugins)
 
-### P.5.6 OpenAI Agents SDK
+### Q.5.6 OpenAI Agents SDK
 
 OpenAI Agents SDK 将 MCP Server 纳入 Agent 的工具体系，并与 Agent Loop、Tracing、Handoff 和模型调用集成。它适合使用 OpenAI 模型与 Responses API 构建后端 Agent，而不是单独承担 MCP Server 治理。
 
@@ -330,11 +330,11 @@ OpenAI Agents SDK 将 MCP Server 纳入 Agent 的工具体系，并与 Agent Loo
 
 ---
 
-## P.6 主流 MCP Server 生态
+## Q.6 主流 MCP Server 生态
 
 MCP Server 可以按能力来源分为六类。
 
-### P.6.1 开发与代码协作
+### Q.6.1 开发与代码协作
 
 | MCP Server | 核心能力 |
 |---|---|
@@ -347,7 +347,7 @@ MCP Server 可以按能力来源分为六类。
 
 GitHub、Microsoft Playwright 和 Sentry 均提供官方或供应商维护的 MCP 实现。
 
-### P.6.2 企业协作与知识库
+### Q.6.2 企业协作与知识库
 
 | MCP Server | 核心能力 |
 |---|---|
@@ -361,13 +361,13 @@ Atlassian Rovo MCP 是云托管 Remote MCP，使用 OAuth 2.1 并支持权限分
 
 参考：[Atlassian Rovo MCP](https://support.atlassian.com/atlassian-rovo-mcp-server/docs/getting-started-with-the-atlassian-remote-mcp-server/)
 
-### P.6.3 设计与产品研发
+### Q.6.3 设计与产品研发
 
 Figma MCP 可把设计上下文提供给 Coding Agent，并支持将 Agent 生成的内容写入 Figma 画布。它代表了 MCP 从纯文本工具调用向可交互应用和双向创作延伸的方向。
 
 参考：[Figma MCP Server](https://developers.figma.com/docs/figma-mcp-server/)
 
-### P.6.4 可观测性和运维
+### Q.6.4 可观测性和运维
 
 | MCP Server | 能力 |
 |---|---|
@@ -381,7 +381,7 @@ Grafana 同时提供开源自托管 MCP 和 Grafana Cloud Remote MCP；Datadog �
 
 参考：[Datadog MCP Server](https://docs.datadoghq.com/mcp_server/)
 
-### P.6.5 数据库和数据平台
+### Q.6.5 数据库和数据平台
 
 典型 MCP Server 包括：
 
@@ -402,7 +402,7 @@ Grafana 同时提供开源自托管 MCP 和 Grafana Cloud Remote MCP；Datadog �
 - 写操作单独 Server；
 - 用户级审计。
 
-### P.6.6 官方参考 Server
+### Q.6.6 官方参考 Server
 
 官方参考仓库包含 Everything、Fetch、Filesystem、Git、Memory、Sequential Thinking、Time 等示例 Server，但官方明确将它们定位为参考和教学实现，而不是可直接用于生产环境的安全产品。
 
@@ -410,9 +410,9 @@ Grafana 同时提供开源自托管 MCP 和 Grafana Cloud Remote MCP；Datadog �
 
 ---
 
-## P.7 Registry、Catalog 与 Marketplace
+## Q.7 Registry、Catalog 与 Marketplace
 
-### P.7.1 官方 MCP Registry
+### Q.7.1 官方 MCP Registry
 
 官方 MCP Registry 当前仍处于 Preview 阶段，主要存放公开 MCP Server 的元数据。Registry 条目可以指向：
 
@@ -426,13 +426,13 @@ Grafana 同时提供开源自托管 MCP 和 Grafana Cloud Remote MCP；Datadog �
 
 参考：[MCP Registry](https://modelcontextprotocol.io/registry/about)
 
-### P.7.2 GitHub MCP Registry
+### Q.7.2 GitHub MCP Registry
 
 GitHub MCP Registry 是精选型目录，更偏向开发者和 Coding Agent 生态，并支持 Agent 在运行时搜索适用 Server。
 
 参考：[GitHub MCP Concepts](https://docs.github.com/en/copilot/concepts/context/mcp)
 
-### P.7.3 Docker MCP Catalog 与 Toolkit
+### Q.7.3 Docker MCP Catalog 与 Toolkit
 
 Docker MCP Catalog 和 Toolkit 提供容器化的 MCP Server 分发、配置和运行能力，Catalog 已收录数百个经过整理的 Server，并与 Docker Desktop、客户端配置和 MCP Gateway 联动。
 
@@ -450,7 +450,7 @@ Docker MCP Toolkit 及部分动态发现能力仍处于 Beta 或实验阶段。
 
 参考：[Docker MCP Catalog and Toolkit](https://docs.docker.com/ai/mcp-catalog-and-toolkit/)
 
-### P.7.4 社区目录
+### Q.7.4 社区目录
 
 常见社区平台包括：
 
@@ -465,7 +465,7 @@ Docker MCP Toolkit 及部分动态发现能力仍处于 Beta 或实验阶段。
 
 ---
 
-## P.8 企业 MCP Gateway 全景
+## Q.8 企业 MCP Gateway 全景
 
 Gateway 是 MCP 从个人工具走向企业生产系统的关键组件。
 
@@ -507,13 +507,13 @@ flowchart LR
     FILTER --> SEC
 ```
 
-### P.8.1 AWS Bedrock AgentCore Gateway
+### Q.8.1 AWS Bedrock AgentCore Gateway
 
 AgentCore Gateway 可把 API、Lambda 和其他能力转换或聚合为 Agent 可调用的 MCP 工具，并提供索引、发现和与 AgentCore Runtime 的集成。它更接近 AWS Agent 平台中的托管 MCP 控制面。
 
 参考：[AWS AgentCore Gateway](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-target-MCPservers.html)
 
-### P.8.2 Azure API Management 与 API Center
+### Q.8.2 Azure API Management 与 API Center
 
 Azure API Management 可以：
 
@@ -526,7 +526,7 @@ Azure API Management 可以：
 
 参考：[Azure API Management MCP](https://learn.microsoft.com/en-us/azure/api-management/mcp-server-overview)
 
-### P.8.3 Google Apigee
+### Q.8.3 Google Apigee
 
 Apigee 的方向是把现有 API 资产转换成受治理的 MCP 工具，并复用企业原有 API 管理能力：
 
@@ -541,13 +541,13 @@ Apigee 的方向是把现有 API 资产转换成受治理的 MCP 工具，并复
 
 参考：[Apigee MCP Support](https://cloud.google.com/blog/products/ai-machine-learning/mcp-support-for-apigee)
 
-### P.8.4 Cloudflare
+### Q.8.4 Cloudflare
 
 Cloudflare Workers 和 Agents SDK 支持构建及部署 Remote MCP Server。Cloudflare 还提供面向 MCP 的集中门户、身份策略、工具范围策略和审计能力，并强调 Remote MCP 相对于未经治理的本地 Server 更适合企业控制。
 
 参考：[Cloudflare MCP](https://developers.cloudflare.com/agents/model-context-protocol/)
 
-### P.8.5 Docker MCP Gateway
+### Q.8.5 Docker MCP Gateway
 
 Docker MCP Gateway 是偏本地和开发平台方向的开源网关，重点解决：
 
@@ -562,7 +562,7 @@ Docker MCP Gateway 是偏本地和开发平台方向的开源网关，重点解�
 
 参考：[Docker MCP Gateway](https://docs.docker.com/ai/mcp-catalog-and-toolkit/mcp-gateway/)
 
-### P.8.6 API Gateway 厂商
+### Q.8.6 API Gateway 厂商
 
 传统 API Gateway 厂商也在扩展 MCP 管理能力：
 
@@ -579,7 +579,7 @@ Docker MCP Gateway 是偏本地和开发平台方向的开源网关，重点解�
 
 ---
 
-## P.9 MCP 与其他协议、技术的关系
+## Q.9 MCP 与其他协议、技术的关系
 
 | 技术 | 解决的问题 | 与 MCP 的关系 |
 |---|---|---|
@@ -617,11 +617,11 @@ flowchart TB
 
 ---
 
-## P.10 MCP 安全风险全景
+## Q.10 MCP 安全风险全景
 
 MCP 的最大风险并不在 JSON-RPC 协议本身，而在于它把模型决策连接到了真实系统。
 
-### P.10.1 Prompt Injection 与 Tool Output Injection
+### Q.10.1 Prompt Injection 与 Tool Output Injection
 
 恶意内容可能隐藏在：
 
@@ -644,7 +644,7 @@ MCP 的最大风险并不在 JSON-RPC 协议本身，而在于它把模型决策
 - 对高风险操作增加人工审批；
 - 限制跨 Server 数据传递。
 
-### P.10.2 过度授权
+### Q.10.2 过度授权
 
 常见错误包括：
 
@@ -656,7 +656,7 @@ MCP 的最大风险并不在 JSON-RPC 协议本身，而在于它把模型决策
 
 应采用按用户、按租户、按 Agent、按 Server 和按 Tool 的最小权限控制。
 
-### P.10.3 本地 Server 任意代码执行
+### Q.10.3 本地 Server 任意代码执行
 
 使用如下配置启动 MCP：
 
@@ -681,7 +681,7 @@ VS Code 官方已明确提醒本地 MCP Server 具备执行任意代码的能力
 
 参考：[VS Code MCP Servers](https://code.visualstudio.com/docs/agent-customization/mcp-servers)
 
-### P.10.4 OAuth 与身份混淆
+### Q.10.4 OAuth 与身份混淆
 
 Remote MCP 常见风险包括：
 
@@ -696,7 +696,7 @@ Remote MCP 常见风险包括：
 
 参考：[MCP Authorization](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization)
 
-### P.10.5 Registry 与供应链攻击
+### Q.10.5 Registry 与供应链攻击
 
 Registry 元数据可信，不代表运行包一定安全。可能出现：
 
@@ -713,7 +713,7 @@ Registry 元数据可信，不代表运行包一定安全。可能出现：
 
 参考：[MCP Registry](https://modelcontextprotocol.io/registry/about)
 
-### P.10.6 SSRF 与网络横向移动
+### Q.10.6 SSRF 与网络横向移动
 
 能够获取 URL、访问 HTTP 或执行浏览器操作的 MCP Server，可能被利用访问：
 
@@ -728,7 +728,7 @@ Registry 元数据可信，不代表运行包一定安全。可能出现：
 
 ---
 
-## P.11 企业级 MCP 安全基线
+## Q.11 企业级 MCP 安全基线
 
 建议至少落实以下控制面：
 
@@ -751,7 +751,7 @@ Registry 元数据可信，不代表运行包一定安全。可能出现：
 
 ---
 
-## P.12 工具数量与上下文膨胀问题
+## Q.12 工具数量与上下文膨胀问题
 
 早期 MCP Host 通常在会话开始时加载所有工具 Schema。当接入几十个 Server、数百个工具后，会产生：
 
@@ -792,7 +792,7 @@ sequenceDiagram
 
 ---
 
-## P.13 推荐的企业 MCP 参考架构
+## Q.13 推荐的企业 MCP 参考架构
 
 ```mermaid
 flowchart LR
@@ -838,7 +838,7 @@ flowchart LR
 
 ---
 
-## P.14 不同场景如何选型
+## Q.14 不同场景如何选型
 
 | 场景 | 推荐组合 |
 |---|---|
@@ -856,9 +856,9 @@ flowchart LR
 
 ---
 
-## P.15 开发、测试和可观测性体系
+## Q.15 开发、测试和可观测性体系
 
-### P.15.1 MCP Inspector
+### Q.15.1 MCP Inspector
 
 官方 MCP Inspector 是最基础的开发和协议调试工具，支持 Web、CLI 和 TUI 形态，可用于：
 
@@ -874,7 +874,7 @@ Inspector 已面向旧协议和 2026-07-28 新协议时代演进。
 
 参考：[MCP Inspector](https://modelcontextprotocol.io/docs/2026-07-28/tools/inspector)
 
-### P.15.2 测试分层
+### Q.15.2 测试分层
 
 一个生产级 MCP Server 至少需要以下测试：
 
@@ -897,7 +897,7 @@ MCP 官方路线图也把 SDK 一致性、Conformance Suite 和协议产物自�
 
 参考：[MCP Roadmap](https://modelcontextprotocol.io/development/roadmap)
 
-### P.15.3 核心可观测指标
+### Q.15.3 核心可观测指标
 
 建议记录四类指标：
 
@@ -951,7 +951,7 @@ MCP 官方路线图也把 SDK 一致性、Conformance Suite 和协议产物自�
 
 ---
 
-## P.16 生态成熟度判断
+## Q.16 生态成熟度判断
 
 ### 已较成熟
 
@@ -997,9 +997,9 @@ MCP 官方路线图也把 SDK 一致性、Conformance Suite 和协议产物自�
 
 ---
 
-## P.17 MCP 未来发展方向
+## Q.17 MCP 未来发展方向
 
-### P.17.1 从工具协议走向能力控制平面
+### Q.17.1 从工具协议走向能力控制平面
 
 未来 Host 不会直接记住每个 Server 的全部 Tool，而是向能力目录表达需求：
 
@@ -1007,7 +1007,7 @@ MCP 官方路线图也把 SDK 一致性、Conformance Suite 和协议产物自�
 
 目录根据组织策略、用户身份、成本、地域和可用性返回合适工具。
 
-### P.17.2 Agent 身份取代简单用户 Token
+### Q.17.2 Agent 身份取代简单用户 Token
 
 当前 OAuth 主要回答“用户是谁”，但企业还需要回答：
 
@@ -1023,7 +1023,7 @@ MCP 官方路线图也把 SDK 一致性、Conformance Suite 和协议产物自�
 
 参考：[MCP Roadmap](https://modelcontextprotocol.io/development/roadmap)
 
-### P.17.3 同步调用转向异步任务和事件驱动
+### Q.17.3 同步调用转向异步任务和事件驱动
 
 构建、部署、数据分析、代码扫描和长时间浏览器任务无法用单次同步 Tool Call 良好表达。MCP 将继续完善：
 
@@ -1035,7 +1035,7 @@ MCP 官方路线图也把 SDK 一致性、Conformance Suite 和协议产物自�
 - Webhook；
 - 断线后恢复。
 
-### P.17.4 MCP Apps
+### Q.17.4 MCP Apps
 
 MCP Apps 使 Server 不只返回文本或 JSON，还可以提供可交互 UI，例如：
 
@@ -1051,7 +1051,7 @@ MCP Apps 使 Server 不只返回文本或 JSON，还可以提供可交互 UI，�
 
 参考：[MCP 2026-07-28 Release](https://blog.modelcontextprotocol.io/posts/2026-07-28/)
 
-### P.17.5 Skills over MCP
+### Q.17.5 Skills over MCP
 
 Skill 和 MCP 的边界正在逐渐融合：
 
@@ -1066,7 +1066,7 @@ Skill 和 MCP 的边界正在逐渐融合：
 
 ---
 
-## P.18 最终选型判断
+## Q.18 最终选型判断
 
 对企业而言，MCP 不应被理解为“装几个 Server 的配置功能”，而应被视为 **Agent 访问企业能力的统一边界**。
 
@@ -1108,4 +1108,4 @@ MCP 已经基本确立了“Agent 与工具、数据之间通用协议”的行�
 
 ---
 
-> **使用提示**：与其他附录的分工——A 讲模型机制、B 讲方法论、C 记来源、D 列产品、E 辨异同、F 索引图版、G 详解 OTel、H 上手 DeepEval、I 评测观测平台选型、J 盘点 Coding Agent 赛道、K 盘点可观测赛道、L 盘点评估赛道、M 盘点 Memory 赛道、N 盘点自进化赛道、O 盘点多 Agent 赛道、**P 盘点 MCP 生态**、Q 解析 Pi 源码、R 解析 Claude Code 源码、S 解析 Codex 源码。对照阅读：MCP 是什么与协议变化（P.2–P.3）对第 8 章与 [C-03] 版本 pin、Host 盘点（P.4）对附录 D 与 J、安全风险与基线（P.10–P.11）对第 8 章 2.4 描述投毒与第 13 章、工具膨胀治理（P.12）对第 5/7 章（上下文税与动态工具集）、Gateway（P.8）对第 21 章网关治理、协议关系（P.9）对第 18 章 A2A、可观测（P.15）对第 14 章与附录 K。信息基准 2026-08-30（[C-42]），发行前按附录 C 清单复核。
+> **使用提示**：与其他附录的分工——A 讲模型机制、B 讲方法论、C 记来源、D 列产品、E 辨异同、F 索引图版、G 详解 OTel、H 上手 DeepEval、I 评测观测平台选型、J 上手 Mem0、K 盘点 Coding Agent 赛道、L 盘点可观测赛道、M 盘点评估赛道、N 盘点 Memory 赛道、O 盘点自进化赛道、P 盘点多 Agent 赛道、**Q 盘点 MCP 生态**、R 解析 Pi 源码、S 解析 Claude Code 源码、T 解析 Codex 源码。对照阅读：MCP 是什么与协议变化（Q.2–Q.3）对第 8 章与 [C-03] 版本 pin、Host 盘点（Q.4）对附录 D 与 J、安全风险与基线（Q.10–Q.11）对第 8 章 2.4 描述投毒与第 13 章、工具膨胀治理（Q.12）对第 5/7 章（上下文税与动态工具集）、Gateway（Q.8）对第 21 章网关治理、协议关系（Q.9）对第 18 章 A2A、可观测（Q.15）对第 14 章与附录 L。信息基准 2026-08-30（[C-42]），发行前按附录 C 清单复核。

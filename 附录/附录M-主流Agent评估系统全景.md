@@ -1,10 +1,10 @@
-# 附录 L：主流 Agent 评估系统全景
+# 附录 M：主流 Agent 评估系统全景
 
 > 定位：**Agent 评估赛道的全景调研报告·评估指标增强版**（全文收录，v1.2，信息基准 2026-08-30，各平台官方入口见 [C-38]）。与相邻内容的分工：第 15 章讲评测方法论与本书实现，附录 H 讲 DeepEval 上手，附录 I 深评五个平台，本附录是整个赛道的地图——四类产品（持续评估平台/代码级框架/云厂商/Benchmark）、评估对象十八类核心维度与逐域指标清单（结果/轨迹/工具/RAG/记忆/多轮/可靠性/性能成本/安全/可观测）、多 Agent 评估、工程闭环与发布门禁、选型与趋势。名单会过期，四类产品框架与指标分层口径不过期。
 
 ---
 
-## L.1 核心结论
+## M.1 核心结论
 
 Agent 评估已经从传统的“输入 Prompt、检查输出文本”，演进为对一次完整任务执行过程进行验证。
 
@@ -63,7 +63,7 @@ Agent 评估体系的核心变化可以概括为：
 
 ---
 
-## L.2 Agent 评估系统的四类产品
+## M.2 Agent 评估系统的四类产品
 
 Agent 评估领域经常将评估框架、持续评估平台、Benchmark 和评估 Harness 混为一谈。它们处于不同层次。
 
@@ -99,7 +99,7 @@ flowchart LR
 
 ---
 
-## L.3 Agent 评估总体架构
+## M.3 Agent 评估总体架构
 
 ```mermaid
 flowchart LR
@@ -191,9 +191,9 @@ Harness 层
 
 ---
 
-## L.4 Agent 需要评估什么
+## M.4 Agent 需要评估什么
 
-### L.4.1 十八类核心维度
+### M.4.1 十八类核心维度
 
 Agent 评估不应只保留一个“总体得分”。建议将指标拆成结果、过程、运行、风险和业务五个层级，并至少覆盖以下十八类维度。
 
@@ -224,7 +224,7 @@ Agent 评估不应只保留一个“总体得分”。建议将指标拆成结�
 - DeepEval Metrics：<https://deepeval.com/docs/metrics-introduction>
 - Ragas Metrics：<https://docs.ragas.io/en/stable/concepts/metrics/available_metrics/>
 
-### L.4.2 结果评估
+### M.4.2 结果评估
 
 结果评估关注最终目标是否真实完成，而不是 Agent 是否输出了“完成”字样。
 
@@ -253,7 +253,7 @@ no_duplicate_booking == true
 7. 工单、订单、审批流等业务状态检查；
 8. 产物格式、Schema 和完整性检查。
 
-### L.4.3 轨迹评估
+### M.4.3 轨迹评估
 
 轨迹评估关注 Agent 如何完成任务。
 
@@ -282,7 +282,7 @@ User Goal
 | **Verification Coverage** | 是否执行了必要的结果验证 |
 | **Evidence Usage** | 结论是否基于真实观察结果 |
 
-### L.4.4 工具调用评估
+### M.4.4 工具调用评估
 
 工具调用评估至少应拆分为四层：
 
@@ -305,7 +305,7 @@ User Goal
 
 仅判断“调用了某个工具”是不够的。Agent 可能选择了正确工具，但传入错误参数；也可能工具返回正确结果，但 Agent 对结果产生错误解释。
 
-### L.4.5 记忆评估
+### M.4.5 记忆评估
 
 长期记忆和个性化记忆需要独立评估：
 
@@ -321,7 +321,7 @@ User Goal
 | **Injection Quality** | 记忆注入是否帮助任务，而非干扰推理 |
 | **Privacy Compliance** | 是否存储了不应持久化的敏感内容 |
 
-### L.4.6 安全评估
+### M.4.6 安全评估
 
 Agent 安全评估应覆盖：
 
@@ -340,7 +340,7 @@ Agent 安全评估应覆盖：
 - 人类审批绕过；
 - 子 Agent 权限传播错误。
 
-### L.4.7 指标分层与统一口径
+### M.4.7 指标分层与统一口径
 
 同一个指标名称在不同框架中可能代表不同含义。落地时应先定义指标卡片，再实现评分器。建议每个指标至少保存以下字段：
 
@@ -389,7 +389,7 @@ L4 用户与业务指标
 
 L0 和 L1 决定“能否发布”，L2 用于定位失败，L3 用于容量与成本控制，L4 用于确认 Agent 是否真正产生产品价值。
 
-### L.4.8 任务结果与业务价值指标
+### M.4.8 任务结果与业务价值指标
 
 ### 4.8.1 任务结果指标
 
@@ -464,7 +464,7 @@ Outcome Value per Cost
 = normalized_business_value / total_agent_cost
 ```
 
-### L.4.9 意图、指令、约束与最终输出指标
+### M.4.9 意图、指令、约束与最终输出指标
 
 微软 Foundry 当前将 Task Completion、Task Adherence、Intent Resolution、Task Navigation Efficiency 等作为 Agent 系统级指标，并将 Relevance、Abstention、Answer Completeness、Groundedness 和 Context Coverage 作为回答质量维度。以下口径可用于构建平台无关的内部指标。
 
@@ -509,7 +509,7 @@ Constraint Satisfaction
 
 对于结构化产物，应优先使用解析、Schema、编译、单测和环境检查，不应先用 LLM Judge 判断“格式大致正确”。
 
-### L.4.10 计划与执行轨迹指标
+### M.4.10 计划与执行轨迹指标
 
 OpenAI 的 Trace Grading 将模型调用、工具调用、Guardrail 和 Handoff 作为端到端工作流的一部分；LangSmith 支持按精确顺序、工具集合或 LLM Judge 评价轨迹；DeepEval 提供 Plan Quality、Plan Adherence、Step Efficiency 和 Task Completion 等指标。
 
@@ -572,7 +572,7 @@ Trajectory F1
 
 这比强制 Agent 与一条参考轨迹完全一致更稳健。
 
-### L.4.11 工具、函数调用与 MCP 指标
+### M.4.11 工具、函数调用与 MCP 指标
 
 工具指标应覆盖“可用工具集合、选择、参数、执行、返回值利用和副作用”六层，而不是只检查是否出现 Tool Call。
 
@@ -642,7 +642,7 @@ AND operation_is_idempotent_or_guarded
 AND audit_event_recorded
 ```
 
-### L.4.12 检索、RAG 与知识使用指标
+### M.4.12 检索、RAG 与知识使用指标
 
 RAG Agent 需要将“检索质量”和“生成质量”分开。生成回答错误可能来自检索不到、检索噪声、上下文截断、错误引用或模型未使用证据。
 
@@ -683,7 +683,7 @@ Noise Sensitivity Drop
 
 Ragas 当前覆盖 Context Precision、Context Recall、Noise Sensitivity、Response Relevancy、Faithfulness，以及 Agent Goal Accuracy、Tool Call Accuracy 和 Tool Call F1：<https://docs.ragas.io/en/stable/concepts/metrics/available_metrics/>
 
-### L.4.13 记忆系统量化指标
+### M.4.13 记忆系统量化指标
 
 第 4.5 节给出了记忆评估维度，本节补充可计算口径。记忆系统至少要区分写入、存储、召回、注入、更新、遗忘和隔离七个阶段。
 
@@ -735,7 +735,7 @@ Deletion Compliance Rate
 
 否则只能证明“记忆被召回”，不能证明“记忆带来了正向效用”。
 
-### L.4.14 多轮会话、人机协作与用户体验指标
+### M.4.14 多轮会话、人机协作与用户体验指标
 
 多轮 Agent 的成功对象是整个 Thread 或 Session，而不是其中某一轮回答。
 
@@ -774,7 +774,7 @@ Clarification Recall
 
 “澄清越少越好”并不成立。高风险动作中，不澄清可能造成更大错误。应同时看 Clarification Precision、Recall 和最终结果。
 
-### L.4.15 可靠性、稳定性与故障恢复指标
+### M.4.15 可靠性、稳定性与故障恢复指标
 
 Agent 输出存在随机性，应在同一任务、同一配置下进行多次 Trial，并将能力与稳定性分开。
 
@@ -819,7 +819,7 @@ Flaky Task Rate
 
 高风险任务不应通过不断增加 `k` 来掩盖低 `pass@1`。真实用户通常只给一次机会。
 
-### L.4.16 性能、效率、成本与资源指标
+### M.4.16 性能、效率、成本与资源指标
 
 ### 4.16.1 延迟指标
 
@@ -893,7 +893,7 @@ Orchestration Overhead Ratio
 
 OpenTelemetry 的 GenAI 语义约定提供模型调用耗时、输入/输出 Token 等标准化观测字段，可作为性能与成本指标的数据基础：<https://opentelemetry.io/blog/2026/genai-observability/>
 
-### L.4.17 安全、权限与 Guardrail 指标
+### M.4.17 安全、权限与 Guardrail 指标
 
 安全评估应同时统计攻击是否成功、正常请求是否被误拦截，以及失败后影响是否被限制。
 
@@ -943,7 +943,7 @@ Unauthorized Action Rate
 
 `ASR = 0` 仍不足以证明安全。还必须验证正常任务成功率和 False Refusal，避免 Guardrail 通过“全部拒绝”获得虚假的安全高分。
 
-### L.4.18 可观测性、审计与可复现性指标
+### M.4.18 可观测性、审计与可复现性指标
 
 Agent 评估依赖 Trace 质量。缺少模型版本、工具参数、环境快照或结果事件时，许多过程指标无法可信计算。
 
@@ -975,7 +975,7 @@ Replay Success Rate
 
 OpenTelemetry 的语义约定为 Trace、Metric、Event 及 Agent、模型、工具相关字段提供统一命名基础；评估平台仍需补充业务 Task、Trial、环境状态和评分器版本：<https://opentelemetry.io/docs/concepts/semantic-conventions/>
 
-### L.4.19 不同 Agent 类型的专项指标
+### M.4.19 不同 Agent 类型的专项指标
 
 通用指标只能覆盖共同部分，不同执行环境还需要专项指标。
 
@@ -1026,7 +1026,7 @@ Stale-state Recovery Rate
 
 页面点击成功不等于任务成功，必须验证 URL、DOM、后台数据或跨应用状态是否发生预期变化。
 
-### L.4.20 评估器、LLM Judge 与人工标签质量指标
+### M.4.20 评估器、LLM Judge 与人工标签质量指标
 
 评估器本身也需要评估。一个未经校准的 Judge 可能稳定地给出错误结论。
 
@@ -1070,7 +1070,7 @@ Judge Repeatability
 
 Ragas 建议优先选择具有客观标准的指标，并通过独立人工标注的一致程度判断指标是否足够客观：<https://docs.ragas.io/en/stable/concepts/metrics/overview/>
 
-### L.4.21 评测数据集质量指标
+### M.4.21 评测数据集质量指标
 
 指标再完善，如果数据集覆盖不足，也无法代表生产质量。
 
@@ -1116,7 +1116,7 @@ Dataset Version
 
 否则不同实验之间的分数不可直接比较。
 
-### L.4.22 指标之间的因果诊断关系
+### M.4.22 指标之间的因果诊断关系
 
 指标应形成诊断链，而不是互不关联的仪表盘数字。
 
@@ -1155,7 +1155,7 @@ flowchart TD
 | Judge 分数稳定、人工一致率低 | Judge 稳定地产生系统性偏差 |
 
 
-### L.4.23 Skill、能力注册与生命周期指标
+### M.4.23 Skill、能力注册与生命周期指标
 
 Skill 不是普通 Prompt 文件。一个完整 Skill 往往包含触发描述、指令、工具或 MCP 依赖、权限要求、资源文件、脚本、版本和输出契约，因此需要独立评价“是否发现、是否触发、能否执行、是否带来收益以及是否安全退出”。
 
@@ -1226,9 +1226,9 @@ Skill 更新不能只验证新能力。发布前还应运行旧版本回归集�
 
 ---
 
-## L.5 主流持续评估平台
+## M.5 主流持续评估平台
 
-### L.5.1 综合对比
+### M.5.1 综合对比
 
 | 系统 | 产品定位 | 核心能力 | 更适合的场景 |
 |---|---|---|---|
@@ -1242,7 +1242,7 @@ Skill 更新不能只验证新能力。发布前还应运行旧版本回归集�
 | **TruLens** | Feedback Function 与运行时质量控制平台 | Trace Scoring、Feedback Function、Inline Evaluation | 让评估结果参与运行时决策 |
 | **Confident AI** | DeepEval 对应的企业平台 | Dataset、Experiment、Metric、Regression、Monitoring | 已采用 DeepEval 并需要团队协作能力 |
 
-### L.5.2 LangSmith
+### M.5.2 LangSmith
 
 LangSmith 的优势集中在：
 
@@ -1270,7 +1270,7 @@ LangChain / LangGraph
 
 参考：<https://docs.langchain.com/langsmith/evaluation>
 
-### L.5.3 Langfuse
+### M.5.3 Langfuse
 
 Langfuse 更接近平台中立的开源 Agent Engineering Backend：
 
@@ -1299,7 +1299,7 @@ Trace
 
 参考：<https://langfuse.com/docs/evaluation/overview>
 
-### L.5.4 Arize Phoenix
+### M.5.4 Arize Phoenix
 
 Phoenix 的特点是从 Trace 和 OpenTelemetry/OpenInference 出发：
 
@@ -1323,7 +1323,7 @@ Phoenix 的特点是从 Trace 和 OpenTelemetry/OpenInference 出发：
 
 参考：<https://arize.com/docs/phoenix/evaluation/llm-evals>
 
-### L.5.5 MLflow
+### M.5.5 MLflow
 
 MLflow 的优势是将 Agent 评估纳入传统实验和模型生命周期：
 
@@ -1351,7 +1351,7 @@ Production Trace
 
 参考：<https://mlflow.org/docs/latest/genai/eval-monitor/>
 
-### L.5.6 Braintrust
+### M.5.6 Braintrust
 
 Braintrust 强调端到端评估工作流：
 
@@ -1368,7 +1368,7 @@ Braintrust 强调端到端评估工作流：
 
 参考：<https://www.braintrust.dev/docs/evaluate>
 
-### L.5.7 W&B Weave
+### M.5.7 W&B Weave
 
 Weave 延续了 Weights & Biases 的实验管理思路：
 
@@ -1385,7 +1385,7 @@ Model / Agent
 
 参考：<https://docs.wandb.ai/weave/guides/core-types/evaluations>
 
-### L.5.8 Opik
+### M.5.8 Opik
 
 Opik 提供：
 
@@ -1402,7 +1402,7 @@ Opik 提供：
 
 参考：<https://www.comet.com/docs/opik>
 
-### L.5.9 TruLens
+### M.5.9 TruLens
 
 TruLens 重点是 Feedback Function 和运行时反馈：
 
@@ -1417,9 +1417,9 @@ TruLens 重点是 Feedback Function 和运行时反馈：
 
 ---
 
-## L.6 主流代码级评估框架
+## M.6 主流代码级评估框架
 
-### L.6.1 综合对比
+### M.6.1 综合对比
 
 | 框架 | 核心定位 | 主要能力 |
 |---|---|---|
@@ -1430,7 +1430,7 @@ TruLens 重点是 Feedback Function 和运行时反馈：
 | **Giskard** | LLM/Agent 质量与安全测试 | 自动测试生成、业务测试、安全扫描、Prompt Injection |
 | **EvalScope** | 模型与 Agent 统一评估框架 | AgentLoop、外部 Agent Bridge、CLI Agent、Trace 回放、Benchmark 接入 |
 
-### L.6.2 DeepEval
+### M.6.2 DeepEval
 
 DeepEval 最接近 Agent 领域的“单元测试框架”。
 
@@ -1481,7 +1481,7 @@ def test_agent_result():
 
 参考：<https://deepeval.com/docs/metrics-introduction>
 
-### L.6.3 Ragas
+### M.6.3 Ragas
 
 Ragas 最初聚焦 RAG，但已经扩展到 Agent 评估：
 
@@ -1508,7 +1508,7 @@ RAG Agent
 
 参考：<https://docs.ragas.io/en/stable/concepts/metrics/available_metrics/agents/>
 
-### L.6.4 Promptfoo
+### M.6.4 Promptfoo
 
 Promptfoo 的特点是配置驱动、模型对比和安全红队。
 
@@ -1540,7 +1540,7 @@ tests:
 
 参考：<https://www.promptfoo.dev/>
 
-### L.6.5 Inspect AI
+### M.6.5 Inspect AI
 
 Inspect AI 更关注受控实验：
 
@@ -1563,7 +1563,7 @@ Task
 
 参考：<https://inspect.aisi.org.uk/>
 
-### L.6.6 EvalScope
+### M.6.6 EvalScope
 
 EvalScope 支持 Native AgentLoop 和 External Agent Bridge，可用于连接外部 Agent 或编码 CLI：
 
@@ -1591,7 +1591,7 @@ Benchmark and Evaluator
 
 ---
 
-## L.7 云厂商 Agent 评估系统
+## M.7 云厂商 Agent 评估系统
 
 | 厂商 | 主要能力 | 适用场景 |
 |---|---|---|
@@ -1601,7 +1601,7 @@ Benchmark and Evaluator
 | **Google Cloud** | Gen AI Evaluation、Agent Goal Completion、批量评估、模型比较 | Google Cloud 和 Gemini 生态 |
 | **Databricks** | MLflow Agent Evaluation、Trace、Judge、Review App、人工反馈、线上监控 | Databricks 数据与 AI 平台 |
 
-### L.7.1 OpenAI
+### M.7.1 OpenAI
 
 OpenAI Agent 评估体系重点关注：
 
@@ -1630,7 +1630,7 @@ Trace Grader
 
 参考：<https://developers.openai.com/api/docs/guides/agent-evals>
 
-### L.7.2 Microsoft Foundry
+### M.7.2 Microsoft Foundry
 
 Microsoft Foundry 将 Agent 评估拆分为：
 
@@ -1648,7 +1648,7 @@ Microsoft Foundry 将 Agent 评估拆分为：
 
 参考：<https://learn.microsoft.com/en-us/azure/foundry/concepts/evaluation-evaluators/agent-evaluators>
 
-### L.7.3 AWS Bedrock AgentCore
+### M.7.3 AWS Bedrock AgentCore
 
 AgentCore Evaluation 侧重：
 
@@ -1663,7 +1663,7 @@ AgentCore Evaluation 侧重：
 
 参考：<https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/evaluations.html>
 
-### L.7.4 Google Cloud
+### M.7.4 Google Cloud
 
 Google Cloud 的生成式 AI 评估能力包括：
 
@@ -1676,7 +1676,7 @@ Google Cloud 的生成式 AI 评估能力包括：
 - 第三方模型比较；
 - 人工评估和自动评估结合。
 
-### L.7.5 Databricks
+### M.7.5 Databricks
 
 Databricks 将 Agent 评估纳入 MLflow 和统一数据平台：
 
@@ -1696,11 +1696,11 @@ Agent Trace
 
 ---
 
-## L.8 主流 Agent Benchmark
+## M.8 主流 Agent Benchmark
 
 公共 Benchmark 的主要作用是横向比较模型与 Agent Harness；生产发布门禁仍应基于内部业务数据、真实失败案例和权限模型。
 
-### L.8.1 Benchmark 全景
+### M.8.1 Benchmark 全景
 
 | 领域 | Benchmark | 主要评测能力 |
 |---|---|---|
@@ -1715,7 +1715,7 @@ Agent Trace
 | **安全** | AgentDojo | Prompt Injection、恶意工具结果、数据泄露、攻击防御 |
 | **长期记忆** | LoCoMo、LongMemEval | 单跳、多跳、时间关系、长期对话记忆 |
 
-### L.8.2 GAIA
+### M.8.2 GAIA
 
 GAIA 面向通用 AI Assistant，强调：
 
@@ -1728,7 +1728,7 @@ GAIA 面向通用 AI Assistant，强调：
 
 参考：<https://ai.meta.com/research/publications/gaia-a-benchmark-for-general-ai-assistants/>
 
-### L.8.3 Berkeley Function Calling Leaderboard
+### M.8.3 Berkeley Function Calling Leaderboard
 
 BFCL 主要评估：
 
@@ -1743,7 +1743,7 @@ BFCL 主要评估：
 
 参考：<https://gorilla.cs.berkeley.edu/leaderboard.html>
 
-### L.8.4 τ-bench 系列
+### M.8.4 τ-bench 系列
 
 τ-bench 面向真实客服和企业交互场景，通常包含：
 
@@ -1760,7 +1760,7 @@ User Simulator
 
 参考：<https://taubench.com/>
 
-### L.8.5 WebArena
+### M.8.5 WebArena
 
 WebArena 提供可交互网站环境，用于评估 Agent：
 
@@ -1772,7 +1772,7 @@ WebArena 提供可交互网站环境，用于评估 Agent：
 
 参考：<https://webarena.dev/>
 
-### L.8.6 OSWorld
+### M.8.6 OSWorld
 
 OSWorld 面向桌面 GUI Agent：
 
@@ -1784,7 +1784,7 @@ OSWorld 面向桌面 GUI Agent：
 
 参考：<https://github.com/xlang-ai/OSWorld>
 
-### L.8.7 SWE-bench
+### M.8.7 SWE-bench
 
 SWE-bench 用于编码 Agent 评估：
 
@@ -1806,7 +1806,7 @@ GitHub Repository
 
 参考：<https://www.swebench.com/verified.html>
 
-### L.8.8 AgentDojo
+### M.8.8 AgentDojo
 
 AgentDojo 聚焦 Agent 安全：
 
@@ -1819,7 +1819,7 @@ AgentDojo 聚焦 Agent 安全：
 
 参考：<https://agentdojo.spylab.ai/>
 
-### L.8.9 LoCoMo 与长期记忆评估
+### M.8.9 LoCoMo 与长期记忆评估
 
 LoCoMo 关注长期对话记忆，常见维度包括：
 
@@ -1833,9 +1833,9 @@ LoCoMo 关注长期对话记忆，常见维度包括：
 
 ---
 
-## L.9 Benchmark、框架与平台的关系
+## M.9 Benchmark、框架与平台的关系
 
-### L.9.1 DeepEval 与 SWE-bench 的关系
+### M.9.1 DeepEval 与 SWE-bench 的关系
 
 DeepEval 与 SWE-bench 不属于同一层。
 
@@ -1863,7 +1863,7 @@ flowchart LR
     H --> I
 ```
 
-### L.9.2 公共 Benchmark 的正确用途
+### M.9.2 公共 Benchmark 的正确用途
 
 公共 Benchmark 适合回答：
 
@@ -1886,7 +1886,7 @@ flowchart LR
 
 生产系统不能只追求公开榜单成绩。
 
-### L.9.3 Benchmark 的局限
+### M.9.3 Benchmark 的局限
 
 - 任务分布与真实业务不一致；
 - 数据可能被模型训练集污染；
@@ -1898,11 +1898,11 @@ flowchart LR
 
 ---
 
-## L.10 多 Agent 系统评估
+## M.10 多 Agent 系统评估
 
 普通单 Agent 指标无法完整覆盖 Orchestrator、Router、Worker、Reviewer、Guard 等协作问题。
 
-### L.10.1 多 Agent 核心指标
+### M.10.1 多 Agent 核心指标
 
 | 维度 | 需要验证的问题 |
 |---|---|
@@ -2009,7 +2009,7 @@ Cost-adjusted Contribution(agent_i)
 不必要升级
 ```
 
-### L.10.2 分层评分模型
+### M.10.2 分层评分模型
 
 多 Agent 系统不应只有一个总分。
 
@@ -2046,7 +2046,7 @@ hard_gate_pass =
     AND no_destructive_side_effect
 ```
 
-### L.10.3 Handoff 评估
+### M.10.3 Handoff 评估
 
 Handoff 至少需要检查：
 
@@ -2059,7 +2059,7 @@ Handoff 至少需要检查：
 - 子 Agent 是否重复执行已完成工作；
 - 交接摘要是否包含错误或幻觉。
 
-### L.10.4 多 Agent 故障归因
+### M.10.4 多 Agent 故障归因
 
 推荐使用故障分类树：
 
@@ -2082,11 +2082,11 @@ flowchart TD
 
 ---
 
-## L.11 通用 Agent 平台评估架构
+## M.11 通用 Agent 平台评估架构
 
 对于统一编排多个模型、编码 CLI、工具、MCP、Skill、Memory 和子 Agent 的平台，推荐采用分层评估架构。
 
-### L.11.1 推荐技术组合
+### M.11.1 推荐技术组合
 
 | 层次 | 推荐实现 | 职责 |
 |---|---|---|
@@ -2098,7 +2098,7 @@ flowchart TD
 | **安全评估** | Promptfoo + AgentDojo 风格任务 | Prompt Injection、MCP、权限、数据泄露 |
 | **生产闭环** | Online Sampling + Human Review | 线上评分、失败聚类和回归数据沉淀 |
 
-### L.11.2 推荐 Trace 结构
+### M.11.2 推荐 Trace 结构
 
 ```text
 session
@@ -2122,7 +2122,7 @@ session
     └── evaluator.run
 ```
 
-### L.11.3 Span 字段建议
+### M.11.3 Span 字段建议
 
 每个 Span 至少应包含：
 
@@ -2158,7 +2158,7 @@ evaluation_scores
 artifact_references
 ```
 
-### L.11.4 评估数据模型
+### M.11.4 评估数据模型
 
 ```mermaid
 erDiagram
@@ -2215,7 +2215,7 @@ erDiagram
     }
 ```
 
-### L.11.5 Agent Runtime 与评估系统解耦
+### M.11.5 Agent Runtime 与评估系统解耦
 
 推荐通过标准事件协议解耦：
 
@@ -2252,9 +2252,9 @@ Experiment Store
 
 ---
 
-## L.12 Agent 评估工程闭环
+## M.12 Agent 评估工程闭环
 
-### L.12.1 开发阶段
+### M.12.1 开发阶段
 
 ```text
 代码变更
@@ -2274,7 +2274,7 @@ Experiment Store
 - 错误处理；
 - 关键业务结果。
 
-### L.12.2 PR 阶段
+### M.12.2 PR 阶段
 
 ```text
 核心回归集
@@ -2292,7 +2292,7 @@ PR 门禁应优先使用：
 - 稳定、低成本模型；
 - 可重复的固定测试环境。
 
-### L.12.3 Nightly 阶段
+### M.12.3 Nightly 阶段
 
 ```text
 更大数据集
@@ -2317,7 +2317,7 @@ PR 门禁应优先使用：
 - 多租户隔离；
 - 长任务恢复。
 
-### L.12.4 发布阶段
+### M.12.4 发布阶段
 
 ```text
 全量回归
@@ -2331,7 +2331,7 @@ PR 门禁应优先使用：
 + 安全红队
 ```
 
-### L.12.5 生产阶段
+### M.12.5 生产阶段
 
 ```mermaid
 flowchart LR
@@ -2350,7 +2350,7 @@ flowchart LR
     K --> L[下一版本评估]
 ```
 
-### L.12.6 数据集来源
+### M.12.6 数据集来源
 
 高质量内部评测集通常来自：
 
@@ -2382,9 +2382,9 @@ Dataset
 
 ---
 
-## L.13 指标设计与发布门禁
+## M.13 指标设计与发布门禁
 
-### L.13.1 评分器优先级
+### M.13.1 评分器优先级
 
 推荐优先级：
 
@@ -2415,7 +2415,7 @@ LLM Judge 更适合：
 - 解释质量；
 - Pairwise 比较。
 
-### L.13.2 硬门禁与软评分分离
+### M.13.2 硬门禁与软评分分离
 
 ### 硬门禁
 
@@ -2460,7 +2460,7 @@ Router准确性
 
 绝不能平均为 50 分后判定“基本可用”。
 
-### L.13.3 pass@k 与 pass^k
+### M.13.3 pass@k 与 pass^k
 
 ### pass@k
 
@@ -2492,7 +2492,7 @@ pass^k = P(k次全部成功)
 - 企业自动化；
 - 高可靠任务。
 
-### L.13.4 Judge 校准
+### M.13.4 Judge 校准
 
 LLM Judge 应使用人工标注数据进行校准。
 
@@ -2518,7 +2518,7 @@ LLM Judge 应使用人工标注数据进行校准。
 - 自我偏好；
 - Prompt Injection 对 Judge 的影响。
 
-### L.13.5 指标切片
+### M.13.5 指标切片
 
 总分不足以解释 Agent 行为，应按以下维度切片：
 
@@ -2538,7 +2538,7 @@ LLM Judge 应使用人工标注数据进行校准。
 - 是否使用记忆；
 - 是否使用子 Agent。
 
-### L.13.6 指标类型、量纲与聚合口径
+### M.13.6 指标类型、量纲与聚合口径
 
 不同类型的指标不能直接相加。建议先声明原始量纲，再决定是否归一化。
 
@@ -2595,7 +2595,7 @@ Agent-attributable Failure Rate
 
 否则基础设施波动会被误判为模型回归，或者被过滤后完全不可见。
 
-### L.13.7 指标聚合模型
+### M.13.7 指标聚合模型
 
 ### 13.7.1 推荐的三级判定
 
@@ -2660,7 +2660,7 @@ Worst-slice Score
 - 相对基线变化；
 - 置信区间。
 
-### L.13.8 阈值与回归判定
+### M.13.8 阈值与回归判定
 
 阈值不应从某个框架的默认值直接复制。应从风险等级、人工基线、历史版本和真实事故成本反推。
 
@@ -2702,7 +2702,7 @@ Worst-slice Score
 | **Minor** | 非关键切片小幅下降，整体收益明显 | 记录并跟踪 |
 | **Informational** | 无统计意义的小波动 | 不阻断 |
 
-### L.13.9 置信区间、配对实验与统计显著性
+### M.13.9 置信区间、配对实验与统计显著性
 
 Agent 指标具有任务差异和运行随机性。只比较两个平均分不足以证明新版本更好。
 
@@ -2771,7 +2771,7 @@ Judge 评分随机性
 
 可对同一 Trace 重复评分，计算 Judge Repeatability；关键门禁可使用多 Judge、规则校验或人工复核，不应将单次 Judge 分数直接视为真值。
 
-### L.13.10 发布门禁配置示例
+### M.13.10 发布门禁配置示例
 
 下面是通用示例，具体指标和阈值应按业务风险调整。
 
@@ -2849,7 +2849,7 @@ evaluation_gate:
 
 该配置中的数值只是演示结构，不代表通用生产标准。
 
-### L.13.11 不同阶段的最小指标集
+### M.13.11 不同阶段的最小指标集
 
 ### 开发与单元测试
 
@@ -2920,7 +2920,7 @@ Trace / Audit 缺失率
 分布漂移和切片漂移
 ```
 
-### L.13.12 指标反模式
+### M.13.12 指标反模式
 
 以下做法通常会产生虚假的高分或无法定位问题：
 
@@ -2941,7 +2941,7 @@ Trace / Audit 缺失率
 15. **指标名称不含版本**：Rubric 改变后历史趋势被错误解释；
 16. **将 Judge 解释当作可靠根因**：Judge 给出的理由仍需 Trace 和环境证据验证。
 
-### L.13.13 推荐评估看板
+### M.13.13 推荐评估看板
 
 一个可操作的评估看板至少应包含以下区域：
 
@@ -2963,9 +2963,9 @@ Trace / Audit 缺失率
 
 ---
 
-## L.14 选型建议
+## M.14 选型建议
 
-### L.14.1 按场景选择
+### M.14.1 按场景选择
 
 | 需求 | 推荐组合 |
 |---|---|
@@ -2981,7 +2981,7 @@ Trace / Audit 缺失率
 | 快速采用托管平台 | **Braintrust、LangSmith、Confident AI** |
 | Azure/AWS/Google 全栈项目 | 优先采用对应云厂商服务，再补业务评分器 |
 
-### L.14.2 推荐的通用组合
+### M.14.2 推荐的通用组合
 
 对于大多数独立 Agent 产品，可以从以下组合开始：
 
@@ -3026,7 +3026,7 @@ Environment Grader
     → 真实业务状态验证
 ```
 
-### L.14.3 最小可行评估体系
+### M.14.3 最小可行评估体系
 
 早期团队不必一次建设完整平台，可先实现：
 
@@ -3049,7 +3049,7 @@ Environment Grader
 - 评估器版本管理；
 - 人工复核平台。
 
-### L.14.4 不应只依赖单个平台
+### M.14.4 不应只依赖单个平台
 
 没有一个系统能够同时在以下方面做到最优：
 
@@ -3068,7 +3068,7 @@ Environment Grader
 
 ---
 
-## L.15 发展趋势
+## M.15 发展趋势
 
 | 趋势 | 说明 |
 |---|---|
@@ -3085,7 +3085,7 @@ Environment Grader
 | **生产失败自动沉淀为回归集** | Incident、用户反馈和低分 Trace 自动形成候选评测任务 |
 | **评估驱动 Agent 优化** | 评分结果直接驱动 Prompt、路由、模型、Skill 和策略优化 |
 
-### L.15.1 Trace 标准化
+### M.15.1 Trace 标准化
 
 未来 Agent 可观测与评估会进一步统一：
 
@@ -3100,7 +3100,7 @@ Agent Runtime
 
 这将降低不同 Agent Framework、模型厂商和评估平台之间的耦合。
 
-### L.15.2 环境型评估成为主流
+### M.15.2 环境型评估成为主流
 
 静态输入输出数据集难以覆盖复杂 Agent。更多评估将采用：
 
@@ -3113,7 +3113,7 @@ Agent Runtime
 - 恶意工具模拟器；
 - 网络和故障注入器。
 
-### L.15.3 评估与运行时控制融合
+### M.15.3 评估与运行时控制融合
 
 评估器将不再只在任务结束后运行，而会进入 Agent Loop：
 
@@ -3134,7 +3134,7 @@ Action
 
 ---
 
-## L.16 总结
+## M.16 总结
 
 成熟的 Agent 评估体系，本质上不是给最终回答打一个总分，而是建立完整的工程闭环：
 
@@ -3232,4 +3232,4 @@ Outcome and Business State
 
 ---
 
-> **使用提示**：与其他附录的分工——A 讲模型机制、B 讲方法论、C 记来源、D 列产品、E 辨异同、F 索引图版、G 详解 OTel、H 上手 DeepEval、I 评测观测平台选型、J 盘点 Coding Agent 赛道、K 盘点可观测赛道、**L 盘点评估赛道**、M 盘点 Memory 赛道、N 盘点自进化赛道、O 盘点多 Agent 赛道、P 盘点 MCP 生态、Q 解析 Pi 源码、R 解析 Claude Code 源码、S 解析 Codex 源码。对照阅读：评估维度与指标清单（L.4）对第 15 章五层指标体系与第 14 章三类指标框架、代码级框架（L.6）中 DeepEval 的上手见附录 H、平台深评见附录 I、Benchmark（L.8）对第 15/24 章、指标设计与发布门禁（L.13）对第 15 章回归门禁、可观测联动对附录 K。信息基准 2026-08-30（[C-38]），发行前按附录 C 清单复核。
+> **使用提示**：与其他附录的分工——A 讲模型机制、B 讲方法论、C 记来源、D 列产品、E 辨异同、F 索引图版、G 详解 OTel、H 上手 DeepEval、I 评测观测平台选型、J 上手 Mem0、K 盘点 Coding Agent 赛道、L 盘点可观测赛道、**M 盘点评估赛道**、N 盘点 Memory 赛道、O 盘点自进化赛道、P 盘点多 Agent 赛道、Q 盘点 MCP 生态、R 解析 Pi 源码、S 解析 Claude Code 源码、T 解析 Codex 源码。对照阅读：评估维度与指标清单（M.4）对第 15 章五层指标体系与第 14 章三类指标框架、代码级框架（M.6）中 DeepEval 的上手见附录 H、平台深评见附录 I、Benchmark（M.8）对第 15/24 章、指标设计与发布门禁（M.13）对第 15 章回归门禁、可观测联动对附录 L。信息基准 2026-08-30（[C-38]），发行前按附录 C 清单复核。

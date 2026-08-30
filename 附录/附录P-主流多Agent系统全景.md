@@ -1,10 +1,10 @@
-# 附录 O：主流多 Agent 系统全景
+# 附录 P：主流多 Agent 系统全景
 
 > 定位：**多 Agent 赛道的全景调研报告**（全文收录，信息基准 2026-08-30，各框架与平台官方入口见 [C-41]）。与相邻内容的分工：第四篇（第 17–19 章）讲多 Agent 的机制原理与克制判断（八拓扑代价模型、簿记下沉、可行性劝退），本附录是整个赛道的地图——"什么才算真正的多 Agent"的定义辨析、生态全景、通用框架逐家盘点（Agent Framework/LangGraph/OpenAI Agents SDK/ADK/CrewAI 等）、研究型与云厂商平台、编排模式、协议栈（MCP/A2A/AG-UI）、状态与记忆设计、沙箱权限、可观测与评估、该用与不该用的判据、选型与生产参考架构。名单会过期，"什么时候不该用多 Agent"的判据不过期。
 
 ---
 
-## O.1 什么才算真正的多 Agent
+## P.1 什么才算真正的多 Agent
 
 截至 **2026 年 8 月**，多 Agent 已经从早期的“多个角色在群聊里互相讨论”，逐步演进为一套完整的工程体系：
 
@@ -57,7 +57,7 @@ Multi-Agent System
 
 ---
 
-## O.2 多 Agent 生态全景
+## P.2 多 Agent 生态全景
 
 ```mermaid
 flowchart TB
@@ -167,9 +167,9 @@ flowchart TB
 
 ---
 
-## O.3 主流通用多 Agent 框架
+## P.3 主流通用多 Agent 框架
 
-### O.3.1 Microsoft Agent Framework
+### P.3.1 Microsoft Agent Framework
 
 **定位：企业级、跨语言、生产级 Agent 与多 Agent 工作流框架。**
 
@@ -212,7 +212,7 @@ Microsoft Agent Framework 将 AutoGen 的 Agent 抽象与 Semantic Kernel 的类
 
 ---
 
-### O.3.2 LangGraph 与 Deep Agents
+### P.3.2 LangGraph 与 Deep Agents
 
 **定位：低层图运行时，加高层长任务 Agent Harness。**
 
@@ -269,7 +269,7 @@ Deep Agents 强调 **Context Quarantine**：把独立任务委派给拥有独立
 
 ---
 
-### O.3.3 OpenAI Agents SDK
+### P.3.3 OpenAI Agents SDK
 
 **定位：轻量级 Agent 原语，以及 OpenAI 模型、工具、Tracing 的统一运行时。**
 
@@ -329,7 +329,7 @@ SDK 还可以通过普通代码实现：
 
 ---
 
-### O.3.4 Google Agent Development Kit
+### P.3.4 Google Agent Development Kit
 
 **定位：Google 提供的跨语言 Agent 开发框架，与 Gemini Enterprise Agent Platform 深度集成。**
 
@@ -373,7 +373,7 @@ ADK 支持 Python、TypeScript、Go、Java 和 Kotlin；ADK 2.0 在部分语言�
 
 ---
 
-### O.3.5 CrewAI
+### P.3.5 CrewAI
 
 **定位：角色驱动的多 Agent 团队，以及事件驱动业务工作流。**
 
@@ -416,7 +416,7 @@ Crew 提供自主协作，Flow 提供显式流程控制。一个 Flow 节点可�
 
 ---
 
-### O.3.6 PydanticAI
+### P.3.6 PydanticAI
 
 **定位：Python 类型安全、结构化输出和依赖注入优先的 Agent 框架。**
 
@@ -452,7 +452,7 @@ PydanticAI 强调：
 
 ---
 
-### O.3.7 LlamaIndex AgentWorkflow
+### P.3.7 LlamaIndex AgentWorkflow
 
 **定位：数据、RAG 和知识密集型多 Agent 工作流。**
 
@@ -483,7 +483,7 @@ LlamaIndex 支持三类常见多 Agent 模式：
 
 ---
 
-### O.3.8 Agno
+### P.3.8 Agno
 
 **定位：Agent、Team、Workflow、AgentOS 和控制平面一体化。**
 
@@ -514,7 +514,7 @@ Team Leader 可以根据成员角色委派任务并汇总结果。Agno 还提供
 
 ---
 
-### O.3.9 AG2
+### P.3.9 AG2
 
 **定位：协议驱动、异步优先的 AgentOS 与多 Agent Network。**
 
@@ -549,7 +549,7 @@ AG2 1.0 与 Classic 不是直接兼容升级。
 
 ---
 
-### O.3.10 Mastra
+### P.3.10 Mastra
 
 **定位：TypeScript 原生 Agent 与 Workflow 框架。**
 
@@ -582,7 +582,7 @@ Mastra 支持：
 
 ---
 
-### O.3.11 框架横向对比
+### P.3.11 框架横向对比
 
 | 框架 | 核心定位 | 编排能力 | 状态持久化 | 多 Agent 原语 | 主要语言 | 典型场景 |
 |---|---|---|---|---|---|---|
@@ -599,9 +599,9 @@ Mastra 支持：
 
 ---
 
-## O.4 研究型与领域型多 Agent 系统
+## P.4 研究型与领域型多 Agent 系统
 
-### O.4.1 CAMEL
+### P.4.1 CAMEL
 
 CAMEL 更偏向：
 
@@ -626,7 +626,7 @@ CAMEL 更偏向：
 
 ---
 
-### O.4.2 MetaGPT
+### P.4.2 MetaGPT
 
 MetaGPT 使用“软件公司”思想，将产品经理、架构师、工程师、测试等角色组成协作实体，并通过标准操作过程约束 Agent 行为。
 
@@ -653,7 +653,7 @@ MetaGPT 更像领域化多 Agent 方法论，不一定适合直接作为通用�
 
 ---
 
-### O.4.3 ChatDev 2.0
+### P.4.3 ChatDev 2.0
 
 ChatDev 1.0 以“虚拟软件公司”闻名；ChatDev 2.0 转向零代码通用多 Agent 编排平台，可以通过配置定义 Agent、任务和工作流。
 
@@ -668,7 +668,7 @@ ChatDev 1.0 以“虚拟软件公司”闻名；ChatDev 2.0 转向零代码通�
 
 ---
 
-### O.4.4 Anthropic Research 多 Agent 系统
+### P.4.4 Anthropic Research 多 Agent 系统
 
 Anthropic 公开的 Research 系统是典型的 **Orchestrator-Worker** 架构：
 
@@ -698,9 +698,9 @@ Anthropic 公开的 Research 系统是典型的 **Orchestrator-Worker** 架构�
 
 ---
 
-## O.5 云厂商多 Agent 平台
+## P.5 云厂商多 Agent 平台
 
-### O.5.1 Microsoft Foundry Agent Service
+### P.5.1 Microsoft Foundry Agent Service
 
 Microsoft Foundry Agent Service 是托管的 Agent 构建、部署和扩缩容平台，可与 Microsoft Agent Framework 或其他框架结合。
 
@@ -729,7 +729,7 @@ Azure Functions / Container Apps / Cosmos DB
 
 ---
 
-### O.5.2 Gemini Enterprise Agent Platform
+### P.5.2 Gemini Enterprise Agent Platform
 
 Google Cloud 通过 Gemini Enterprise Agent Platform 提供：
 
@@ -763,7 +763,7 @@ Agent Gateway 强调每个 Agent 拥有独立、可追踪身份，并以 Agent �
 
 ---
 
-### O.5.3 Amazon Bedrock AgentCore
+### P.5.3 Amazon Bedrock AgentCore
 
 AgentCore 是 AWS 面向 Agent 系统的托管基础设施，覆盖：
 
@@ -791,7 +791,7 @@ AgentCore 支持不同模型和框架，不要求必须使用特定 Agent SDK。
 
 ---
 
-### O.5.4 Salesforce Agentforce
+### P.5.4 Salesforce Agentforce
 
 Agentforce 面向 CRM、客服、销售和企业流程。
 
@@ -817,7 +817,7 @@ Agentforce 面向 CRM、客服、销售和企业流程。
 
 ---
 
-### O.5.5 云平台横向对比
+### P.5.5 云平台横向对比
 
 | 云平台 | 重点能力 | 推荐框架 | 工具与执行环境 | 身份治理 | 典型场景 |
 |---|---|---|---|---|---|
@@ -828,9 +828,9 @@ Agentforce 面向 CRM、客服、销售和企业流程。
 
 ---
 
-## O.6 主流多 Agent 编排模式
+## P.6 主流多 Agent 编排模式
 
-### O.6.1 顺序流水线
+### P.6.1 顺序流水线
 
 ```text
 Researcher → Writer → Reviewer → Publisher
@@ -865,7 +865,7 @@ flowchart LR
 
 ---
 
-### O.6.2 并行 Fan-out / Fan-in
+### P.6.2 并行 Fan-out / Fan-in
 
 ```text
                   ┌→ Research Agent A ─┐
@@ -903,7 +903,7 @@ flowchart LR
 
 ---
 
-### O.6.3 Supervisor / Worker
+### P.6.3 Supervisor / Worker
 
 由一个管理 Agent 负责：
 
@@ -956,7 +956,7 @@ sequenceDiagram
 
 ---
 
-### O.6.4 Router / Handoff
+### P.6.4 Router / Handoff
 
 Router 根据用户意图把控制权转给某个专家 Agent：
 
@@ -983,7 +983,7 @@ Handoff 与 Agent as Tool 的区别：
 
 ---
 
-### O.6.5 Group Chat
+### P.6.5 Group Chat
 
 多个 Agent 共享一个会话空间，通过以下策略决定下一个发言者：
 
@@ -1023,7 +1023,7 @@ Group Chat 最大风险是：**看起来协作很多，实际有效信息很少�
 
 ---
 
-### O.6.6 Debate / Critic / Judge
+### P.6.6 Debate / Critic / Judge
 
 典型结构：
 
@@ -1053,7 +1053,7 @@ Generator B ─┘
 
 ---
 
-### O.6.7 Evaluator-Optimizer
+### P.6.7 Evaluator-Optimizer
 
 ```text
 Worker → Evaluator
@@ -1092,7 +1092,7 @@ flowchart LR
 
 ---
 
-### O.6.8 Blackboard / Shared Workspace
+### P.6.8 Blackboard / Shared Workspace
 
 多个 Agent 不直接频繁对话，而是围绕一个共享工作区协作：
 
@@ -1130,7 +1130,7 @@ flowchart TB
 
 ---
 
-### O.6.9 去中心化 Swarm
+### P.6.9 去中心化 Swarm
 
 Agent 之间没有单一 Supervisor，可以：
 
@@ -1168,7 +1168,7 @@ Agent 之间没有单一 Supervisor，可以：
 
 ---
 
-### O.6.10 编排模式选型表
+### P.6.10 编排模式选型表
 
 | 模式 | 确定性 | 并行性 | 上下文隔离 | 工程复杂度 | 适用场景 |
 |---|---:|---:|---:|---:|---|
@@ -1184,7 +1184,7 @@ Agent 之间没有单一 Supervisor，可以：
 
 ---
 
-## O.7 协议栈：MCP、A2A、AG-UI
+## P.7 协议栈：MCP、A2A、AG-UI
 
 当前 Agent 生态逐步形成三层协议：
 
@@ -1203,7 +1203,7 @@ flowchart LR
     AgentB <-->|MCP| Tool2[工具 / 数据源]
 ```
 
-### O.7.1 MCP
+### P.7.1 MCP
 
 MCP 采用 Host—Client—Server 架构，标准化 Agent 对外部工具和数据的访问。
 
@@ -1222,7 +1222,7 @@ MCP 的重点不是多 Agent 编排，而是 **Agent 与能力之间的标准接
 
 ---
 
-### O.7.2 A2A
+### P.7.2 A2A
 
 A2A 的目标是让不同厂商、框架和运行时中的 Agent 安全通信。
 
@@ -1245,7 +1245,7 @@ A2A 不替代 MCP：一个 Agent 可以通过 MCP 使用工具，再通过 A2A �
 
 ---
 
-### O.7.3 AG-UI
+### P.7.3 AG-UI
 
 AG-UI 是 Agent 后端与用户前端之间的双向、事件驱动协议，适合：
 
@@ -1267,7 +1267,7 @@ AG-UI 是 Agent 后端与用户前端之间的双向、事件驱动协议，适�
 
 ---
 
-### O.7.4 三类协议的边界
+### P.7.4 三类协议的边界
 
 | 问题 | 推荐协议 |
 |---|---|
@@ -1280,11 +1280,11 @@ AG-UI 是 Agent 后端与用户前端之间的双向、事件驱动协议，适�
 
 ---
 
-## O.8 多 Agent 状态、上下文与记忆设计
+## P.8 多 Agent 状态、上下文与记忆设计
 
 多 Agent 系统至少要区分以下状态域。
 
-### O.8.1 Agent 私有上下文
+### P.8.1 Agent 私有上下文
 
 每个 Agent 独立保存：
 
@@ -1308,7 +1308,7 @@ AG-UI 是 Agent 后端与用户前端之间的双向、事件驱动协议，适�
 
 ---
 
-### O.8.2 共享任务状态
+### P.8.2 共享任务状态
 
 共享状态应结构化，例如：
 
@@ -1349,7 +1349,7 @@ constraints:
 
 ---
 
-### O.8.3 短期记忆与长期记忆
+### P.8.3 短期记忆与长期记忆
 
 #### 短期记忆
 
@@ -1392,7 +1392,7 @@ task_scope
 
 ---
 
-### O.8.4 Artifact Store
+### P.8.4 Artifact Store
 
 多 Agent 之间最可靠的协作媒介往往不是消息，而是 Artifact：
 
@@ -1424,7 +1424,7 @@ validation_status: passed
 
 ---
 
-### O.8.5 Checkpoint 与恢复
+### P.8.5 Checkpoint 与恢复
 
 长任务必须支持 Checkpoint。一个有效 Checkpoint 至少包括：
 
@@ -1456,7 +1456,7 @@ stateDiagram-v2
 
 ---
 
-### O.8.6 上下文注入策略
+### P.8.6 上下文注入策略
 
 推荐按需注入，而不是全量注入：
 
@@ -1481,11 +1481,11 @@ Agent Input Context
 
 ---
 
-## O.9 执行、沙箱与权限体系
+## P.9 执行、沙箱与权限体系
 
 多 Agent 系统会放大权限风险。假设一个 Supervisor 可以委派 20 个 Worker，而每个 Worker 都继承 Supervisor 的全部权限，则系统风险可能呈乘法增长。
 
-### O.9.1 每 Agent 独立身份
+### P.9.1 每 Agent 独立身份
 
 每个 Agent 都应具有：
 
@@ -1504,7 +1504,7 @@ Agent 不应默认继承创建者的全部 Credential。
 
 ---
 
-### O.9.2 最小权限
+### P.9.2 最小权限
 
 示例：
 
@@ -1530,7 +1530,7 @@ Agent Role Policy
 
 ---
 
-### O.9.3 高风险操作审批
+### P.9.3 高风险操作审批
 
 以下操作通常要求 Human-in-the-loop：
 
@@ -1561,7 +1561,7 @@ approval_request:
 
 ---
 
-### O.9.4 沙箱隔离
+### P.9.4 沙箱隔离
 
 Coding Agent 和数据 Agent 应使用：
 
@@ -1587,7 +1587,7 @@ Coding Agent 和数据 Agent 应使用：
 
 ---
 
-### O.9.5 委派权限约束
+### P.9.5 委派权限约束
 
 Supervisor 委派任务时，不应把自身全部权限转交给 Worker。
 
@@ -1622,7 +1622,7 @@ delegation:
 
 ---
 
-### O.9.6 Prompt Injection 与跨 Agent 污染
+### P.9.6 Prompt Injection 与跨 Agent 污染
 
 多 Agent 系统中，Prompt Injection 可能沿以下路径传播：
 
@@ -1647,7 +1647,7 @@ delegation:
 
 ---
 
-## O.10 多 Agent 可观测性
+## P.10 多 Agent 可观测性
 
 单 Agent Trace 通常接近线性；多 Agent Trace 是图结构。
 
@@ -1665,7 +1665,7 @@ Run
  └── Finalize
 ```
 
-### O.10.1 Trace 数据模型
+### P.10.1 Trace 数据模型
 
 建议至少记录：
 
@@ -1701,7 +1701,7 @@ status: success
 
 ---
 
-### O.10.2 任务质量指标
+### P.10.2 任务质量指标
 
 - Task Success Rate；
 - 最终结果正确率；
@@ -1715,7 +1715,7 @@ status: success
 
 ---
 
-### O.10.3 协作质量指标
+### P.10.3 协作质量指标
 
 - Agent Routing Accuracy；
 - Delegation Success Rate；
@@ -1733,7 +1733,7 @@ status: success
 
 ---
 
-### O.10.4 效率指标
+### P.10.4 效率指标
 
 - 总 Token；
 - 每 Agent Token；
@@ -1758,7 +1758,7 @@ Parallel Speedup
 
 ---
 
-### O.10.5 可靠性指标
+### P.10.5 可靠性指标
 
 - Timeout Rate；
 - Retry Rate；
@@ -1775,7 +1775,7 @@ Parallel Speedup
 
 ---
 
-### O.10.6 安全指标
+### P.10.6 安全指标
 
 - 越权工具调用次数；
 - 未授权 Handoff；
@@ -1791,7 +1791,7 @@ Parallel Speedup
 
 ---
 
-### O.10.7 可观测架构
+### P.10.7 可观测架构
 
 ```mermaid
 flowchart LR
@@ -1812,11 +1812,11 @@ flowchart LR
 
 ---
 
-## O.11 多 Agent 评估
+## P.11 多 Agent 评估
 
 多 Agent 不能只评估最终回答，还要评估协作过程。
 
-### O.11.1 结果评估
+### P.11.1 结果评估
 
 使用任务本身对应的 Benchmark 或验收机制：
 
@@ -1833,7 +1833,7 @@ flowchart LR
 
 ---
 
-### O.11.2 协作评估
+### P.11.2 协作评估
 
 多 Agent 协作评估应覆盖：
 
@@ -1853,7 +1853,7 @@ MultiAgentBench 等研究工作尝试评估多 Agent 的协作和竞争，并比
 
 ---
 
-### O.11.3 失败模式评估
+### P.11.3 失败模式评估
 
 多 Agent 失败大致可以归纳为三类：
 
@@ -1878,7 +1878,7 @@ MultiAgentBench 等研究工作尝试评估多 Agent 的协作和竞争，并比
 
 ---
 
-### O.11.4 评估维度模型
+### P.11.4 评估维度模型
 
 ```text
 Multi-Agent Evaluation
@@ -1902,7 +1902,7 @@ Multi-Agent Evaluation
 
 ---
 
-### O.11.5 Offline、Online 与 Shadow 评估
+### P.11.5 Offline、Online 与 Shadow 评估
 
 #### Offline Evaluation
 
@@ -1926,9 +1926,9 @@ Multi-Agent Evaluation
 
 ---
 
-## O.12 什么时候应该使用多 Agent
+## P.12 什么时候应该使用多 Agent
 
-### O.12.1 任务可以并行分解
+### P.12.1 任务可以并行分解
 
 例如：
 
@@ -1937,7 +1937,7 @@ Multi-Agent Evaluation
 - 同时搜索多个信息源；
 - 同时生成多个候选方案。
 
-### O.12.2 不同子任务需要不同上下文
+### P.12.2 不同子任务需要不同上下文
 
 例如：
 
@@ -1945,7 +1945,7 @@ Multi-Agent Evaluation
 - 法务 Agent 不需要看到完整运行日志；
 - Reviewer 只需要 Artifact 和验收标准。
 
-### O.12.3 不同子任务需要不同工具或权限
+### P.12.3 不同子任务需要不同工具或权限
 
 例如：
 
@@ -1955,15 +1955,15 @@ Multi-Agent Evaluation
 - 财务审批 Agent；
 - 发布 Agent。
 
-### O.12.4 需要独立验证
+### P.12.4 需要独立验证
 
 生成 Agent 和验证 Agent 分开，有利于降低自我确认偏差。
 
-### O.12.5 单上下文无法容纳任务
+### P.12.5 单上下文无法容纳任务
 
 子 Agent 可以提供独立上下文窗口，并最终只返回压缩结果和 Artifact。
 
-### O.12.6 需要接入外部 Agent
+### P.12.6 需要接入外部 Agent
 
 例如通过 A2A 接入：
 
@@ -1973,23 +1973,23 @@ Multi-Agent Evaluation
 - 第三方服务 Agent；
 - 个人 Agent。
 
-### O.12.7 需要故障隔离
+### P.12.7 需要故障隔离
 
 某个 Agent 崩溃、超时或输出异常时，不应导致整个系统状态丢失。
 
 ---
 
-## O.13 什么时候不应该使用多 Agent
+## P.13 什么时候不应该使用多 Agent
 
-### O.13.1 一个 Agent 加合适工具已经足够
+### P.13.1 一个 Agent 加合适工具已经足够
 
 如果普通函数、单 Agent 或确定性 Workflow 可以完成，应优先采用更简单方案。
 
-### O.13.2 任务高度串行且强依赖完整共享上下文
+### P.13.2 任务高度串行且强依赖完整共享上下文
 
 例如某些编码任务要求所有步骤持续理解同一份复杂代码状态。此时频繁拆分给多个 Agent 可能导致上下文损失和合并冲突。
 
-### O.13.3 延迟和成本要求极低
+### P.13.3 延迟和成本要求极低
 
 多 Agent 会增加：
 
@@ -2000,15 +2000,15 @@ Multi-Agent Evaluation
 - 状态读写；
 - 调度时间。
 
-### O.13.4 无法验证结果
+### P.13.4 无法验证结果
 
 如果没有自动测试、Schema、规则、引用或人工验收，多 Agent 只会产生更多无法验证的文本。
 
-### O.13.5 只是为了模拟组织结构
+### P.13.5 只是为了模拟组织结构
 
 “CEO—CTO—开发—测试”看起来直观，但不代表必须对应四次独立模型调用。很多情况下，一个 Agent 加四个 Skill 和一个确定性 Workflow 更便宜、更稳定。
 
-### O.13.6 子任务无法真正隔离
+### P.13.6 子任务无法真正隔离
 
 如果所有 Agent 都需要完整上下文、相同工具、相同权限，而且任务不能并行，多 Agent 价值通常较低。
 
@@ -2026,7 +2026,7 @@ Multi-Agent Evaluation
 
 ---
 
-## O.14 主流系统选型建议
+## P.14 主流系统选型建议
 
 | 场景 | 优先考虑 | 原因 |
 |---|---|---|
@@ -2043,7 +2043,7 @@ Multi-Agent Evaluation
 | 社会模拟与合成数据 | CAMEL | Agent Society、World Simulation、数据生成 |
 | 软件公司/SOP 研究 | MetaGPT、ChatDev | 角色化软件过程和多 Agent 教学 |
 
-### O.14.1 按控制复杂度选型
+### P.14.1 按控制复杂度选型
 
 ```text
 轻量调用与 Handoff
@@ -2062,7 +2062,7 @@ Multi-Agent Evaluation
     → AG2 / CAMEL / MetaGPT / ChatDev
 ```
 
-### O.14.2 按组织能力选型
+### P.14.2 按组织能力选型
 
 | 团队特征 | 建议 |
 |---|---|
@@ -2075,9 +2075,9 @@ Multi-Agent Evaluation
 
 ---
 
-## O.15 2026 年多 Agent 发展趋势
+## P.15 2026 年多 Agent 发展趋势
 
-### O.15.1 从自由对话转向显式工作流
+### P.15.1 从自由对话转向显式工作流
 
 早期框架强调 Group Chat；当前主流框架越来越强调：
 
@@ -2092,7 +2092,7 @@ Multi-Agent Evaluation
 
 ---
 
-### O.15.2 从共享全部上下文转向上下文隔离
+### P.15.2 从共享全部上下文转向上下文隔离
 
 子 Agent 的重要价值之一，是把大量搜索、工具日志和中间过程隔离在独立上下文中，只向主 Agent 返回结构化结果。
 
@@ -2110,7 +2110,7 @@ Global Goal
 
 ---
 
-### O.15.3 从框架内 Agent 转向跨组织 Agent
+### P.15.3 从框架内 Agent 转向跨组织 Agent
 
 未来多 Agent 不只发生在一个进程中，而会出现：
 
@@ -2136,7 +2136,7 @@ Global Goal
 
 ---
 
-### O.15.4 Agent Gateway 与 Agent Identity 成为基础设施
+### P.15.4 Agent Gateway 与 Agent Identity 成为基础设施
 
 企业 Agent 平台会逐渐像 API 平台一样拥有：
 
@@ -2160,7 +2160,7 @@ API Gateway 管理的是服务调用；Agent Gateway 还需要管理：
 
 ---
 
-### O.15.5 预算感知的动态编排
+### P.15.5 预算感知的动态编排
 
 Supervisor 不再无限创建 Agent，而会根据：
 
@@ -2193,7 +2193,7 @@ Risk Cost
 
 ---
 
-### O.15.6 单 Agent + Skill 与多 Agent 融合
+### P.15.6 单 Agent + Skill 与多 Agent 融合
 
 很多过去通过多个角色 Agent 实现的能力，会被重新实现为：
 
@@ -2214,7 +2214,7 @@ Risk Cost
 
 ---
 
-### O.15.7 多 Agent 安全从单体安全转向系统安全
+### P.15.7 多 Agent 安全从单体安全转向系统安全
 
 安全边界必须覆盖：
 
@@ -2240,7 +2240,7 @@ Risk Cost
 
 ---
 
-### O.15.8 多 Agent 从在线对话转向 Durable Execution
+### P.15.8 多 Agent 从在线对话转向 Durable Execution
 
 未来长任务系统会越来越依赖：
 
@@ -2257,7 +2257,7 @@ Risk Cost
 
 ---
 
-### O.15.9 Agent 选择将从静态配置转向能力市场
+### P.15.9 Agent 选择将从静态配置转向能力市场
 
 系统将根据 Agent 的：
 
@@ -2288,7 +2288,7 @@ Agent Selection Score
 
 ---
 
-### O.15.10 多 Agent 评估将成为持续运营系统
+### P.15.10 多 Agent 评估将成为持续运营系统
 
 评估不再只发生在上线前，而会持续运行：
 
@@ -2306,9 +2306,9 @@ Agent Selection Score
 
 ---
 
-## O.16 生产级参考架构
+## P.16 生产级参考架构
 
-### O.16.1 总体架构
+### P.16.1 总体架构
 
 ```mermaid
 flowchart TB
@@ -2408,7 +2408,7 @@ flowchart TB
     Audit --> Dashboard
 ```
 
-### O.16.2 推荐核心服务
+### P.16.2 推荐核心服务
 
 | 服务 | 职责 |
 |---|---|
@@ -2428,7 +2428,7 @@ flowchart TB
 
 ---
 
-### O.16.3 任务生命周期
+### P.16.3 任务生命周期
 
 ```mermaid
 sequenceDiagram
@@ -2469,7 +2469,7 @@ sequenceDiagram
 
 ---
 
-### O.16.4 Agent 配置示例
+### P.16.4 Agent 配置示例
 
 ```yaml
 agent:
@@ -2517,9 +2517,9 @@ agent:
 
 ---
 
-## O.17 落地检查清单
+## P.17 落地检查清单
 
-### O.17.1 架构与职责
+### P.17.1 架构与职责
 
 - [ ] 每个 Agent 的职责边界是否明确；
 - [ ] 是否真的需要多个 Agent，而不是一个 Agent 加多个 Skill；
@@ -2528,7 +2528,7 @@ agent:
 - [ ] 是否避免所有 Agent 共享全部上下文；
 - [ ] 是否设计明确的终止条件。
 
-### O.17.2 状态与数据
+### P.17.2 状态与数据
 
 - [ ] 是否区分 Agent 私有状态和共享状态；
 - [ ] 共享状态是否使用版本化 Schema；
@@ -2537,7 +2537,7 @@ agent:
 - [ ] 是否有幂等键和重复副作用防护；
 - [ ] 是否定义记忆 Scope 和数据生命周期。
 
-### O.17.3 权限与安全
+### P.17.3 权限与安全
 
 - [ ] 每个 Agent 是否拥有独立身份；
 - [ ] 委派时是否执行权限缩减；
@@ -2547,7 +2547,7 @@ agent:
 - [ ] 是否防止 Prompt Injection 跨 Agent 传播；
 - [ ] 是否记录完整委派链和数据来源链。
 
-### O.17.4 可靠性
+### P.17.4 可靠性
 
 - [ ] 是否设置最大轮数、Token、时间和成本；
 - [ ] 是否有 Loop Detection；
@@ -2556,7 +2556,7 @@ agent:
 - [ ] 是否处理孤儿任务和僵尸进程；
 - [ ] 是否存在降级到单 Agent 或人工处理的路径。
 
-### O.17.5 可观测性与评估
+### P.17.5 可观测性与评估
 
 - [ ] 是否记录 Agent、Handoff、Delegation、Tool 和 Artifact Span；
 - [ ] 是否统计路由准确率和重复任务率；
@@ -2566,7 +2566,7 @@ agent:
 - [ ] 是否具备 Offline、Online 和 Shadow Evaluation；
 - [ ] 是否能从失败 Trace 回放完整执行过程。
 
-### O.17.6 协议与集成
+### P.17.6 协议与集成
 
 - [ ] 工具接入是否优先采用 MCP 或统一 Tool Contract；
 - [ ] 跨系统 Agent 是否使用 A2A 或稳定远程协议；
@@ -2576,7 +2576,7 @@ agent:
 
 ---
 
-## O.18 整体结论
+## P.18 整体结论
 
 多 Agent 系统的核心不是“让多个大模型聊天”，而是建立一套可控制的分布式智能执行系统：
 
@@ -2674,4 +2674,4 @@ Agent 专业化
 
 ---
 
-> **使用提示**：与其他附录的分工——A 讲模型机制、B 讲方法论、C 记来源、D 列产品、E 辨异同、F 索引图版、G 详解 OTel、H 上手 DeepEval、I 评测观测平台选型、J 盘点 Coding Agent 赛道、K 盘点可观测赛道、L 盘点评估赛道、M 盘点 Memory 赛道、N 盘点自进化赛道、**O 盘点多 Agent 赛道**、P 盘点 MCP 生态、Q 解析 Pi 源码、R 解析 Claude Code 源码、S 解析 Codex 源码。对照阅读：多 Agent 定义与编排模式（O.1/O.6）对第 17 章八拓扑与代价模型、框架盘点（O.3）对附录 D.5、协议栈（O.7）对第 8/18 章（MCP/A2A）、状态与记忆（O.8）对第 18 章交接包与附录 M、沙箱权限（O.9）对第 13 章与第 23 章 2.6、可观测（O.10）对第 14/19 章与附录 K、评估（O.11）对第 15 章与附录 L、该用不该用（O.12–O.13）对第 17/19 章三维选型与劝退判定。信息基准 2026-08-30（[C-41]），发行前按附录 C 清单复核。
+> **使用提示**：与其他附录的分工——A 讲模型机制、B 讲方法论、C 记来源、D 列产品、E 辨异同、F 索引图版、G 详解 OTel、H 上手 DeepEval、I 评测观测平台选型、J 上手 Mem0、K 盘点 Coding Agent 赛道、L 盘点可观测赛道、M 盘点评估赛道、N 盘点 Memory 赛道、O 盘点自进化赛道、**P 盘点多 Agent 赛道**、Q 盘点 MCP 生态、R 解析 Pi 源码、S 解析 Claude Code 源码、T 解析 Codex 源码。对照阅读：多 Agent 定义与编排模式（P.1/P.6）对第 17 章八拓扑与代价模型、框架盘点（P.3）对附录 D.5、协议栈（P.7）对第 8/18 章（MCP/A2A）、状态与记忆（P.8）对第 18 章交接包与附录 N、沙箱权限（P.9）对第 13 章与第 23 章 2.6、可观测（P.10）对第 14/19 章与附录 L、评估（P.11）对第 15 章与附录 M、该用不该用（P.12–P.13）对第 17/19 章三维选型与劝退判定。信息基准 2026-08-30（[C-41]），发行前按附录 C 清单复核。
