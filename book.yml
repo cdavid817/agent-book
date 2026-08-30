@@ -289,3 +289,8 @@ appendices:
     title: 主流 Coding Agent 系统全景
     path: 附录/附录M-主流CodingAgent系统全景.md
     status: draft
+  - id: appendix-n
+    letter: N
+    title: 主流 Agent 可观测系统全景
+    path: 附录/附录N-主流Agent可观测系统全景.md
+    status: draft

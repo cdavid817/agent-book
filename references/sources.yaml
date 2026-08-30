@@ -342,6 +342,15 @@ sources:
     expires_at: "2026-11-30"
     status: verified
     url: "https://github.com/anthropics/claude-code"
+  - id: C-37
+    title: "主流 Agent 可观测平台官方页面与 OTel GenAI Observability（附录 N 全景盘点，信息基准 2026-08）"
+    publisher: "各平台供应商与 OpenTelemetry 社区"
+    source_type: vendor-page
+    claim_scope: [appendix-n]
+    verified_at: "2026-08-30"
+    expires_at: "2026-11-30"
+    status: verified
+    url: "https://opentelemetry.io/blog/2026/genai-observability/"
 
 # 协议版本一致性锚点：check_sources 校验 C-03.version 与第 8 章 PROTOCOL_VERSION 常量相等。
 version_anchors:

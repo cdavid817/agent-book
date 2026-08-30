@@ -1,7 +1,7 @@
 # 《企业级 Agent 从入门到专家（2026版）》章节大纲
 
 > 主线逻辑：能力递进为主线、专题深潜为支线
-> 全书七篇 · 27 章 · 附录 A–M 十三本工具书 · 附贯穿实战项目
+> 全书七篇 · 27 章 · 附录 A–N 十四本工具书 · 附贯穿实战项目
 
 ---
 
@@ -403,3 +403,13 @@
 - M.11 能力九维度：Context Engine / Harness / ACI / 执行环境 / 验证 / 记忆与技能 / 多 Agent 编排 / 安全治理 / 可观测与评估
 - M.12–M.13 标准与评测：MCP、ACP、AGENTS.md；评测体系（对第 15/24 章）
 - M.14–M.17 趋势、场景选型、统一多 Agent 平台参考架构、最终判断
+
+## 附录 N：主流 Agent 可观测系统全景
+
+> 定位：Agent 可观测赛道全景调研（全文收录，信息基准 2026-08）——第 14 章讲方法、附录 G 讲 OTel 机制、附录 I 深评五家平台，本附录是赛道地图；名单会过期，六类问题框架与成熟度模型不过期。
+
+- N.1–N.2 框架：整体技术栈、核心数据模型与对象边界（对第 14 章四层 Span）
+- N.3 标准与埋点生态：OTel GenAI SemConv、OpenInference、OpenLLMetry、Agent Spec Tracing
+- N.4–N.8 五路平台盘点：开源自托管（Langfuse/Phoenix/MLflow/OpenLIT/AgentOps/Helicone/TruLens）、商业专用（LangSmith/Weave/Braintrust/Arize AX）、传统 APM（Datadog/New Relic/Dynatrace/Splunk/通用后端）、云厂商原生、框架原生
+- N.9–N.10 选型与指标体系（对第 14 章三类指标框架）
+- N.11–N.14 生产参考架构（对附录 G.5）、成熟度模型、未来方向、总结
