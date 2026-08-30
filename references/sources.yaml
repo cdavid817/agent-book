@@ -369,6 +369,15 @@ sources:
     expires_at: "2026-11-30"
     status: verified
     url: "https://github.com/mem0ai/mem0"
+  - id: C-40
+    title: "主流 Agent 自进化系统与论文（附录 Q 全景盘点，信息基准 2026-08-30；研究为主，非大规模商业部署）"
+    publisher: "各研究团队与开源社区"
+    source_type: community
+    claim_scope: [appendix-q]
+    verified_at: "2026-08-30"
+    expires_at: "2026-11-30"
+    status: verified
+    url: "https://arxiv.org/abs/2303.11366"
 
 # 协议版本一致性锚点：check_sources 校验 C-03.version 与第 8 章 PROTOCOL_VERSION 常量相等。
 version_anchors:

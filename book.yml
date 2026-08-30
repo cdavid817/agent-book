@@ -304,3 +304,8 @@ appendices:
     title: 主流 Agent Memory 系统全景
     path: 附录/附录P-主流AgentMemory系统全景.md
     status: draft
+  - id: appendix-q
+    letter: Q
+    title: 主流 Agent 自进化系统全景
+    path: 附录/附录Q-主流Agent自进化系统全景.md
+    status: draft
