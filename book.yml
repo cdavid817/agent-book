@@ -329,3 +329,8 @@ appendices:
     title: Codex 源码架构深度解析
     path: 附录/附录U-Codex源码架构深度解析.md
     status: draft
+  - id: appendix-v
+    letter: V
+    title: OpenCode 源码全景技术解析
+    path: 附录/附录V-OpenCode源码全景技术解析.md
+    status: draft

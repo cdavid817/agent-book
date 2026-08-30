@@ -1,7 +1,7 @@
 # 《企业级 Agent 从入门到专家（2026版）》章节大纲
 
 > 主线逻辑：能力递进为主线、专题深潜为支线
-> 全书七篇 · 27 章 · 附录 A–U 二十一本工具书 · 附贯穿实战项目
+> 全书七篇 · 27 章 · 附录 A–V 二十二本工具书 · 附贯穿实战项目
 
 ---
 
@@ -489,3 +489,13 @@
 - 篇十（U.60）端到端场景与故障推演：29 条控制流/安全流/数据流联合场景
 - 篇十一（U.61–U.66）收尾：结论、阅读路线、二次开发原则、关键源码链接、术语表、质量门禁
 
+## 附录 V：OpenCode 源码全景技术解析
+
+> 定位：OpenCode（anomalyco/opencode）整仓源码解析（全文收录，锁定 dev@10765ff，v1.18.25，基线 2026-08-30）——源码事实/架构推断/工程建议三级证据；S/T/U/V 四册源码解剖的第四册，独有课题是 V1/V2 双内核迁移。
+
+- V.1–V.6 基线与骨架：Monorepo 包边界、CLI 入口、Effect AppNode 与 Location 依赖图、Project 身份与 Worktree、配置体系、Agent 注册表与 Skill
+- V.7–V.10 双内核：V1 SessionPrompt 现行主循环、LLM 流式适配、V2 SessionRunner 与 Durable Input、Event Store 与 Projector（SQLite 投影）
+- V.11–V.19 能力平台：Provider 与模型目录、工具 Registry 汇聚、文件编辑与 Snapshot/Revert、Shell 与子 Agent、Permission 与 Doom Loop、压缩与 Overflow 恢复、MCP Client、LSP、插件 Host 与信任边界
+- V.20–V.23 产品表面：V1/V2 Server 与协议 SDK、TUI、共享 Web、Electron Desktop 与 Sidecar
+- V.24–V.27 工程治理：可观测、性能与资源、安全模型与强隔离、测试与发布矩阵
+- V.28–V.41 附带工程附录：工具目录与风险分类、事件目录、配置优先级、威胁矩阵、测试矩阵、故障演练、术语表、源码路径索引、逐章核验卡、迁移路线与发布门禁、接口一致性审查

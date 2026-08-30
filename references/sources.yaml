@@ -420,6 +420,16 @@ sources:
     status: verified
     url: "https://e2b.dev/docs"
 
+  - id: C-45
+    title: "OpenCode 源码仓库（附录 V 分析锁定 dev@10765ff，v1.18.25）"
+    publisher: "anomalyco / SST 社区"
+    source_type: repo
+    claim_scope: [appendix-v]
+    verified_at: "2026-08-31"
+    expires_at: "2026-11-30"
+    status: verified
+    url: "https://github.com/anomalyco/opencode"
+
 # 协议版本一致性锚点：check_sources 校验 C-03.version 与第 8 章 PROTOCOL_VERSION 常量相等。
 version_anchors:
   - source_id: C-03
