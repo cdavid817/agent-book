@@ -26,7 +26,7 @@ make verify     # 本地跑全部门禁；PR 通过它才有意义
 
 ## 来源规则
 
-- 凡量化结果、版本号、“当前/最新/已废弃/主流”等时效性表述，正文标 `[C-XX]`，并在 `references/sources.yaml` 登记（附录 C 是其可读视图）。
+- 凡量化结果、版本号、“当前/最新/已废弃/主流”等时效性表述，正文标 `[C-XX]`，并在 `references/sources.yaml` 登记（附录 3 是其可读视图）。
 - 协议/API 结论必须官方一手来源（规范 > 官方 SDK 文档 > 官方公告 > 论文 > 官方基准 > 二手分析 > 社区），不得以二手博客为唯一来源。
 - 时效性来源带 `verified_at` / `expires_at`；`tools/check_sources.py` 校验一致性与过期，并核对协议版本常量（如第 8 章 `PROTOCOL_VERSION` 与 `C-03`）。
 - 发行前跑 `make check-sources-strict`：`待确认` / 过期项会阻断。

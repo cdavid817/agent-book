@@ -9,7 +9,7 @@
   - book.yml 中所有 path 存在；
   - 磁盘上的正式章节全部登记在 book.yml（无孤儿章节、无缺失）；
   - 章节号唯一且从 1 连续；
-  - 附录 id/letter 唯一；
+  - 附录 id/number 唯一；
   - 每章含固定六段（## 1..6.）；
   - 每章图号从 1 连续、每图有图注；
   - README 引用了每章与每附录的路径（目录不漂移）；
@@ -79,13 +79,13 @@ def main(argv: list[str]) -> int:
     if yaml_numbers and sorted(yaml_numbers) != list(range(1, len(yaml_numbers) + 1)):
         errors.append(f"[章号不连续] 期望 1..{len(yaml_numbers)}，实为 {sorted(yaml_numbers)}")
 
-    # 4) 附录 id/letter 唯一
+    # 4) 附录 id/number 唯一
     ap_ids = [a["id"] for a in appendices]
-    ap_letters = [a.get("letter") for a in appendices]
+    ap_letters = [a.get("number") for a in appendices]
     if len(ap_ids) != len(set(ap_ids)):
         errors.append(f"[附录 id 重复] {ap_ids}")
     if len(ap_letters) != len(set(ap_letters)):
-        errors.append(f"[附录 letter 重复] {ap_letters}")
+        errors.append(f"[附录 number 重复] {ap_letters}")
 
     # 5)+6) 每章六段结构 + 图号连续 + 图注存在
     for ch, _ in yaml_chapters:

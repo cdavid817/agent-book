@@ -1,6 +1,6 @@
-# 附录 G：OpenTelemetry 详解与 Agent 可观测性指南
+# 附录 7：OpenTelemetry 详解与 Agent 可观测性指南
 
-> 定位：**OTel 机制兜底 + Agent 观测接入原理的完整指南**（全文收录，信息基准 2026-08-31，规范与文档入口见 [C-28]）。正文第 14 章讲"本书的 Agent 怎么用 OTel"（四层 Span、指标框架、采样策略），附录 M 盘点可观测赛道的平台产品，本附录讲两层原理：**OTel 本体**（G.2 的 24 个小节：数据模型、五信号、API/SDK、语义约定与 Schema 治理、OTLP、Collector 与部署形态、采样、排障）与 **Agent 观测机制**（四层观测模型、Agent 对象到遥测的映射、Python 零侵入探针原理、LangChain/LangGraph/OpenAI SDK/ChromaDB 的接入机制、Span 所有权与重复埋点治理、敏感数据治理、自研 Runtime 的原生观测设计）。一句话分工：第 14 章讲用法、M 讲平台、本附录讲机制与接入原理。
+> 定位：**OTel 机制兜底 + Agent 观测接入原理的完整指南**（全文收录，信息基准 2026-08-31，规范与文档入口见 [C-28]）。正文第 14 章讲"本书的 Agent 怎么用 OTel"（四层 Span、指标框架、采样策略），附录 13 盘点可观测赛道的平台产品，本附录讲两层原理：**OTel 本体**（7.2 的 24 个小节：数据模型、五信号、API/SDK、语义约定与 Schema 治理、OTLP、Collector 与部署形态、采样、排障）与 **Agent 观测机制**（四层观测模型、Agent 对象到遥测的映射、Python 零侵入探针原理、LangChain/LangGraph/OpenAI SDK/ChromaDB 的接入机制、Span 所有权与重复埋点治理、敏感数据治理、自研 Runtime 的原生观测设计）。一句话分工：第 14 章讲用法、13 讲平台、本附录讲机制与接入原理。
 
 ---
 
@@ -45,9 +45,9 @@ OpenTelemetry 提供统一的遥测标准，但它不会自动理解 Agent。完
 
 ---
 
-## G.1 核心结论
+## 7.1 核心结论
 
-### G.1.1 OpenTelemetry 不会自动理解 Agent
+### 7.1.1 OpenTelemetry 不会自动理解 Agent
 
 OpenTelemetry 提供的是统一的遥测 API、SDK、数据模型、语义约定和传输协议。它并不知道：
 
@@ -61,7 +61,7 @@ OpenTelemetry 提供的是统一的遥测 API、SDK、数据模型、语义约�
 
 真正理解框架内部语义的是 **Instrumentation Library**。它通过 Callback、Processor、Event Bus、Monkey Patch、Wrapper、Decorator、Middleware、Interceptor 或原生埋点，把框架行为翻译为 OpenTelemetry Span、Metric、Log 和 Event。
 
-### G.1.2 “零侵入”通常是零业务代码修改，不是零注入
+### 7.1.2 “零侵入”通常是零业务代码修改，不是零注入
 
 Python 中所谓零代码或零侵入接入，通常意味着：
 
@@ -79,7 +79,7 @@ Python 中所谓零代码或零侵入接入，通常意味着：
 - 对已运行进程进行任意动态附着；
 - 不需要 SDK、Exporter 或 Collector 配置。
 
-### G.1.3 四层观测共同构成完整视角
+### 7.1.3 四层观测共同构成完整视角
 
 | 观测层 | 回答的核心问题 |
 |---|---|
@@ -90,7 +90,7 @@ Python 中所谓零代码或零侵入接入，通常意味着：
 
 单独依赖任何一层都不完整。
 
-### G.1.4 OpenTelemetry“四件套”之外还必须有 Instrumentation
+### 7.1.4 OpenTelemetry“四件套”之外还必须有 Instrumentation
 
 通常所说的四件套是：
 
@@ -121,7 +121,7 @@ Collector
 
 Semantic Conventions 不在线性数据流中，它约束 Instrumentation 应如何命名和表达数据。
 
-### G.1.5 OTLP 与 Trace Context 是两件事
+### 7.1.5 OTLP 与 Trace Context 是两件事
 
 - `traceparent`、`tracestate`、`baggage`：用于在业务请求中传播上下文；
 - OTLP：用于把已经生成的遥测数据发送给 Collector。
@@ -130,14 +130,14 @@ Semantic Conventions 不在线性数据流中，它约束 Instrumentation 应如
 
 ---
 
-## G.2 OpenTelemetry 详解：从数据模型到生产运行时
+## 7.2 OpenTelemetry 详解：从数据模型到生产运行时
 
 本章先脱离 Agent 场景，系统解释 OpenTelemetry 本体。后续各章再把这些机制映射到 LangChain、LangGraph、OpenAI、ChromaDB 和自研 Agent Runtime。
 
 > **版本基线（2026-08-31）**  
 > 本章依据当前官方规范和文档整理：OpenTelemetry Specification `1.60.0`、Semantic Conventions `1.44.0`、OTLP `1.11.0`。不同语言 SDK、自动探针和语义约定的成熟度可能不同，生产接入应以所用语言与组件的实际版本为准。
 
-### G.2.1 OpenTelemetry 是什么，不是什么
+### 7.2.1 OpenTelemetry 是什么，不是什么
 
 OpenTelemetry，简称 OTel，是一套厂商中立的可观测性标准、API、SDK、数据模型、语义约定、自动埋点生态和采集组件。它解决的是：
 
@@ -174,7 +174,7 @@ flowchart LR
 
 OpenTelemetry 的核心价值不是“再造一个监控后端”，而是把遥测的生产端、传输端和消费端解耦。
 
-### G.2.2 OpenTelemetry 的整体分层
+### 7.2.2 OpenTelemetry 的整体分层
 
 从工程实现看，可以分成八个协作层次：
 
@@ -198,7 +198,7 @@ OpenTelemetry 的核心价值不是“再造一个监控后端”，而是把遥
 - **Trace Context** 是“业务调用如何被串联”；
 - **Instrumentation** 是“怎样从框架内部拿到数据”。
 
-### G.2.3 信号模型：Trace、Metric、Log、Baggage 与 Profile
+### 7.2.3 信号模型：Trace、Metric、Log、Baggage 与 Profile
 
 OpenTelemetry 以信号组织客户端架构。当前概念体系包含 Trace、Metric、Log、Baggage 和 Profile。
 
@@ -240,7 +240,7 @@ Metric 告警
   → 再按同一 Resource 和时间窗口查看 Profile
 ```
 
-### G.2.4 统一数据包络：Resource 与 InstrumentationScope
+### 7.2.4 统一数据包络：Resource 与 InstrumentationScope
 
 OpenTelemetry 的 Trace、Metric、Log 都不是孤立记录。它们通常处于两层公共上下文之下：
 
@@ -336,7 +336,7 @@ ResourceLogs
 
 理解这三层结构，对排查 `service.name` 丢失、同名 Metric 冲突、Scope 版本不一致和语义迁移问题非常重要。
 
-### G.2.5 Trace 详解
+### 7.2.5 Trace 详解
 
 ### 2.5.1 Trace 与 Span
 
@@ -499,7 +499,7 @@ Trace B: 后台任务
 
 这也是 Trace 与普通函数调用栈、日志缩进或单机 Profiler 的根本区别。
 
-### G.2.6 Metrics 详解
+### 7.2.6 Metrics 详解
 
 Metric 用于表达可聚合的数值趋势。它不是“定时打印一个数字”，而是由测量、属性、聚合、时间范围和 temporality 共同构成的数据流。
 
@@ -652,7 +652,7 @@ agent.workflow.duration p99 异常
 
 因此，Exemplar 是 Metrics 与 Traces 之间非常重要的桥梁。
 
-### G.2.7 Logs 详解
+### 7.2.7 Logs 详解
 
 OpenTelemetry Logs 的重点不是要求所有应用抛弃现有日志库，而是：
 
@@ -707,7 +707,7 @@ EventName（按实现和语义使用）
 
 不要把大量流式 Token、完整 stdout 或逐行文件内容全部作为 Span Event；这会扩大 Span、增加内存和后端索引压力。此类内容更适合受控日志或对象存储引用。
 
-### G.2.8 Context、SpanContext 与 Baggage
+### 7.2.8 Context、SpanContext 与 Baggage
 
 ### 2.8.1 Context
 
@@ -768,7 +768,7 @@ workflow.class
 进入Metric前再次做低基数过滤
 ```
 
-### G.2.9 Context Propagation 与 W3C Trace Context
+### 7.2.9 Context Propagation 与 W3C Trace Context
 
 ### 2.9.1 Inject 与 Extract
 
@@ -838,7 +838,7 @@ flowchart LR
 
 没有业务侧 Context Propagation，即使 A 和 B 都向同一 Collector 导出，也会形成两条不相关的 Trace。
 
-### G.2.10 Sampling 详解
+### 7.2.10 Sampling 详解
 
 采样用于控制 Trace 数据量与成本。采样不应与 Metrics 聚合或日志级别过滤混为一谈。
 
@@ -904,7 +904,7 @@ Consistent Probability Sampling
 - 未采样 Trace 的日志可能仍携带 TraceId，但后端未必能找到对应 Span；
 - Eval、审计和计费数据不能盲目依赖采样后的 Trace 作为唯一事实来源。
 
-### G.2.11 OpenTelemetry API 详解
+### 7.2.11 OpenTelemetry API 详解
 
 API 是供 Instrumentation、框架和应用调用的稳定接口。
 
@@ -961,7 +961,7 @@ Logs API 既可以被应用直接使用，也常由日志 Bridge／Appender 调�
 
 库只依赖 API，而宿主应用没有安装或配置 SDK 时，API 应以低开销 No-op 运行。这保证公共库可以安全加入 OTel API 依赖，而不会强制用户选择某个 SDK 或后端。
 
-### G.2.12 OpenTelemetry SDK 详解
+### 7.2.12 OpenTelemetry SDK 详解
 
 SDK 是 API 的实际实现。应用所有者通常在每个进程中统一配置一套 Provider。
 
@@ -1059,7 +1059,7 @@ Serverless冻结与恢复
 
 批处理提高吞吐，但意味着异常退出时可能丢失尚未导出的遥测。关键审计数据不应只依赖内存中的 Batch Queue。
 
-### G.2.13 OTLP 详解
+### 7.2.13 OTLP 详解
 
 OTLP 是 OpenTelemetry 原生协议，用于传输 Trace、Metric、Log 和逐步扩展的其他信号。
 
@@ -1139,7 +1139,7 @@ Exporter Queue
 
 因此，“SDK 返回成功”通常只代表当前导出边界成功，不代表数据已进入最终可查询的长期存储。
 
-### G.2.14 Collector 详解
+### 7.2.14 Collector 详解
 
 OpenTelemetry Collector 是厂商中立的遥测接收、处理和导出进程。它通过 Pipeline 组织组件。
 
@@ -1279,7 +1279,7 @@ Collector 是可组合架构。不同 Distribution 包含的 Receiver、Processo
 - 固定镜像摘要和组件版本；
 - 对配置做启动前校验和集成测试。
 
-### G.2.15 Collector 部署形态
+### 7.2.15 Collector 部署形态
 
 ### 2.15.1 直接导出
 
@@ -1347,7 +1347,7 @@ flowchart LR
 | Deployment | 中心 Gateway 集群 | Tail Sampling、路由、集中治理 |
 | 混合 | DaemonSet／Sidecar + Deployment | 大中型生产环境 |
 
-### G.2.16 Instrumentation 模式详解
+### 7.2.16 Instrumentation 模式详解
 
 ### 2.16.1 手工埋点
 
@@ -1429,7 +1429,7 @@ Tool参数
 
 因此它是协议和运行时观测补充，而不是 Agent 语义层替代品。
 
-### G.2.17 Semantic Conventions 与 Schema 版本治理
+### 7.2.17 Semantic Conventions 与 Schema 版本治理
 
 ### 2.17.1 为什么需要语义约定
 
@@ -1527,7 +1527,7 @@ company.workflow.run.id
 
 推荐增加内部 Telemetry Schema／Adapter 层统一管理。
 
-### G.2.18 配置模型与常用环境变量
+### 7.2.18 配置模型与常用环境变量
 
 OpenTelemetry 通常支持代码配置、环境变量、自动探针配置和 Collector 配置。常见环境变量包括：
 
@@ -1557,7 +1557,7 @@ OTEL_TRACES_SAMPLER_ARG=0.1
 - 自动探针、框架和应用可能同时尝试设置全局 Provider；
 - 凭证优先由 Secret 管理系统注入，不写入仓库。
 
-### G.2.19 性能、可靠性与安全治理
+### 7.2.19 性能、可靠性与安全治理
 
 ### 2.19.1 性能成本来自哪里
 
@@ -1646,7 +1646,7 @@ flowchart LR
 - Collector Receiver 启用认证和 TLS；
 - 防止租户伪造 Resource 或服务标识污染后端。
 
-### G.2.20 自可观测性与 Collector 运维
+### 7.2.20 自可观测性与 Collector 运维
 
 可观测系统自身也必须被观测。需要监控：
 
@@ -1678,7 +1678,7 @@ debug exporter
 
 容量判断不能只看 Collector CPU。若 Exporter Queue 持续接近容量，可能是后端或网络变慢，盲目增加 Collector 副本可能进一步压垮后端。
 
-### G.2.21 调试与排障方法
+### 7.2.21 调试与排障方法
 
 ### 2.21.1 从最短链路验证
 
@@ -1728,7 +1728,7 @@ Metric标签不含高基数值
 
 这比仅检查“有没有 Span”更可靠。
 
-### G.2.22 OpenTelemetry 与常见可观测组件的关系
+### 7.2.22 OpenTelemetry 与常见可观测组件的关系
 
 | 组件 | 与 OpenTelemetry 的关系 |
 |---|---|
@@ -1745,7 +1745,7 @@ Metric标签不含高基数值
 
 OpenTelemetry 可以替换“每个后端一套 SDK”的接入方式，但不会自动替换所有存储、查询和告警系统。
 
-### G.2.23 设计一套高质量 OTel 埋点的基本原则
+### 7.2.23 设计一套高质量 OTel 埋点的基本原则
 
 1. **先定义业务问题，再定义信号。** 不要为了“全量”给每个函数建 Span。
 2. **Span 表示有持续时间的操作，Event 表示瞬时事实。**
@@ -1763,7 +1763,7 @@ OpenTelemetry 可以替换“每个后端一套 SDK”的接入方式，但不�
 14. **对遥测结构做契约测试。**
 15. **监控可观测管线本身。**
 
-### G.2.24 从 OpenTelemetry 本体过渡到 Agent 可观测性
+### 7.2.24 从 OpenTelemetry 本体过渡到 Agent 可观测性
 
 掌握上述机制后，Agent 接入可以理解为一组映射：
 
@@ -1821,9 +1821,9 @@ Collector
 
 ---
 
-## G.3 OpenTelemetry 与 Agent 的总体关系
+## 7.3 OpenTelemetry 与 Agent 的总体关系
 
-### G.3.1 一次 Agent 任务应建模为一条 Trace
+### 7.3.1 一次 Agent 任务应建模为一条 Trace
 
 推荐把一次用户可感知的 Agent 请求建模为一条完整 Trace：
 
@@ -1855,7 +1855,7 @@ invoke_workflow coding_change
 - 是否出现循环、预算耗尽或人工接管；
 - 检索、记忆、模型和工具之间的因果关系。
 
-### G.3.2 总体架构
+### 7.3.2 总体架构
 
 ```mermaid
 flowchart LR
@@ -1882,9 +1882,9 @@ flowchart LR
 
 ---
 
-## G.4 OpenTelemetry 体系中的关键角色
+## 7.4 OpenTelemetry 体系中的关键角色
 
-### G.4.1 被观测框架
+### 7.4.1 被观测框架
 
 典型对象包括：
 
@@ -1904,7 +1904,7 @@ flowchart LR
 
 这些框架负责业务执行，不负责统一遥测表达。
 
-### G.4.2 Instrumentation
+### 7.4.2 Instrumentation
 
 Instrumentation 是连接框架与 OpenTelemetry 的适配层，主要职责是：
 
@@ -1924,7 +1924,7 @@ Instrumentation 通常不负责：
 - Collector 路由；
 - 可视化。
 
-### G.4.3 OpenTelemetry API
+### 7.4.3 OpenTelemetry API
 
 API 提供稳定的遥测编程接口：
 
@@ -1968,7 +1968,7 @@ API 本身不决定：
 
 如果应用没有安装或配置 SDK，API 通常退化为低开销 No-op。
 
-### G.4.4 OpenTelemetry SDK
+### 7.4.4 OpenTelemetry SDK
 
 SDK 是 API 的实际运行实现，负责：
 
@@ -1997,7 +1997,7 @@ flowchart LR
     F --> G["Collector"]
 ```
 
-### G.4.5 Semantic Conventions
+### 7.4.5 Semantic Conventions
 
 Semantic Conventions 是统一数据字典，规定：
 
@@ -2036,7 +2036,7 @@ gen_ai.tool.call.id = call_123
 - 避免业务代码散落硬编码 `gen_ai.*` 字段；
 - 对升级进行兼容性和数据口径回归测试。
 
-### G.4.6 OTLP
+### 7.4.6 OTLP
 
 OTLP 是 OpenTelemetry 原生遥测传输协议，负责：
 
@@ -2050,7 +2050,7 @@ OTLP 是 OpenTelemetry 原生遥测传输协议，负责：
 
 OTLP 不理解 Agent、Tool、Token 或 Retriever，它只运输已经生成的遥测对象。
 
-### G.4.7 Context Propagation
+### 7.4.7 Context Propagation
 
 Context Propagation 负责把调用关系串起来：
 
@@ -2076,7 +2076,7 @@ baggage
 
 它不负责导出遥测。
 
-### G.4.8 Collector
+### 7.4.8 Collector
 
 Collector 位于 SDK 和后端之间，负责：
 
@@ -2094,9 +2094,9 @@ Collector 位于 SDK 和后端之间，负责：
 
 ---
 
-## G.5 Agent 对象如何映射为 OpenTelemetry 遥测
+## 7.5 Agent 对象如何映射为 OpenTelemetry 遥测
 
-### G.5.1 Agent 概念与 Span 的映射
+### 7.5.1 Agent 概念与 Span 的映射
 
 | Agent 概念 | OpenTelemetry 表达 | 推荐操作 |
 |---|---|---|
@@ -2114,7 +2114,7 @@ Collector 位于 SDK 和后端之间，负责：
 | 一轮 Agent Loop | Event 或轻量内部 Span | Iteration |
 | 评测结果 | Event、Log 或独立 Eval 数据 | `gen_ai.evaluation.result` |
 
-### G.5.2 推荐父子关系
+### 7.5.2 推荐父子关系
 
 ```text
 Trace
@@ -2131,7 +2131,7 @@ Trace
     └── Evaluation
 ```
 
-### G.5.3 推荐标准属性
+### 7.5.3 推荐标准属性
 
 模型调用：
 
@@ -2166,7 +2166,7 @@ gen_ai.tool.call.id
 error.type
 ```
 
-### G.5.4 推荐应用自定义属性
+### 7.5.4 推荐应用自定义属性
 
 标准语义约定无法覆盖所有领域逻辑，可使用应用命名空间：
 
@@ -2203,7 +2203,7 @@ app.eval.score
 app.eval.result
 ```
 
-### G.5.5 两个容易误用的字段
+### 7.5.5 两个容易误用的字段
 
 ### 不要把运行 ID 当成稳定 Agent ID
 
@@ -2232,7 +2232,7 @@ gen_ai.conversation.id
 
 ---
 
-## G.6 四层 Agent 观测模型
+## 7.6 四层 Agent 观测模型
 
 四层不是互斥选项，而是从不同位置观察同一条执行链。
 
@@ -2252,7 +2252,7 @@ flowchart TD
 
 ---
 
-### G.6.1 第一层：Agent／框架语义观测层
+### 7.6.1 第一层：Agent／框架语义观测层
 
 ### 观察对象
 
@@ -2331,7 +2331,7 @@ def risk_node(state):
 
 ---
 
-### G.6.2 第二层：SDK／客户端库观测层
+### 7.6.2 第二层：SDK／客户端库观测层
 
 ### 观察对象
 
@@ -2394,7 +2394,7 @@ SDK 通常不知道：
 
 ---
 
-### G.6.3 第三层：协议／传输观测层
+### 7.6.3 第三层：协议／传输观测层
 
 ### 观察对象
 
@@ -2464,7 +2464,7 @@ chat gpt-*
 
 ---
 
-### G.6.4 第四层：应用／领域逻辑观测层
+### 7.6.4 第四层：应用／领域逻辑观测层
 
 ### 观察对象
 
@@ -2536,7 +2536,7 @@ span.add_event(
 
 ---
 
-### G.6.5 四层回答的问题对照
+### 7.6.5 四层回答的问题对照
 
 | 问题 | 主要观测层 |
 |---|---|
@@ -2554,7 +2554,7 @@ span.add_event(
 
 ---
 
-## G.7 常见 Hook 与 Instrumentation 机制
+## 7.7 常见 Hook 与 Instrumentation 机制
 
 “Hook”是一个统称，具体实现差异很大。
 
@@ -2572,7 +2572,7 @@ span.add_event(
 | Native OTel | 框架内部直接调用 OTel API | 使用者只需配置 | 最高 | AutoGen 等 |
 | Manual Span | 应用主动创建 Span | 需要修改业务代码 | 最高 | 自研领域逻辑 |
 
-### G.7.1 稳定性优先级
+### 7.7.1 稳定性优先级
 
 通常推荐：
 
@@ -2595,7 +2595,7 @@ Monkey Patch
 - Monkey Patch 依赖方法路径、签名和返回类型；
 - 协议层很难恢复 Agent 语义。
 
-### G.7.2 为什么 Monkey Patch 仍然重要
+### 7.7.2 为什么 Monkey Patch 仍然重要
 
 Monkey Patch 的价值主要在于：
 
@@ -2609,7 +2609,7 @@ Monkey Patch 的价值主要在于：
 
 ---
 
-## G.8 Python 零侵入探针的实现原理
+## 7.8 Python 零侵入探针的实现原理
 
 Python 的自动埋点与 Java Agent 的字节码增强不同，主要依靠：
 
@@ -2625,7 +2625,7 @@ Instrumentation
 Monkey Patch / Callback 注册
 ```
 
-### G.8.1 启动方式
+### 7.8.1 启动方式
 
 典型命令：
 
@@ -2640,7 +2640,7 @@ opentelemetry-instrument python app.py
 3. 注入自动埋点目录；
 4. 使用 `exec` 启动目标应用。
 
-### G.8.2 `sitecustomize` 自动执行
+### 7.8.2 `sitecustomize` 自动执行
 
 Python 启动时会尝试加载 `sitecustomize.py`。OpenTelemetry 的自动注入目录中包含类似逻辑：
 
@@ -2652,7 +2652,7 @@ initialize()
 
 因此 Instrumentation 可以在业务模块正式执行前完成加载。
 
-### G.8.3 Entry Point 自动发现
+### 7.8.3 Entry Point 自动发现
 
 Instrumentation 包会声明 Entry Point，例如：
 
@@ -2681,7 +2681,7 @@ opentelemetry_instrumentor
 instrument()
 ```
 
-### G.8.4 运行时注入
+### 7.8.4 运行时注入
 
 不同 Instrumentor 采用不同方法：
 
@@ -2702,7 +2702,7 @@ ChromaDB
     → 框架源码中的 @trace_method
 ```
 
-### G.8.5 父子 Span 如何自动形成
+### 7.8.5 父子 Span 如何自动形成
 
 OpenTelemetry Python 通常基于 `ContextVar` 保存当前上下文。
 
@@ -2718,7 +2718,7 @@ OpenTelemetry Python 通常基于 `ContextVar` 保存当前上下文。
 
 跨线程池、子进程或网络边界时，需要显式传播。
 
-### G.8.6 流式调用为什么更复杂
+### 7.8.6 流式调用为什么更复杂
 
 普通方法可以在返回时结束 Span，但流式方法返回时数据尚未消费完成。
 
@@ -2750,9 +2750,9 @@ OpenTelemetry Stream Wrapper
 
 ---
 
-## G.9 LangChain 与 LangGraph 的接入机制
+## 7.9 LangChain 与 LangGraph 的接入机制
 
-### G.9.1 核心机制
+### 7.9.1 核心机制
 
 LangChain 和 LangGraph 的主要观测机制是：
 
@@ -2779,7 +2779,7 @@ on_retriever_end
 on_retriever_error
 ```
 
-### G.9.2 OpenTelemetry 如何自动插入 Handler
+### 7.9.2 OpenTelemetry 如何自动插入 Handler
 
 OpenTelemetry LangChain Instrumentation 采用混合方式：
 
@@ -2806,7 +2806,7 @@ OpenTelemetry API
 
 > Monkey Patch 只负责自动接入，真正的语义数据来自框架 Callback。
 
-### G.9.3 事件映射
+### 7.9.3 事件映射
 
 | LangChain／LangGraph Callback | OpenTelemetry 表达 |
 |---|---|
@@ -2817,7 +2817,7 @@ OpenTelemetry API
 | `*_end` | 补充结果并结束 Span |
 | `*_error` | 记录异常并结束 Span |
 
-### G.9.4 父子关系恢复
+### 7.9.4 父子关系恢复
 
 Callback 通常携带：
 
@@ -2842,7 +2842,7 @@ Workflow
     └── Retriever
 ```
 
-### G.9.5 LangGraph 自动观测的边界
+### 7.9.5 LangGraph 自动观测的边界
 
 自动 Callback 可以看到：
 
@@ -2868,7 +2868,7 @@ Workflow
 - 手工 Span；
 - 应用领域 Event。
 
-### G.9.6 Middleware 的作用
+### 7.9.6 Middleware 的作用
 
 LangChain 可通过类似以下 Hook 扩展：
 
@@ -2893,9 +2893,9 @@ wrap_tool_call
 
 ---
 
-## G.10 OpenAI Python SDK 的接入机制
+## 7.10 OpenAI Python SDK 的接入机制
 
-### G.10.1 核心机制
+### 7.10.1 核心机制
 
 OpenAI Python SDK 的 OpenTelemetry 接入主要采用：
 
@@ -2928,7 +2928,7 @@ HTTP Client
 OpenAI API
 ```
 
-### G.10.2 包装器获取的数据
+### 7.10.2 包装器获取的数据
 
 调用前可从参数和 Client 中提取：
 
@@ -2955,7 +2955,7 @@ usage.output_tokens
 exception
 ```
 
-### G.10.3 典型包装流程
+### 7.10.3 典型包装流程
 
 ```python
 def traced_call(original, instance, args, kwargs):
@@ -2977,7 +2977,7 @@ def traced_call(original, instance, args, kwargs):
         raise
 ```
 
-### G.10.4 能看到什么
+### 7.10.4 能看到什么
 
 - 模型；
 - 请求参数；
@@ -2989,7 +2989,7 @@ def traced_call(original, instance, args, kwargs):
 - SDK 异常；
 - 某些自动重试。
 
-### G.10.5 看不到什么
+### 7.10.5 看不到什么
 
 - 哪个 Agent 为什么调用模型；
 - 这是 Planning 还是 Reflection；
@@ -3000,7 +3000,7 @@ def traced_call(original, instance, args, kwargs):
 
 这些需要上层框架或应用层补充。
 
-### G.10.6 Prompt 为什么默认可能不可见
+### 7.10.6 Prompt 为什么默认可能不可见
 
 出于安全和隐私考虑，生产默认通常不应采集：
 
@@ -3025,9 +3025,9 @@ truncated
 
 ---
 
-## G.11 OpenAI Agents SDK 的接入机制
+## 7.11 OpenAI Agents SDK 的接入机制
 
-### G.11.1 核心机制
+### 7.11.1 核心机制
 
 OpenAI Agents SDK 是 Agent 框架，其接入机制是：
 
@@ -3052,7 +3052,7 @@ TracingProcessor
 OpenTelemetry Span
 ```
 
-### G.11.2 典型映射
+### 7.11.2 典型映射
 
 ```text
 Agents Trace
@@ -3065,7 +3065,7 @@ FunctionSpanData
     → execute_tool
 ```
 
-### G.11.3 为什么还需要 OpenAI SDK Instrumentation
+### 7.11.3 为什么还需要 OpenAI SDK Instrumentation
 
 Agents Processor 主要负责：
 
@@ -3096,7 +3096,7 @@ invoke_workflow customer_support
         └── HTTP POST /v1/responses
 ```
 
-### G.11.4 实现边界
+### 7.11.4 实现边界
 
 框架拥有原生 Span 类型，并不代表当前 OTel 适配器已映射全部类型。某些 Handoff、Guardrail、Speech、Transcription 或特殊 Span 可能仍需：
 
@@ -3106,11 +3106,11 @@ invoke_workflow customer_support
 
 ---
 
-## G.12 ChromaDB 的接入机制
+## 7.12 ChromaDB 的接入机制
 
 ChromaDB 不是 Agent 框架，而是 Agent 常用的向量数据库。需要分为客户端和服务端。
 
-### G.12.1 Agent 侧 Chroma Client
+### 7.12.1 Agent 侧 Chroma Client
 
 如果通过 LangChain Retriever 调用 Chroma：
 
@@ -3126,7 +3126,7 @@ retrieval product_knowledge
 
 只有 HTTP Span 时，只能看到网络请求，无法知道它是一次语义检索。
 
-### G.12.2 Chroma Server 内部
+### 7.12.2 Chroma Server 内部
 
 Chroma 后端采用：
 
@@ -3165,7 +3165,7 @@ def decorator(original):
 - 服务端耗时；
 - 异常。
 
-### G.12.3 完整链路
+### 7.12.3 完整链路
 
 ```text
 retrieval product_documents       ← Agent / RAG 框架
@@ -3176,7 +3176,7 @@ retrieval product_documents       ← Agent / RAG 框架
         └── segment.search
 ```
 
-### G.12.4 Chroma 的 SDK 所有权问题
+### 7.12.4 Chroma 的 SDK 所有权问题
 
 独立 Chroma Server 自己配置：
 
@@ -3196,7 +3196,7 @@ retrieval product_documents       ← Agent / RAG 框架
 
 ---
 
-## G.13 其他 Agent 与 LLM 框架的机制对照
+## 7.13 其他 Agent 与 LLM 框架的机制对照
 
 | 框架或组件 | 主要观测层 | 核心机制 | 主要可见内容 |
 |---|---|---|---|
@@ -3220,9 +3220,9 @@ retrieval product_documents       ← Agent / RAG 框架
 
 ---
 
-## G.14 API、SDK、语义约定、OTLP 如何协同
+## 7.14 API、SDK、语义约定、OTLP 如何协同
 
-### G.14.1 六个角色的职责
+### 7.14.1 六个角色的职责
 
 | 组件 | 负责什么 | 不负责什么 |
 |---|---|---|
@@ -3237,7 +3237,7 @@ retrieval product_documents       ← Agent / RAG 框架
 
 > **Instrumentation 负责翻译，API 负责写入，语义约定负责统一语言，SDK 负责运行处理，OTLP 负责运输。**
 
-### G.14.2 线性数据流
+### 7.14.2 线性数据流
 
 ```text
 框架行为
@@ -3262,7 +3262,7 @@ Semantic Conventions
     ───────────────→ Instrumentation
 ```
 
-### G.14.3 为什么 Instrumentation 应依赖 API，而不是 SDK
+### 7.14.3 为什么 Instrumentation 应依赖 API，而不是 SDK
 
 Instrumentation 作者不应替用户决定：
 
@@ -3286,7 +3286,7 @@ Instrumentation 作者
 
 这样同一个 LangChain 或 OpenAI Instrumentation 可以输出到不同后端。
 
-### G.14.4 同进程统一 SDK
+### 7.14.4 同进程统一 SDK
 
 推荐同一应用进程只配置一个统一 Provider：
 
@@ -3323,7 +3323,7 @@ OpenAIInstrumentor().instrument(
 
 应用自己的手工 Span 也使用同一个 Provider。
 
-### G.14.5 LangChain 的协同过程
+### 7.14.5 LangChain 的协同过程
 
 ```text
 LangGraph 运行
@@ -3339,7 +3339,7 @@ OTLP
 Collector
 ```
 
-### G.14.6 OpenAI SDK 的协同过程
+### 7.14.6 OpenAI SDK 的协同过程
 
 ```text
 responses.create()
@@ -3357,7 +3357,7 @@ SDK 处理
 OTLP
 ```
 
-### G.14.7 Chroma Server 的协同过程
+### 7.14.7 Chroma Server 的协同过程
 
 ```text
 Chroma 内部方法
@@ -3373,7 +3373,7 @@ Collector
 
 ---
 
-## G.15 一次完整 RAG Agent 调用的观测链路
+## 7.15 一次完整 RAG Agent 调用的观测链路
 
 假设系统包含：
 
@@ -3383,7 +3383,7 @@ LangGraph
     └── ChromaDB
 ```
 
-### G.15.1 运行时序
+### 7.15.1 运行时序
 
 ```mermaid
 sequenceDiagram
@@ -3423,7 +3423,7 @@ sequenceDiagram
     SDK->>COL: OTLP 批量导出
 ```
 
-### G.15.2 最终 Trace
+### 7.15.2 最终 Trace
 
 ```text
 POST /agent/run
@@ -3437,7 +3437,7 @@ POST /agent/run
         └── HTTP POST /v1/responses
 ```
 
-### G.15.3 每层的解释能力
+### 7.15.3 每层的解释能力
 
 | Span | 解释的问题 |
 |---|---|
@@ -3450,9 +3450,9 @@ POST /agent/run
 
 ---
 
-## G.16 Trace、Metric、Log、Event 与 Eval 的职责
+## 7.16 Trace、Metric、Log、Event 与 Eval 的职责
 
-### G.16.1 Trace：回答单次任务的因果关系
+### 7.16.1 Trace：回答单次任务的因果关系
 
 Trace 适合分析：
 
@@ -3477,7 +3477,7 @@ chat model-x
 └── HTTP POST /responses    200
 ```
 
-### G.16.2 Metric：回答整体趋势
+### 7.16.2 Metric：回答整体趋势
 
 推荐指标：
 
@@ -3549,7 +3549,7 @@ raw_query
 
 原因是高基数会增加聚合状态、内存和存储压力。
 
-### G.16.3 Log：记录结构化上下文和明细
+### 7.16.3 Log：记录结构化上下文和明细
 
 推荐自动携带：
 
@@ -3571,7 +3571,7 @@ Log 适合记录：
 - 调试信息；
 - 外部工件引用。
 
-### G.16.4 Span Event：记录离散生命周期事件
+### 7.16.4 Span Event：记录离散生命周期事件
 
 推荐 Event：
 
@@ -3591,7 +3591,7 @@ app.agent.cancelled
 app.agent.completed
 ```
 
-### G.16.5 Eval：回答质量问题
+### 7.16.5 Eval：回答质量问题
 
 OpenTelemetry 可以回答：
 
@@ -3640,15 +3640,15 @@ Prompt 版本升级前后效果
 
 ---
 
-## G.17 跨线程、跨进程和跨服务上下文传播
+## 7.17 跨线程、跨进程和跨服务上下文传播
 
-### G.17.1 同进程
+### 7.17.1 同进程
 
 Python 通常通过 `ContextVar` 维护当前 Span。
 
 同步和标准异步调用可自动形成父子关系。
 
-### G.17.2 HTTP／gRPC
+### 7.17.2 HTTP／gRPC
 
 客户端：
 
@@ -3663,7 +3663,7 @@ Extract Context
 创建 Server Span
 ```
 
-### G.17.3 MCP
+### 7.17.3 MCP
 
 MCP 的一个流式 HTTP 连接可能传输多个逻辑请求，因此不能只依赖外层 HTTP Span。
 
@@ -3694,7 +3694,7 @@ execute_tool search-code
     └── mcp.server tools/call
 ```
 
-### G.17.4 CLI 和子进程
+### 7.17.4 CLI 和子进程
 
 CLI 支持 OpenTelemetry 时，父进程可通过环境变量或 IPC 传递：
 
@@ -3725,7 +3725,7 @@ app.cli.exit_code
 app.cli.signal
 ```
 
-### G.17.5 OTLP 与 Trace Context 的区别
+### 7.17.5 OTLP 与 Trace Context 的区别
 
 ```mermaid
 flowchart LR
@@ -3754,11 +3754,11 @@ flowchart LR
 
 ---
 
-## G.18 Span 所有权与重复 Span 治理
+## 7.18 Span 所有权与重复 Span 治理
 
 多层 Instrumentation 同时启用时容易重复。
 
-### G.18.1 合理嵌套
+### 7.18.1 合理嵌套
 
 ```text
 invoke_agent researcher          ← Agent 框架
@@ -3768,7 +3768,7 @@ invoke_agent researcher          ← Agent 框架
 
 三层含义不同，应保留。
 
-### G.18.2 不合理重复
+### 7.18.2 不合理重复
 
 ```text
 chat model-x                     ← LangChain
@@ -3783,7 +3783,7 @@ chat model-x                     ← LangChain
 - 告警失真；
 - Trace 噪声。
 
-### G.18.3 推荐 Span 所有权
+### 7.18.3 推荐 Span 所有权
 
 | Span 类型 | 推荐创建者 |
 |---|---|
@@ -3800,7 +3800,7 @@ chat model-x                     ← LangChain
 | 权限、预算、循环、审批 | 应用领域层 |
 | Eval | Eval 系统 |
 
-### G.18.4 治理方式
+### 7.18.4 治理方式
 
 - 禁用某层重复 Instrumentation；
 - 使用抑制机制；
@@ -3813,9 +3813,9 @@ chat model-x                     ← LangChain
 
 ---
 
-## G.19 Prompt、Completion 与敏感数据治理
+## 7.19 Prompt、Completion 与敏感数据治理
 
-### G.19.1 默认不采集正文
+### 7.19.1 默认不采集正文
 
 高风险内容包括：
 
@@ -3835,7 +3835,7 @@ API Key
 
 生产环境推荐默认关闭正文采集。
 
-### G.19.2 推荐记录元数据
+### 7.19.2 推荐记录元数据
 
 ```text
 gen_ai.prompt.name
@@ -3852,7 +3852,7 @@ app.output.length
 app.output.truncated
 ```
 
-### G.19.3 双层脱敏
+### 7.19.3 双层脱敏
 
 ```mermaid
 flowchart LR
@@ -3864,7 +3864,7 @@ flowchart LR
 
 进程内脱敏确保秘密不离开应用；Collector 负责第二道防线。
 
-### G.19.4 常见策略
+### 7.19.4 常见策略
 
 - Allowlist 优先于 Blocklist；
 - API Key、Token、Cookie 全部删除；
@@ -3879,9 +3879,9 @@ flowchart LR
 
 ---
 
-## G.20 Collector、采样与生产部署
+## 7.20 Collector、采样与生产部署
 
-### G.20.1 推荐 Agent-to-Gateway 架构
+### 7.20.1 推荐 Agent-to-Gateway 架构
 
 ```mermaid
 flowchart LR
@@ -3919,7 +3919,7 @@ flowchart LR
     GC --> E
 ```
 
-### G.20.2 常见 Pipeline
+### 7.20.2 常见 Pipeline
 
 ```yaml
 receivers:
@@ -3941,7 +3941,7 @@ exporters:
   otlp/logs:
 ```
 
-### G.20.3 可靠性配置
+### 7.20.3 可靠性配置
 
 建议启用：
 
@@ -3963,7 +3963,7 @@ Exporter 延迟
 持久队列磁盘
 ```
 
-### G.20.4 采样策略
+### 7.20.4 采样策略
 
 Agent Trace 通常长、重、包含大量嵌套，不建议所有成功任务永久全量保存。
 
@@ -3992,11 +3992,11 @@ Tail Sampling 的关键约束：
 
 ---
 
-## G.21 自研 Agent Runtime 的原生可观测设计
+## 7.21 自研 Agent Runtime 的原生可观测设计
 
 自研 Runtime 不应主要依靠 Monkey Patch 自己内部实现，而应提供正式生命周期契约。
 
-### G.21.1 推荐接口
+### 7.21.1 推荐接口
 
 ```python
 class AgentTracingProcessor:
@@ -4026,7 +4026,7 @@ class AgentTracingProcessor:
     def on_human_approval(self, event): ...
 ```
 
-### G.21.2 推荐架构
+### 7.21.2 推荐架构
 
 ```text
 Agent Runtime
@@ -4040,7 +4040,7 @@ OpenTelemetry API
 OTLP
 ```
 
-### G.21.3 职责边界
+### 7.21.3 职责边界
 
 Runtime 负责：
 
@@ -4070,7 +4070,7 @@ HTTP / gRPC
 消息队列
 ```
 
-### G.21.4 建议领域事件模型
+### 7.21.4 建议领域事件模型
 
 ```text
 WorkflowStarted
@@ -4114,7 +4114,7 @@ HumanApprovalCompleted
 EvaluationCompleted
 ```
 
-### G.21.5 设计原则
+### 7.21.5 设计原则
 
 1. 领域事件与 OTel 解耦；
 2. OTel Adapter 只是一个 Listener；
@@ -4129,7 +4129,7 @@ EvaluationCompleted
 
 ---
 
-## G.22 推荐落地路径
+## 7.22 推荐落地路径
 
 ### 第一阶段：打通基础 Trace
 
@@ -4219,9 +4219,9 @@ Trace + Token + Cost + Eval + User Feedback
 
 ---
 
-## G.23 常见误区与排查方法
+## 7.23 常见误区与排查方法
 
-### G.23.1 只安装 HTTP 探针
+### 7.23.1 只安装 HTTP 探针
 
 现象：
 
@@ -4243,7 +4243,7 @@ retrieval
 
 解决：安装对应框架和模型 SDK Instrumentation。
 
-### G.23.2 认为零侵入能看到所有内部逻辑
+### 7.23.2 认为零侵入能看到所有内部逻辑
 
 自动探针只能看到已知 Hook 或方法边界。
 
@@ -4260,7 +4260,7 @@ Loop
 
 仍需原生 Hook 或手工埋点。
 
-### G.23.3 Instrumentation 与框架版本不兼容
+### 7.23.3 Instrumentation 与框架版本不兼容
 
 Monkey Patch 依赖：
 
@@ -4278,7 +4278,7 @@ Monkey Patch 依赖：
 - 流式 Span 是否结束；
 - 是否出现异常或重复。
 
-### G.23.4 流式 Span 不结束
+### 7.23.4 流式 Span 不结束
 
 可能原因：
 
@@ -4288,7 +4288,7 @@ Monkey Patch 依赖：
 - 异步生成器泄漏；
 - Instrumentation 版本不兼容。
 
-### G.23.5 Token 或成本翻倍
+### 7.23.5 Token 或成本翻倍
 
 可能原因：
 
@@ -4300,13 +4300,13 @@ Monkey Patch 依赖：
 
 应指定一个权威模型逻辑 Span。
 
-### G.23.6 两个服务都导出 OTLP，但 Trace 没串起来
+### 7.23.6 两个服务都导出 OTLP，但 Trace 没串起来
 
 原因：没有在业务请求中传播 `traceparent`。
 
 OTLP 只负责导出，不负责业务调用上下文。
 
-### G.23.7 Metric 基数失控
+### 7.23.7 Metric 基数失控
 
 错误标签：
 
@@ -4321,7 +4321,7 @@ prompt
 
 应移到 Trace 或 Log。
 
-### G.23.8 HTTP 200 但业务失败
+### 7.23.8 HTTP 200 但业务失败
 
 HTTP 200 只代表传输成功，不代表：
 
@@ -4332,7 +4332,7 @@ HTTP 200 只代表传输成功，不代表：
 
 需要框架层、应用层和 Eval。
 
-### G.23.9 Prompt 看不到
+### 7.23.9 Prompt 看不到
 
 通常是安全默认设置，不一定是探针失效。
 
@@ -4344,7 +4344,7 @@ HTTP 200 只代表传输成功，不代表：
 - Collector Filter；
 - Backend 权限。
 
-### G.23.10 嵌入式组件覆盖全局 SDK
+### 7.23.10 嵌入式组件覆盖全局 SDK
 
 如果框架内部自行设置全局 Provider，可能导致：
 
@@ -4358,7 +4358,7 @@ HTTP 200 只代表传输成功，不代表：
 
 ---
 
-## G.24 术语表
+## 7.24 术语表
 
 | 术语 | 说明 |
 |---|---|
@@ -4415,7 +4415,7 @@ HTTP 200 只代表传输成功，不代表：
 
 ---
 
-## G.25 参考资料
+## 7.25 参考资料
 
 以下资料均为本次会话整理过程中涉及的主要官方或上游来源。
 
@@ -4522,7 +4522,7 @@ Agent 可观测性不是“给模型调用加一个 Trace”这么简单。一�
 
 只有把这些部分组合起来，OpenTelemetry 才能从普通的调用链监控，升级为 Agent 执行分析、故障定位、成本治理、安全审计和质量闭环的统一基础设施。
 
-## G.26 本书的 OTel 用件对照表
+## 7.26 本书的 OTel 用件对照表
 
 全书用到的 OTel 机制一表收束——也是"读完本附录回正文"的导航：
 
@@ -4541,4 +4541,4 @@ Agent 可观测性不是“给模型调用加一个 Trace”这么简单。一�
 
 ---
 
-> **使用提示**：与其他附录的分工——A 讲模型机制、B 讲方法论、C 记来源、D 列产品、E 辨异同、F 索引图版、**G 详解 OTel 与 Agent 观测**、H 上手 DeepEval、I 评测观测平台选型、J 上手 Mem0、K 详解记忆晋升机制、L 盘点 Coding Agent 赛道、M 盘点可观测赛道、N 盘点评估赛道、O 盘点 Memory 赛道、P 盘点自进化赛道、Q 盘点多 Agent 赛道、R 盘点 MCP 生态、S 盘点沙箱赛道、T 盘点 RAG 赛道、U 盘点 LLM Wiki 赛道、V 盘点 Loop Engineering 赛道、W 解析 Pi 源码、X 解析 Claude Code 源码、Y 解析 Codex 源码、Z 解析 OpenCode 源码。对照阅读：OTel 本体详解（G.2）对第 14 章用法与 [C-28]/[C-04]、四层观测模型（G.6）对第 14 章 2.1 四层 Span 树、Agent 对象映射（G.5）对第 12 章事件模型、敏感数据治理（G.19）对第 14 章 2.6 内容三级与第 13/20 章、生产部署与采样（G.20）对第 14 章坑 3、自研 Runtime 观测（G.21）对第 12 章六大件与贯穿项目 otel_bridge、平台选型见附录 I/L。顺序建议：先读第 14 章带着问题回来查；G.26 用件对照表是"读完回正文"的导航。
+> **使用提示**：与其他附录的分工——1 讲模型机制、2 讲方法论、3 记来源、4 列产品、5 辨异同、6 索引图版、**7 详解 OTel 与 Agent 观测**、8 上手 DeepEval、9 评测观测平台选型、10 上手 Mem0、11 详解记忆晋升机制、12 盘点 Coding Agent 赛道、13 盘点可观测赛道、14 盘点评估赛道、15 盘点 Memory 赛道、16 盘点自进化赛道、17 盘点多 Agent 赛道、18 盘点 MCP 生态、19 盘点沙箱赛道、20 盘点 RAG 赛道、21 盘点 LLM Wiki 赛道、22 盘点 Loop Engineering 赛道、23 解析 Pi 源码、24 解析 Claude Code 源码、25 解析 Codex 源码、26 解析 OpenCode 源码。对照阅读：OTel 本体详解（7.2）对第 14 章用法与 [C-28]/[C-04]、四层观测模型（7.6）对第 14 章 2.1 四层 Span 树、Agent 对象映射（7.5）对第 12 章事件模型、敏感数据治理（7.19）对第 14 章 2.6 内容三级与第 13/20 章、生产部署与采样（7.20）对第 14 章坑 3、自研 Runtime 观测（7.21）对第 12 章六大件与贯穿项目 otel_bridge、平台选型见附录 9/13。顺序建议：先读第 14 章带着问题回来查；7.26 用件对照表是"读完回正文"的导航。

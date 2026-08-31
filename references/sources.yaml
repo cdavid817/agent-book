@@ -1,4 +1,4 @@
-# 结构化来源账本（Task Group 5）。附录 C 的机器可检查版本。
+# 结构化来源账本（Task Group 5）。附录 3 的机器可检查版本。
 # 校验：python3 tools/check_sources.py（CI job: source-freshness）。
 #
 # 字段：id / title / publisher / source_type / version(适用时) / claim_scope /
@@ -36,7 +36,7 @@ sources:
     publisher: "Model Context Protocol"
     source_type: official-spec
     version: "2026-07-28"
-    claim_scope: [ch08, appendix-c]
+    claim_scope: [ch08, appendix-03]
     verified_at: "2026-08-24"
     expires_at: "2026-11-24"
     status: verified
@@ -64,30 +64,30 @@ sources:
     url: "https://www.swebench.com/"
 
   - id: C-06
-    title: "附录 D.1–D.6 产品/框架名称、归属与成熟度状态"
+    title: "附录 4.1–4.6 产品/框架名称、归属与成熟度状态"
     publisher: "各供应商官方页面与开源仓库"
     source_type: vendor-page
-    claim_scope: [appendix-d]
+    claim_scope: [appendix-04]
     verified_at: "2026-08-23"
     expires_at: "2026-11-24"
     status: verified
-    url: "https://appendix-d/see-per-product-links"
+    url: "https://appendix-04/see-per-product-links"
 
   - id: C-07
-    title: "附录 D.7–D.10 社区与新兴项目（含待确认条目）"
+    title: "附录 4.7–4.10 社区与新兴项目（含待确认条目）"
     publisher: "各项目开源仓库/官方页面"
     source_type: community
-    claim_scope: [appendix-d]
+    claim_scope: [appendix-04]
     verified_at: "2026-08-23"
     expires_at: "2026-11-24"
     status: partial   # 含待确认子项：OhMyOpencode / openclaw / Hermes Agent，发行前核实或删除
-    url: "https://appendix-d/community-and-emerging"
+    url: "https://appendix-04/community-and-emerging"
 
   - id: C-08
     title: "Lost in the Middle: How Language Models Use Long Contexts"
     publisher: "Liu et al. (TACL 2024)"
     source_type: paper
-    claim_scope: [ch05, appendix-a]
+    claim_scope: [ch05, appendix-01]
     verified_at: "2026-08-23"
     status: stable
     url: "https://arxiv.org/abs/2307.03172"
@@ -96,7 +96,7 @@ sources:
     title: "ReAct: Synergizing Reasoning and Acting in Language Models"
     publisher: "Yao et al. (ICLR 2023)"
     source_type: paper
-    claim_scope: [appendix-f]
+    claim_scope: [appendix-06]
     verified_at: "2026-08-23"
     status: stable
     url: "https://arxiv.org/abs/2210.03629"
@@ -105,7 +105,7 @@ sources:
     title: "Chain-of-Thought Prompting Elicits Reasoning in Large Language Models"
     publisher: "Wei et al. (NeurIPS 2022)"
     source_type: paper
-    claim_scope: [appendix-f]
+    claim_scope: [appendix-06]
     verified_at: "2026-08-23"
     status: stable
     url: "https://arxiv.org/abs/2201.11903"
@@ -114,7 +114,7 @@ sources:
     title: "Reflexion: Language Agents with Verbal Reinforcement Learning"
     publisher: "Shinn et al. (NeurIPS 2023)"
     source_type: paper
-    claim_scope: [appendix-f]
+    claim_scope: [appendix-06]
     verified_at: "2026-08-23"
     status: stable
     url: "https://arxiv.org/abs/2303.11366"
@@ -123,7 +123,7 @@ sources:
     title: "ReWOO: Decoupling Reasoning from Observations for Efficient Augmented Language Models"
     publisher: "Xu et al."
     source_type: paper
-    claim_scope: [appendix-f]
+    claim_scope: [appendix-06]
     verified_at: "2026-08-23"
     status: stable
     url: "https://arxiv.org/abs/2305.18323"
@@ -132,7 +132,7 @@ sources:
     title: "Attention Is All You Need"
     publisher: "Vaswani et al. (NeurIPS 2017)"
     source_type: paper
-    claim_scope: [appendix-f]
+    claim_scope: [appendix-06]
     verified_at: "2026-08-23"
     status: stable
     url: "https://arxiv.org/abs/1706.03762"
@@ -141,7 +141,7 @@ sources:
     title: "Cognitive Architectures for Language Agents (CoALA)"
     publisher: "Sumers et al. (TMLR 2024)"
     source_type: paper
-    claim_scope: [appendix-f]
+    claim_scope: [appendix-06]
     verified_at: "2026-08-23"
     status: stable
     url: "https://arxiv.org/abs/2309.02427"
@@ -223,7 +223,7 @@ sources:
     title: "Plan-and-Solve Prompting: Improving Zero-Shot Chain-of-Thought Reasoning by Large Language Models"
     publisher: "Wang et al. (ACL 2023)"
     source_type: paper
-    claim_scope: [ch04, appendix-e]
+    claim_scope: [ch04, appendix-05]
     verified_at: "2026-08-26"
     status: stable
     url: "https://arxiv.org/abs/2305.04091"
@@ -257,7 +257,7 @@ sources:
     title: "analysis_claude_code — Claude Code v1.0.33 反混淆产物的社区逆向分析（非官方；结论待确认且版本特定；上游仓库可能因 DMCA 下架）"
     publisher: "shareAI-Lab (community)"
     source_type: community
-    claim_scope: [appendix-d, ch25]
+    claim_scope: [appendix-04, ch25]
     verified_at: "2026-08-26"
     expires_at: "2026-11-26"
     status: verified
@@ -266,7 +266,7 @@ sources:
     title: "OpenTelemetry Specification & Documentation"
     publisher: "OpenTelemetry / CNCF"
     source_type: official-spec
-    claim_scope: [appendix-g, ch14]
+    claim_scope: [appendix-07, ch14]
     verified_at: "2026-08-27"
     expires_at: "2026-11-27"
     status: verified
@@ -275,7 +275,7 @@ sources:
     title: "Efficient and Robust Approximate Nearest Neighbor Search Using Hierarchical Navigable Small World Graphs (HNSW)"
     publisher: "Malkov & Yashunin (IEEE TPAMI 2018)"
     source_type: paper
-    claim_scope: [appendix-f, ch11]
+    claim_scope: [appendix-06, ch11]
     verified_at: "2026-08-27"
     status: stable
     url: "https://arxiv.org/abs/1603.09320"
@@ -283,7 +283,7 @@ sources:
     title: "Learning Transferable Visual Models From Natural Language Supervision (CLIP)"
     publisher: "Radford et al. (ICML 2021)"
     source_type: paper
-    claim_scope: [appendix-f, appendix-a]
+    claim_scope: [appendix-06, appendix-01]
     verified_at: "2026-08-27"
     status: stable
     url: "https://arxiv.org/abs/2103.00020"
@@ -292,7 +292,7 @@ sources:
     publisher: "Confident AI"
     source_type: vendor-doc
     version: "4.2.0"
-    claim_scope: [appendix-h, ch15]
+    claim_scope: [appendix-08, ch15]
     verified_at: "2026-08-28"
     expires_at: "2026-11-28"
     status: verified
@@ -301,170 +301,170 @@ sources:
     title: "DeepEval / Ragas / Arize Phoenix / Langfuse / MLflow 官方文档与仓库"
     publisher: "Confident AI / Exploding Gradients / Arize AI / Langfuse / Databricks(LF AI)"
     source_type: vendor-doc
-    claim_scope: [appendix-i, ch15]
+    claim_scope: [appendix-09, ch15]
     verified_at: "2026-08-28"
     expires_at: "2026-11-28"
     status: verified
     url: "https://docs.ragas.io/"
   - id: C-33
-    title: "Pi (earendil-works/pi) 源码仓库（附录 W 分析锁定 main@853a80d）"
+    title: "Pi (earendil-works/pi) 源码仓库（附录 23 分析锁定 main@853a80d）"
     publisher: "earendil-works"
     source_type: repo
-    claim_scope: [appendix-w]
+    claim_scope: [appendix-23]
     verified_at: "2026-08-30"
     expires_at: "2026-11-30"
     status: verified
     url: "https://github.com/earendil-works/pi"
   - id: C-34
-    title: "Claude Code 还原源码仓库（附录 X 审阅基线 b78dd22；source map 还原，非官方）"
+    title: "Claude Code 还原源码仓库（附录 24 审阅基线 b78dd22；source map 还原，非官方）"
     publisher: "pengchengneo（社区）"
     source_type: community
-    claim_scope: [appendix-x]
+    claim_scope: [appendix-24]
     verified_at: "2026-08-30"
     expires_at: "2026-11-30"
     status: verified
     url: "https://github.com/pengchengneo/Claude-Code"
   - id: C-35
-    title: "OpenAI Codex 源码仓库（附录 Y 快照锁定 main@0ae94fd）"
+    title: "OpenAI Codex 源码仓库（附录 25 快照锁定 main@0ae94fd）"
     publisher: "OpenAI"
     source_type: repo
-    claim_scope: [appendix-y]
+    claim_scope: [appendix-25]
     verified_at: "2026-08-30"
     expires_at: "2026-11-30"
     status: verified
     url: "https://github.com/openai/codex"
   - id: C-36
-    title: "主流 Coding Agent 产品与项目官方页面（附录 L 全景盘点，信息基准 2026-08-30）"
+    title: "主流 Coding Agent 产品与项目官方页面（附录 12 全景盘点，信息基准 2026-08-30）"
     publisher: "各产品供应商与开源社区"
     source_type: vendor-page
-    claim_scope: [appendix-l]
+    claim_scope: [appendix-12]
     verified_at: "2026-08-30"
     expires_at: "2026-11-30"
     status: verified
     url: "https://github.com/anthropics/claude-code"
   - id: C-37
-    title: "主流 Agent 可观测平台官方页面与 OTel GenAI Observability（附录 M 全景盘点，信息基准 2026-08）"
+    title: "主流 Agent 可观测平台官方页面与 OTel GenAI Observability（附录 13 全景盘点，信息基准 2026-08）"
     publisher: "各平台供应商与 OpenTelemetry 社区"
     source_type: vendor-page
-    claim_scope: [appendix-m]
+    claim_scope: [appendix-13]
     verified_at: "2026-08-30"
     expires_at: "2026-11-30"
     status: verified
     url: "https://opentelemetry.io/blog/2026/genai-observability/"
   - id: C-38
-    title: "主流 Agent 评估平台/框架/Benchmark 官方页面（附录 N 全景盘点，信息基准 2026-08-30）"
+    title: "主流 Agent 评估平台/框架/Benchmark 官方页面（附录 14 全景盘点，信息基准 2026-08-30）"
     publisher: "各平台供应商、评估框架社区与 Benchmark 官方"
     source_type: vendor-page
-    claim_scope: [appendix-n]
+    claim_scope: [appendix-14]
     verified_at: "2026-08-30"
     expires_at: "2026-11-30"
     status: verified
     url: "https://www.swebench.com/"
   - id: C-39
-    title: "主流 Agent Memory 系统官方页面与论文（附录 O 全景盘点，信息基准 2026-08）"
+    title: "主流 Agent Memory 系统官方页面与论文（附录 15 全景盘点，信息基准 2026-08）"
     publisher: "各 Memory 系统供应商、框架社区与研究团队"
     source_type: vendor-page
-    claim_scope: [appendix-o]
+    claim_scope: [appendix-15]
     verified_at: "2026-08-30"
     expires_at: "2026-11-30"
     status: verified
     url: "https://github.com/mem0ai/mem0"
   - id: C-40
-    title: "主流 Agent 自进化系统与论文（附录 P 全景盘点，信息基准 2026-08-30；研究为主，非大规模商业部署）"
+    title: "主流 Agent 自进化系统与论文（附录 16 全景盘点，信息基准 2026-08-30；研究为主，非大规模商业部署）"
     publisher: "各研究团队与开源社区"
     source_type: community
-    claim_scope: [appendix-p]
+    claim_scope: [appendix-16]
     verified_at: "2026-08-30"
     expires_at: "2026-11-30"
     status: verified
     url: "https://arxiv.org/abs/2303.11366"
 
   - id: C-41
-    title: "主流多 Agent 框架与平台官方页面（附录 Q 全景盘点，信息基准 2026-08-30）"
+    title: "主流多 Agent 框架与平台官方页面（附录 17 全景盘点，信息基准 2026-08-30）"
     publisher: "各框架供应商、云厂商与开源社区"
     source_type: vendor-page
-    claim_scope: [appendix-q]
+    claim_scope: [appendix-17]
     verified_at: "2026-08-31"
     expires_at: "2026-11-30"
     status: verified
     url: "https://langchain-ai.github.io/langgraph/"
 
   - id: C-42
-    title: "MCP 生态官方页面：Host/SDK/Server/Registry/Gateway 各方（附录 R 全景盘点，信息基准 2026-08-30）"
+    title: "MCP 生态官方页面：Host/SDK/Server/Registry/Gateway 各方（附录 18 全景盘点，信息基准 2026-08-30）"
     publisher: "Model Context Protocol 社区与各供应商"
     source_type: vendor-page
-    claim_scope: [appendix-r]
+    claim_scope: [appendix-18]
     verified_at: "2026-08-31"
     expires_at: "2026-11-30"
     status: verified
     url: "https://modelcontextprotocol.io/"
 
   - id: C-43
-    title: "Mem0 官方文档与 Releases（附录 J 教程快照：Python SDK v2.0.19 / Node SDK v3.1.7，2026-08-30）"
+    title: "Mem0 官方文档与 Releases（附录 10 教程快照：Python SDK v2.0.19 / Node SDK v3.1.7，2026-08-30）"
     publisher: "Mem0"
     source_type: vendor-doc
     version: "py-2.0.19 / node-3.1.7"
-    claim_scope: [appendix-j, ch10]
+    claim_scope: [appendix-10, ch10]
     verified_at: "2026-08-31"
     expires_at: "2026-11-30"
     status: verified
     url: "https://docs.mem0.ai/"
 
   - id: C-44
-    title: "主流 Agent 沙箱产品与隔离技术官方页面（附录 S 全景盘点，信息基准 2026-08-30）"
+    title: "主流 Agent 沙箱产品与隔离技术官方页面（附录 19 全景盘点，信息基准 2026-08-30）"
     publisher: "各沙箱供应商、云厂商与开源社区"
     source_type: vendor-page
-    claim_scope: [appendix-s]
+    claim_scope: [appendix-19]
     verified_at: "2026-08-31"
     expires_at: "2026-11-30"
     status: verified
     url: "https://e2b.dev/docs"
 
   - id: C-45
-    title: "OpenCode 源码仓库（附录 Z 分析锁定 dev@10765ff，v1.18.25）"
+    title: "OpenCode 源码仓库（附录 26 分析锁定 dev@10765ff，v1.18.25）"
     publisher: "anomalyco / SST 社区"
     source_type: repo
-    claim_scope: [appendix-z]
+    claim_scope: [appendix-26]
     verified_at: "2026-08-31"
     expires_at: "2026-11-30"
     status: verified
     url: "https://github.com/anomalyco/opencode"
 
   - id: C-46
-    title: "主流 RAG 产品/框架/基础设施官方页面（附录 T 全景盘点，信息基准 2026-08-31）"
+    title: "主流 RAG 产品/框架/基础设施官方页面（附录 20 全景盘点，信息基准 2026-08-31）"
     publisher: "各 RAG 平台、框架与向量数据库供应商"
     source_type: vendor-page
-    claim_scope: [appendix-t]
+    claim_scope: [appendix-20]
     verified_at: "2026-08-31"
     expires_at: "2026-11-30"
     status: verified
     url: "https://github.com/infiniflow/ragflow"
 
   - id: C-47
-    title: "主流 LLM Wiki 与知识编译系统官方页面（附录 U 全景盘点，信息基准 2026-08-31）"
+    title: "主流 LLM Wiki 与知识编译系统官方页面（附录 21 全景盘点，信息基准 2026-08-31）"
     publisher: "各产品供应商与开源社区"
     source_type: vendor-page
-    claim_scope: [appendix-u]
+    claim_scope: [appendix-21]
     verified_at: "2026-08-31"
     expires_at: "2026-11-30"
     status: verified
     url: "https://deepwiki.com/"
 
   - id: C-48
-    title: "Agent 记忆晋升机制的主流方案与框架文档（附录 K，信息基准 2026-08-31）"
+    title: "Agent 记忆晋升机制的主流方案与框架文档（附录 11，信息基准 2026-08-31）"
     publisher: "各框架供应商与研究社区"
     source_type: vendor-page
-    claim_scope: [appendix-k]
+    claim_scope: [appendix-11]
     verified_at: "2026-08-31"
     expires_at: "2026-11-30"
     status: verified
     url: "https://docs.mem0.ai/"
 
   - id: C-49
-    title: "主流 Loop/Graph Engineering 系统与框架官方页面（附录 V 全景盘点，信息基准 2026-09-01）"
+    title: "主流 Loop/Graph Engineering 系统与框架官方页面（附录 22 全景盘点，信息基准 2026-09-01）"
     publisher: "各框架供应商与开源社区"
     source_type: vendor-page
-    claim_scope: [appendix-v]
+    claim_scope: [appendix-22]
     verified_at: "2026-09-01"
     expires_at: "2026-12-01"
     status: verified

@@ -4,7 +4,7 @@
 
 校验三类内部引用指向真实存在的目标：
   - 第 N 章：N ∈ 1..N_max（N_max 取自 book.yml）；
-  - 附录 X：X ∈ A..F；
+  - 附录 N：N ∈ 1..附录数（book.yml 为单一来源）；
   - 跨章图引用 "第 N 章图 M"：目标章的图号上限 ≥ M；
   - 同文图引用 "图 M"：不超过本文图号上限。
 
@@ -30,18 +30,18 @@ def _max_ch() -> int:
 
 
 MAX_CH = _max_ch()
-def _appendix_letters() -> set:
-    """附录字母以 book.yml 为单一来源, 不在此硬编码"""
+def _appendix_numbers() -> set:
+    """附录编号以 book.yml 为单一来源, 不在此硬编码"""
     try:
         import yaml
         root = Path(__file__).resolve().parents[1]
         book = yaml.safe_load((root / "book.yml").read_text(encoding="utf-8"))
-        return {a["letter"] for a in book.get("appendices", [])}
+        return {a["number"] for a in book.get("appendices", [])}
     except Exception:
-        return set("ABCDEF")
+        return set(range(1, 7))
 
 
-VALID_APP = _appendix_letters()
+VALID_APP = _appendix_numbers()
 CHAP_RE = re.compile(r"第(\d+)章")
 
 
@@ -68,8 +68,8 @@ def main(argv: list[str]) -> int:
             n = int(mm.group(1))
             if n < 1 or n > MAX_CH:
                 broken.append((base, f"第{n}章 (超出 1..{MAX_CH})"))
-        for mm in re.finditer(r"附录\s*([A-Z])", text):
-            if mm.group(1) not in VALID_APP:
+        for mm in re.finditer(r"附录\s*(\d+)", text):
+            if int(mm.group(1)) not in VALID_APP:
                 broken.append((base, f"附录{mm.group(1)} (不存在)"))
         for mm in re.finditer(r"第\s*(\d+)\s*章图\s*(\d+)", text):
             n, fn = int(mm.group(1)), int(mm.group(2))

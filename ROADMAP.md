@@ -11,7 +11,7 @@
 ## 进行中 / 剩余子项
 
 - **TG3 增量**：按依赖顺序把更多 `executable` 章节代码抽入 `examples/reference-assistant/` 并加 snippet 标记（contracts → loop → tools/retry → context → hooks/security → MCP → memory/RAG → obs/cost → eval → orchestration → coding-repair）。
-- **TG4 §9.5**：一份覆盖 27 章 + 附录 A–F + README/outline/图表规范/book.yml/示例 README 的完整编辑性复核报告。
+- **TG4 §9.5**：一份覆盖 27 章 + 附录 1–6 + README/outline/图表规范/book.yml/示例 README 的完整编辑性复核报告。
 
 ## 后续（P1 内容补全）
 
@@ -24,4 +24,4 @@ P1 主题在 P0 完成后以独立 PR 实施，每项须含真实源码 + 测试
 ## 发行前门禁
 
 - `make verify`（CI 每 PR）　- `make check-sources-strict`（`待确认`/过期升级为失败）
-- 解决 `references/sources.yaml` 中所有 `partial` 状态与附录 D 的 `待确认` 产品条目（核实或删除）。
+- 解决 `references/sources.yaml` 中所有 `partial` 状态与附录 4 的 `待确认` 产品条目（核实或删除）。

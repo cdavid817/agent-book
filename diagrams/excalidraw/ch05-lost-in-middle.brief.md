@@ -1,4 +1,4 @@
-# Excalidraw 示意图 brief — lost in the middle U 型曲线（第 5 章 / 附录 A.5 图 A-2 的手绘版）
+# Excalidraw 示意图 brief — lost in the middle U 型曲线（第 5 章 / 附录 1.5 图 1-2 的手绘版）
 
 目标：手绘一条平滑 U 型曲线，比 mermaid xychart 更"示意"、更耐读。
 

@@ -224,138 +224,134 @@ parts:
         sources_verified_at: 2026-08-23
 
 appendices:
-  - id: appendix-a
-    letter: A
+  - id: appendix-01
+    number: 1
     title: LLM 基础 Wiki
-    path: 附录/附录A-LLM基础Wiki.md
+    path: 附录/附录01-LLM基础Wiki.md
     status: reviewed
-  - id: appendix-b
-    letter: B
+  - id: appendix-02
+    number: 2
     title: Agent Engineering 方法论速查
-    path: 附录/附录B-AgentEngineering方法论速查.md
+    path: 附录/附录02-AgentEngineering方法论速查.md
     status: reviewed
-  - id: appendix-c
-    letter: C
+  - id: appendix-03
+    number: 3
     title: 参考文献与版本核验
-    path: 附录/附录C-参考文献与版本核验.md
+    path: 附录/附录03-参考文献与版本核验.md
     status: reviewed
-  - id: appendix-d
-    letter: D
+  - id: appendix-04
+    number: 4
     title: 常见 Agent 产品与框架速览
-    path: 附录/附录D-常见Agent产品与框架速览.md
+    path: 附录/附录04-常见Agent产品与框架速览.md
     status: reviewed
-  - id: appendix-e
-    letter: E
+  - id: appendix-05
+    number: 5
     title: 易混概念辨析速查
-    path: 附录/附录E-易混概念辨析速查.md
+    path: 附录/附录05-易混概念辨析速查.md
     status: reviewed
-  - id: appendix-f
-    letter: F
+  - id: appendix-06
+    number: 6
     title: 关键知识点·经典图版索引
-    path: 附录/附录F-关键知识点经典图版索引.md
+    path: 附录/附录06-关键知识点经典图版索引.md
     status: reviewed
-  - id: appendix-g
-    letter: G
+  - id: appendix-07
+    number: 7
     title: OpenTelemetry 详解与 Agent 可观测性指南
-    path: 附录/附录G-OpenTelemetry详解.md
+    path: 附录/附录07-OpenTelemetry详解.md
     status: draft
-  - id: appendix-h
-    letter: H
+  - id: appendix-08
+    number: 8
     title: DeepEval 实战指南
-    path: 附录/附录H-DeepEval实战指南.md
+    path: 附录/附录08-DeepEval实战指南.md
     status: draft
-  - id: appendix-i
-    letter: I
+  - id: appendix-09
+    number: 9
     title: 评测与观测平台详解与选型
-    path: 附录/附录I-评测与观测平台详解与选型.md
+    path: 附录/附录09-评测与观测平台详解与选型.md
     status: draft
-  - id: appendix-j
-    letter: J
+  - id: appendix-10
+    number: 10
     title: Mem0 实战指南
-    path: 附录/附录J-Mem0实战指南.md
+    path: 附录/附录10-Mem0实战指南.md
     status: draft
-  - id: appendix-k
-    letter: K
+  - id: appendix-11
+    number: 11
     title: Agent 记忆机制详解——从短期到长期
-    path: 附录/附录K-Agent记忆机制详解.md
+    path: 附录/附录11-Agent记忆机制详解.md
     status: draft
-  - id: appendix-l
-    letter: L
+  - id: appendix-12
+    number: 12
     title: 主流 Coding Agent 系统全景
-    path: 附录/附录L-主流CodingAgent系统全景.md
+    path: 附录/附录12-主流CodingAgent系统全景.md
     status: draft
-  - id: appendix-m
-    letter: M
+  - id: appendix-13
+    number: 13
     title: 主流 Agent 可观测系统全景
-    path: 附录/附录M-主流Agent可观测系统全景.md
+    path: 附录/附录13-主流Agent可观测系统全景.md
     status: draft
-  - id: appendix-n
-    letter: N
+  - id: appendix-14
+    number: 14
     title: 主流 Agent 评估系统全景
-    path: 附录/附录N-主流Agent评估系统全景.md
+    path: 附录/附录14-主流Agent评估系统全景.md
     status: draft
-  - id: appendix-o
-    letter: O
+  - id: appendix-15
+    number: 15
     title: 主流 Agent Memory 系统全景
-    path: 附录/附录O-主流AgentMemory系统全景.md
+    path: 附录/附录15-主流AgentMemory系统全景.md
     status: draft
-  - id: appendix-p
-    letter: P
+  - id: appendix-16
+    number: 16
     title: 主流 Agent 自进化系统全景
-    path: 附录/附录P-主流Agent自进化系统全景.md
+    path: 附录/附录16-主流Agent自进化系统全景.md
     status: draft
-  - id: appendix-q
-    letter: Q
+  - id: appendix-17
+    number: 17
     title: 主流多 Agent 系统全景
-    path: 附录/附录Q-主流多Agent系统全景.md
+    path: 附录/附录17-主流多Agent系统全景.md
     status: draft
-  - id: appendix-r
-    letter: R
+  - id: appendix-18
+    number: 18
     title: 主流 MCP 系统全景
-    path: 附录/附录R-主流MCP系统全景.md
+    path: 附录/附录18-主流MCP系统全景.md
     status: draft
-  - id: appendix-s
-    letter: S
+  - id: appendix-19
+    number: 19
     title: 主流 Agent 沙箱系统全景
-    path: 附录/附录S-主流Agent沙箱系统全景.md
+    path: 附录/附录19-主流Agent沙箱系统全景.md
     status: draft
-  - id: appendix-t
-    letter: T
+  - id: appendix-20
+    number: 20
     title: 主流 RAG 系统全景与工程实践
-    path: 附录/附录T-主流RAG系统全景与工程实践.md
+    path: 附录/附录20-主流RAG系统全景与工程实践.md
     status: draft
-  - id: appendix-u
-    letter: U
+  - id: appendix-21
+    number: 21
     title: 主流 LLM Wiki 系统全景
-    path: 附录/附录U-主流LLMWiki系统全景.md
+    path: 附录/附录21-主流LLMWiki系统全景.md
     status: draft
-  - id: appendix-v
-    letter: V
+  - id: appendix-22
+    number: 22
     title: 主流 Loop Engineering 系统全景
-    path: 附录/附录V-主流LoopEngineering系统全景.md
+    path: 附录/附录22-主流LoopEngineering系统全景.md
     status: draft
-  - id: appendix-w
-    letter: W
+  - id: appendix-23
+    number: 23
     title: Pi 源码架构全景解析
-    path: 附录/附录W-Pi源码架构全景解析.md
+    path: 附录/附录23-Pi源码架构全景解析.md
     status: draft
-  - id: appendix-x
-    letter: X
+  - id: appendix-24
+    number: 24
     title: Claude Code 源码架构深度解析
-    path: 附录/附录X-ClaudeCode源码架构深度解析.md
+    path: 附录/附录24-ClaudeCode源码架构深度解析.md
     status: draft
-  - id: appendix-y
-    letter: Y
+  - id: appendix-25
+    number: 25
     title: Codex 源码架构深度解析
-    path: 附录/附录Y-Codex源码架构深度解析.md
+    path: 附录/附录25-Codex源码架构深度解析.md
     status: draft
-  - id: appendix-z
-    letter: Z
+  - id: appendix-26
+    number: 26
     title: OpenCode 源码全景技术解析
-    path: 附录/附录Z-OpenCode源码全景技术解析.md
+    path: 附录/附录26-OpenCode源码全景技术解析.md
     status: draft
 
-# 资料系列（2026-09-01 起）：附录字母表 A–Z 已冻结，新增全文收录文档进编号系列。
-# 命名：资料系列/{全景|详解|源码}NN-标题.md；id 形如 series-quanjing-01。
-# check_sources 的 claim_scope 接受此处登记的 series id；check_book 校验 path 存在。
-series: []

@@ -122,7 +122,7 @@ graph LR
 
 ### 2.4 长上下文衰减：位置就是权重
 
-模型对长上下文的利用不均匀：Liu 等人的实验 [C-08] 显示，关键信息位于上下文**开头或结尾**时召回率最高，位于**中部**时显著下跌（多文档问答场景下跌幅达 20 个百分点量级），曲线呈 U 型——即 **"lost in the middle"** 现象。新一代长窗口模型缓解了但未消除这一效应；对 Agent 的工程含义有三条（机制解释参见附录 A.1，长上下文评测参见附录 A.5）：
+模型对长上下文的利用不均匀：Liu 等人的实验 [C-08] 显示，关键信息位于上下文**开头或结尾**时召回率最高，位于**中部**时显著下跌（多文档问答场景下跌幅达 20 个百分点量级），曲线呈 U 型——即 **"lost in the middle"** 现象。新一代长窗口模型缓解了但未消除这一效应；对 Agent 的工程含义有三条（机制解释参见附录 1.1，长上下文评测参见附录 1.5）：
 
 其一，**关键信息占两端**：System Prompt 天然在头部；而任务的权威状态（当前计划、TODO 视图、关键约束）应在**每轮末尾**注入或重申——这正是第 4 章"TODO 外置 + 每轮注入权威视图"能治漂移的位置学原理。其二，**中部是压缩的天然靶区**：被压掉信息本就处在利用率最低的位置，这是 Compaction 损耗可接受的结构性原因。其三，**长会话的"变笨"要先查位置再怪模型**：场景引入中第 14 轮结论失效，正是它随轮数推移滑入中部的结果——把关键结论提升为状态、随尾部重申，比换更大的模型便宜且有效。
 
@@ -237,7 +237,7 @@ class ContextCompactor:
 if self.compactor and self.compactor.should_compact(messages):
     messages, report = self.compactor.compact(messages)
     if report:
-        state.input_tokens += report.compact_cost_input     # 分类计价（附录 A.3）
+        state.input_tokens += report.compact_cost_input     # 分类计价（附录 1.3）
         state.output_tokens += report.compact_cost_output
         self._emit("compaction", state.turn,
                    saved_per_turn=report.saved_tokens_per_turn,
@@ -324,7 +324,7 @@ if self.compactor and self.compactor.should_compact(messages):
 - 权威状态（计划/TODO/约束）每轮在尾部注入重申——第 4 章治漂移的位置学原理。
 - 中部是压缩的天然靶区：压掉的信息本就处在利用率最低处，损耗结构性可接受。
 - 排障顺序：长会话变笨先查关键信息的位置，再怀疑模型能力。
-- 加分点：长窗口模型缓解但未消除该效应，不能用"窗口够大"豁免上下文管理（参见附录 A.1/A.5）。
+- 加分点：长窗口模型缓解但未消除该效应，不能用"窗口够大"豁免上下文管理（参见附录 1.1/A.5）。
 
 **Q5：压缩和提示缓存是什么关系？怎么算这笔账？**
 

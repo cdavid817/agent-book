@@ -49,7 +49,7 @@
 | 想亲手跑通代码 | 第 5～8 节 |
 | 想做生产级 Agent Runtime | 第 9～19 节 |
 | 准备 Agent 面试 | 第 20～22 节 |
-| 想接入 OpenAI Responses API | 附录 B |
+| 想接入 OpenAI Responses API | 附录 2 |
 
 ---
 
@@ -4211,7 +4211,7 @@ AgentRuntime = Policy + State + Loop + Tools + Guardrails + Observability
 
 ---
 
-# 附录 A：供应商无关的核心接口
+# 附录 1：供应商无关的核心接口
 
 下面给出一个更适合工程项目的抽象。它不是完整实现，而是展示如何防止核心 Loop 被某一家 API 数据结构绑死。
 
@@ -4368,7 +4368,7 @@ def run_agent(deps: Dependencies, task_id: str) -> RunResult:
 
 ---
 
-# 附录 B：OpenAI Responses API 的等价工具循环
+# 附录 2：OpenAI Responses API 的等价工具循环
 
 本章主示例使用 Anthropic 风格的 `tool_use`/`tool_result`，因为其消息配对关系容易直观看清。OpenAI Responses API 的核心循环相同，只是协议对象不同：
 
@@ -4482,7 +4482,7 @@ def run(user_input: str, max_turns: int = 8) -> str:
     raise RuntimeError("Agent exceeded max_turns")
 ```
 
-### B.1 严格模式的一个易错点
+### 2.1 严格模式的一个易错点
 
 当函数工具启用严格 Schema 时，对象通常需要：
 
@@ -4492,11 +4492,11 @@ def run(user_input: str, max_turns: int = 8) -> str:
 
 无论供应商是否提供严格模式，运行时都应再次校验，不能把 API 侧约束当作权限边界。
 
-### B.2 不要只保留 `output_text`
+### 2.2 不要只保留 `output_text`
 
 工具循环中，`response.output` 可能包含函数调用以及供应商用于延续上下文的其他项目。仅把可见文本拼回去可能丢失状态。Adapter 应完整遵守当时生效的官方协议，并用契约测试监控升级。
 
-### B.3 使用 `previous_response_id` 还是手动维护输入
+### 2.3 使用 `previous_response_id` 还是手动维护输入
 
 具体选型取决于：
 
@@ -4510,7 +4510,7 @@ def run(user_input: str, max_turns: int = 8) -> str:
 
 ---
 
-# 附录 C：文本 ReAct 的最小解析器为何只适合教学
+# 附录 3：文本 ReAct 的最小解析器为何只适合教学
 
 在没有原生工具协议时，可能约定模型输出：
 
@@ -4544,7 +4544,7 @@ Action Input: {"path": "."}
 
 ---
 
-# 附录 D：术语表
+# 附录 4：术语表
 
 | 术语 | 含义 |
 |---|---|

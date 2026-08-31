@@ -48,14 +48,14 @@ def _chapter_count() -> int:
         return 25
 
 
-def _appendix_letters() -> set:
+def _appendix_ids() -> set:
     try:
         import yaml
         root = pathlib.Path(__file__).resolve().parents[1]
         book = yaml.safe_load((root / "book.yml").read_text(encoding="utf-8"))
-        return {a["letter"].lower() for a in book.get("appendices", [])}
+        return {f"{a['number']:02d}" for a in book.get("appendices", [])}
     except Exception:
-        return set("abcdef")
+        return {f"{n:02d}" for n in range(1, 7)}
 
 
 def _series_ids() -> set:
@@ -69,7 +69,7 @@ def _series_ids() -> set:
 
 
 VALID_SCOPE = {f"ch{n:02d}" for n in range(1, _chapter_count() + 1)} | \
-              {f"appendix-{c}" for c in _appendix_letters()} | _series_ids()
+              {f"appendix-{c}" for c in _appendix_ids()} | _series_ids()
 
 
 def valid_date(s: str) -> bool:
@@ -97,7 +97,7 @@ def main(argv: list[str]) -> int:
 
     mds = [m for m in root.rglob("*.md")
            if "/.git/" not in str(m) and "/__pycache__/" not in str(m)]
-    appendix_c = root / "附录" / "附录C-参考文献与版本核验.md"
+    appendix_c = root / "附录" / "附录03-参考文献与版本核验.md"
 
     # 1) 正文 [C-id] 都在 yaml
     cited = set()
@@ -159,7 +159,7 @@ def main(argv: list[str]) -> int:
                         f"≠ {src['id']}.version={src.get('version')}")
 
     # 5) 待确认 / TBD / TODO source（附录 C、D）
-    for name in ("附录C-参考文献与版本核验.md", "附录D-常见Agent产品与框架速览.md"):
+    for name in ("附录03-参考文献与版本核验.md", "附录04-常见Agent产品与框架速览.md"):
         p = root / "附录" / name
         if not p.exists():
             continue

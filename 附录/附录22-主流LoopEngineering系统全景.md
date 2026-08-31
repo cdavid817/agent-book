@@ -1,6 +1,6 @@
-# 附录 V：主流 Loop Engineering 系统全景
+# 附录 22：主流 Loop Engineering 系统全景
 
-> 定位：**四类 Engineering（Prompt/Context/Loop/Graph）的系统全景与主流系统盘点**（全文收录，信息基准 2026-09-01，各系统官方入口见 [C-49]）。与相邻内容的分工：附录 B 是四件方法论的词典速查，第 3 章是 Loop Engineering 的机制主体（附录 B.3 的落点）、第 5/6 章对 Context/Prompt、第 18 章对 Graph——本附录把四件拉通成一张系统全景：统一认知与分层架构、四件各自的职责边界/反模式/核心指标/工程流程、主流 Loop Engineering 系统盘点、Loop 与 Graph 模式库、生产级 Loop Contract、状态恢复与收敛、安全审批、可观测评测、成熟度六级（L0–L5）、选型建议、完整示例与实施路线图。名单会过期，"四件不是替代关系 + 有界 Loop Contract"的框架不过期。
+> 定位：**四类 Engineering（Prompt/Context/Loop/Graph）的系统全景与主流系统盘点**（全文收录，信息基准 2026-09-01，各系统官方入口见 [C-49]）。与相邻内容的分工：附录 2 是四件方法论的词典速查，第 3 章是 Loop Engineering 的机制主体（附录 2.3 的落点）、第 5/6 章对 Context/Prompt、第 18 章对 Graph——本附录把四件拉通成一张系统全景：统一认知与分层架构、四件各自的职责边界/反模式/核心指标/工程流程、主流 Loop Engineering 系统盘点、Loop 与 Graph 模式库、生产级 Loop Contract、状态恢复与收敛、安全审批、可观测评测、成熟度六级（L0–L5）、选型建议、完整示例与实施路线图。名单会过期，"四件不是替代关系 + 有界 Loop Contract"的框架不过期。
 
 ---
 
@@ -37,9 +37,9 @@ Loop Engineering 不是某一个框架或产品，而是一套围绕 Agent 持�
 
 ---
 
-## V.1 统一认知：四类 Engineering
+## 22.1 统一认知：四类 Engineering
 
-### V.1.1 核心定义
+### 22.1.1 核心定义
 
 | 工程领域 | 核心问题 | 主要控制对象 | 主要产物 |
 |---|---|---|---|
@@ -57,7 +57,7 @@ Loop Engineering 不是某一个框架或产品，而是一套围绕 Agent 持�
 
 ---
 
-### V.1.2 四者不是替代关系
+### 22.1.2 四者不是替代关系
 
 错误理解：
 
@@ -117,7 +117,7 @@ Graph(
 
 ---
 
-### V.1.3 总体分层架构
+### 22.1.3 总体分层架构
 
 ```mermaid
 flowchart TB
@@ -191,7 +191,7 @@ flowchart TB
 
 ---
 
-### V.1.4 与 Agent、Harness、Runtime 的关系
+### 22.1.4 与 Agent、Harness、Runtime 的关系
 
 | 层级 | 主要解决的问题 | 典型能力 |
 |---|---|---|
@@ -215,9 +215,9 @@ Factory Engineering 解决“多个 Loop 如何形成持续生产系统”
 
 ---
 
-## V.2 Prompt Engineering
+## 22.2 Prompt Engineering
 
-### V.2.1 定义
+### 22.2.1 定义
 
 Prompt Engineering 是围绕模型指令进行设计、实验、版本管理和评测的工程活动。它回答：
 
@@ -227,7 +227,7 @@ Prompt Engineering 是围绕模型指令进行设计、实验、版本管理和�
 
 ---
 
-### V.2.2 Prompt 的典型组成
+### 22.2.2 Prompt 的典型组成
 
 ```text
 Prompt
@@ -279,7 +279,7 @@ Prompt
 
 ---
 
-### V.2.3 Prompt Engineering 的职责
+### 22.2.3 Prompt Engineering 的职责
 
 1. **角色定义**：Planner、Worker、Reviewer、Security Auditor。
 2. **目标定义**：明确当前调用的成功结果。
@@ -294,7 +294,7 @@ Prompt
 
 ---
 
-### V.2.4 Prompt Engineering 不应承担的职责
+### 22.2.4 Prompt Engineering 不应承担的职责
 
 以下规则不应只依赖自然语言 Prompt：
 
@@ -317,7 +317,7 @@ Prompt
 
 ---
 
-### V.2.5 典型反模式
+### 22.2.5 典型反模式
 
 ### 反模式一：超级 Prompt
 
@@ -358,7 +358,7 @@ Prompt 改动直接上线，没有固定测试集、模型版本、基线指标�
 
 ---
 
-### V.2.6 核心指标
+### 22.2.6 核心指标
 
 | 指标 | 含义 |
 |---|---|
@@ -373,7 +373,7 @@ Prompt 改动直接上线，没有固定测试集、模型版本、基线指标�
 
 ---
 
-### V.2.7 标准工程流程
+### 22.2.7 标准工程流程
 
 ```text
 定义成功标准
@@ -389,9 +389,9 @@ Prompt 改动直接上线，没有固定测试集、模型版本、基线指标�
 
 ---
 
-## V.3 Context Engineering
+## 22.3 Context Engineering
 
-### V.3.1 定义
+### 22.3.1 定义
 
 Context Engineering 是在每次模型调用前，从多个信息源中选择、过滤、排序、压缩、隔离并装配上下文的工程活动。它回答：
 
@@ -407,7 +407,7 @@ Prompt 是 Context 的一部分，但完整 Context 还包括状态、记忆、�
 
 ---
 
-### V.3.2 Context Snapshot 的组成
+### 22.3.2 Context Snapshot 的组成
 
 ```text
 Context Snapshot
@@ -450,7 +450,7 @@ Context Snapshot
 
 ---
 
-### V.3.3 Context Engineering 的核心操作
+### 22.3.3 Context Engineering 的核心操作
 
 ### 1. 选择
 
@@ -561,7 +561,7 @@ sensitivity: internal
 
 ---
 
-### V.3.4 Context Budget
+### 22.3.4 Context Budget
 
 上下文工程必须有显式预算，而不是依赖模型最大窗口：
 
@@ -583,7 +583,7 @@ context_budget:
 
 ---
 
-### V.3.5 Context 生命周期
+### 22.3.5 Context 生命周期
 
 ```mermaid
 flowchart LR
@@ -603,7 +603,7 @@ flowchart LR
 
 ---
 
-### V.3.6 典型反模式
+### 22.3.6 典型反模式
 
 ### Context Stuffing
 
@@ -647,7 +647,7 @@ RAG 只是 Context Engineering 的子集。完整上下文工程还需处理：
 
 ---
 
-### V.3.7 核心指标
+### 22.3.7 核心指标
 
 | 指标 | 含义 |
 |---|---|
@@ -663,9 +663,9 @@ RAG 只是 Context Engineering 的子集。完整上下文工程还需处理：
 
 ---
 
-## V.4 Loop Engineering
+## 22.4 Loop Engineering
 
-### V.4.1 定义
+### 22.4.1 定义
 
 Loop Engineering 关注如何让 Agent 或工作流经过多轮执行、观察、验证和修复后可靠收敛。它回答：
 
@@ -693,7 +693,7 @@ Loop
 
 ---
 
-### V.4.2 总体架构
+### 22.4.2 总体架构
 
 ```mermaid
 flowchart TB
@@ -748,7 +748,7 @@ flowchart TB
 
 ---
 
-### V.4.3 Loop 的四个层级
+### 22.4.3 Loop 的四个层级
 
 ### 1. 模型内部工具循环
 
@@ -801,7 +801,7 @@ Model
 
 ---
 
-### V.4.4 六项核心正确性要求
+### 22.4.4 六项核心正确性要求
 
 ### 1. 有界性
 
@@ -898,7 +898,7 @@ Loop 必须受以下策略约束：
 
 ---
 
-### V.4.5 Loop 不等于 `while true`
+### 22.4.5 Loop 不等于 `while true`
 
 错误实现：
 
@@ -943,7 +943,7 @@ while budget.available:
 
 ---
 
-### V.4.6 Loop Engineering 指标
+### 22.4.6 Loop Engineering 指标
 
 | 指标 | 含义 |
 |---|---|
@@ -960,9 +960,9 @@ while budget.available:
 
 ---
 
-## V.5 Graph Engineering
+## 22.5 Graph Engineering
 
-### V.5.1 定义与边界
+### 22.5.1 定义与边界
 
 Graph Engineering 指把 Agent 系统建模为显式执行图，并工程化设计：
 
@@ -988,7 +988,7 @@ Graph Engineering 指把 Agent 系统建模为显式执行图，并工程化设�
 
 ---
 
-### V.5.2 Graph 基本原语
+### 22.5.2 Graph 基本原语
 
 ```text
 Graph
@@ -1024,7 +1024,7 @@ Graph
 
 ---
 
-### V.5.3 节点拆分原则
+### 22.5.3 节点拆分原则
 
 节点应在以下边界上拆分：
 
@@ -1058,7 +1058,7 @@ Requirement Analyzer
 
 ---
 
-### V.5.4 节点契约
+### 22.5.4 节点契约
 
 每个节点应显式定义：
 
@@ -1093,7 +1093,7 @@ node:
 
 ---
 
-### V.5.5 边语义
+### 22.5.5 边语义
 
 Edge 不应只是 A 到 B，还要说明跳转原因和传递数据：
 
@@ -1126,7 +1126,7 @@ edge:
 
 ---
 
-### V.5.6 状态所有权
+### 22.5.6 状态所有权
 
 建议明确字段所有者：
 
@@ -1156,7 +1156,7 @@ Controller：
 
 ---
 
-### V.5.7 Fan-out / Fan-in
+### 22.5.7 Fan-out / Fan-in
 
 ```mermaid
 flowchart LR
@@ -1191,7 +1191,7 @@ first_failure
 
 ---
 
-### V.5.8 循环边与子图
+### 22.5.8 循环边与子图
 
 Graph 中的循环边必须具备：
 
@@ -1215,7 +1215,7 @@ Main Delivery Graph
 
 ---
 
-### V.5.9 Graph、DAG、Workflow、State Machine 的区别
+### 22.5.9 Graph、DAG、Workflow、State Machine 的区别
 
 ### DAG
 
@@ -1276,7 +1276,7 @@ State Machine：表达 Run 生命周期
 
 ---
 
-### V.5.10 Loop Engineering 与 Graph Engineering 的区别
+### 22.5.10 Loop Engineering 与 Graph Engineering 的区别
 
 | 对比项 | Loop Engineering | Graph Engineering |
 |---|---|---|
@@ -1299,7 +1299,7 @@ Graph 是组织多个 Loop 的更高层结构
 
 ---
 
-### V.5.11 Graph Engineering 典型反模式
+### 22.5.11 Graph Engineering 典型反模式
 
 ### 把流程图当执行图
 
@@ -1358,7 +1358,7 @@ Graph 是组织多个 Loop 的更高层结构
 
 ---
 
-### V.5.12 Graph Engineering 指标
+### 22.5.12 Graph Engineering 指标
 
 | 指标 | 含义 |
 |---|---|
@@ -1375,9 +1375,9 @@ Graph 是组织多个 Loop 的更高层结构
 
 ---
 
-## V.6 四类 Engineering 的协同关系
+## 22.6 四类 Engineering 的协同关系
 
-### V.6.1 一次 Agent 执行的完整链路
+### 22.6.1 一次 Agent 执行的完整链路
 
 ```mermaid
 sequenceDiagram
@@ -1415,7 +1415,7 @@ sequenceDiagram
 
 ---
 
-### V.6.2 统一职责矩阵
+### 22.6.2 统一职责矩阵
 
 | 配置或能力 | 主要归属 |
 |---|---|
@@ -1430,7 +1430,7 @@ sequenceDiagram
 
 ---
 
-### V.6.3 故障不能只从 Prompt 找原因
+### 22.6.3 故障不能只从 Prompt 找原因
 
 例如“Agent 没有完成任务”，可能来自：
 
@@ -1447,7 +1447,7 @@ sequenceDiagram
 
 ---
 
-## V.7 主流 Loop Engineering 系统全景
+## 22.7 主流 Loop Engineering 系统全景
 
 主流生态可以分为五层：
 
@@ -1474,7 +1474,7 @@ MLflow、W&B Weave、OpenTelemetry
 
 ---
 
-### V.7.1 第一类：原生 Coding Agent Loop
+### 22.7.1 第一类：原生 Coding Agent Loop
 
 ### Claude Code
 
@@ -1585,7 +1585,7 @@ Ralph 更适合作为最小 Loop 模式，而不是企业级最终架构。
 
 ---
 
-### V.7.2 第二类：通用 Agent 与 Graph 框架
+### 22.7.2 第二类：通用 Agent 与 Graph 框架
 
 | 系统 | 核心定位 | Loop / Graph 能力重点 | 典型场景 |
 |---|---|---|---|
@@ -1711,7 +1711,7 @@ Planner
 
 ---
 
-### V.7.3 第三类：Durable Loop Runtime
+### 22.7.3 第三类：Durable Loop Runtime
 
 Agent 框架通常负责“下一步做什么”，Durable Runtime 负责：
 
@@ -1783,7 +1783,7 @@ Agent 框架通常负责“下一步做什么”，Durable Runtime 负责：
 
 ---
 
-### V.7.4 第四类：低代码与可视化系统
+### 22.7.4 第四类：低代码与可视化系统
 
 ### Dify
 
@@ -1846,7 +1846,7 @@ Agent 框架通常负责“下一步做什么”，Durable Runtime 负责：
 
 ---
 
-### V.7.5 第五类：Trace、Eval 与持续优化
+### 22.7.5 第五类：Trace、Eval 与持续优化
 
 ### LangSmith
 
@@ -1914,9 +1914,9 @@ Agent 框架通常负责“下一步做什么”，Durable Runtime 负责：
 
 ---
 
-## V.8 主流 Loop 与 Graph 模式
+## 22.8 主流 Loop 与 Graph 模式
 
-### V.8.1 主流 Loop 模式
+### 22.8.1 主流 Loop 模式
 
 | 模式 | 基本结构 | 典型停止条件 | 适用场景 |
 |---|---|---|---|
@@ -1933,7 +1933,7 @@ Agent 框架通常负责“下一步做什么”，Durable Runtime 负责：
 
 ---
 
-### V.8.2 主流 Graph 模式
+### 22.8.2 主流 Graph 模式
 
 ### Sequential Pipeline
 
@@ -2006,7 +2006,7 @@ Portfolio Graph
 
 ---
 
-## V.9 生产级 Loop Contract
+## 22.9 生产级 Loop Contract
 
 一个生产 Loop 不应只有 Prompt，而应有版本化 Contract：
 
@@ -2093,9 +2093,9 @@ Contract 的价值：
 
 ---
 
-## V.10 状态、恢复、停止与收敛
+## 22.10 状态、恢复、停止与收敛
 
-### V.10.1 推荐状态机
+### 22.10.1 推荐状态机
 
 ```text
 CREATED
@@ -2116,7 +2116,7 @@ CANCELLED
 
 ---
 
-### V.10.2 Checkpoint 内容
+### 22.10.2 Checkpoint 内容
 
 ```text
 LoopCheckpoint
@@ -2138,7 +2138,7 @@ LoopCheckpoint
 
 ---
 
-### V.10.3 Stop Condition
+### 22.10.3 Stop Condition
 
 停止条件应分层：
 
@@ -2169,7 +2169,7 @@ LoopCheckpoint
 
 ---
 
-### V.10.4 无进展检测
+### 22.10.4 无进展检测
 
 可组合以下信号：
 
@@ -2196,7 +2196,7 @@ progress:
 
 ---
 
-### V.10.5 重试、修复与重规划的区别
+### 22.10.5 重试、修复与重规划的区别
 
 - **Retry**：输入和策略基本不变，处理临时故障。
 - **Repair**：根据验证反馈修改当前产物。
@@ -2206,9 +2206,9 @@ progress:
 
 ---
 
-## V.11 安全、权限与人工审批
+## 22.11 安全、权限与人工审批
 
-### V.11.1 权限必须是确定性机制
+### 22.11.1 权限必须是确定性机制
 
 安全不能只写在 Prompt 中。需要在以下层面强制：
 
@@ -2225,7 +2225,7 @@ progress:
 
 ---
 
-### V.11.2 最小权限模型
+### 22.11.2 最小权限模型
 
 ```yaml
 permissions:
@@ -2261,7 +2261,7 @@ permissions:
 
 ---
 
-### V.11.3 Human-in-the-loop 是一等状态
+### 22.11.3 Human-in-the-loop 是一等状态
 
 人工介入不是异常，而是显式节点和状态：
 
@@ -2281,7 +2281,7 @@ permissions:
 
 ---
 
-### V.11.4 Prompt Injection 防御
+### 22.11.4 Prompt Injection 防御
 
 Prompt Injection 不能仅靠“告诉模型不要受骗”。需要组合：
 
@@ -2296,9 +2296,9 @@ Prompt Injection 不能仅靠“告诉模型不要受骗”。需要组合：
 
 ---
 
-## V.12 可观测性、评测与自我改进
+## 22.12 可观测性、评测与自我改进
 
-### V.12.1 三层闭环
+### 22.12.1 三层闭环
 
 ```mermaid
 flowchart LR
@@ -2314,7 +2314,7 @@ flowchart LR
 
 ---
 
-### V.12.2 推荐 Trace 层级
+### 22.12.2 推荐 Trace 层级
 
 ```text
 Graph Run
@@ -2330,7 +2330,7 @@ Graph Run
 
 ---
 
-### V.12.3 核心 Telemetry 字段
+### 22.12.3 核心 Telemetry 字段
 
 ```text
 graph.id
@@ -2361,7 +2361,7 @@ human.approval_status
 
 ---
 
-### V.12.4 评测维度
+### 22.12.4 评测维度
 
 | 维度 | 示例 |
 |---|---|
@@ -2378,7 +2378,7 @@ human.approval_status
 
 ---
 
-### V.12.5 自我改进的安全边界
+### 22.12.5 自我改进的安全边界
 
 系统可以自动：
 
@@ -2404,7 +2404,7 @@ human.approval_status
 
 ---
 
-## V.13 成熟度分级
+## 22.13 成熟度分级
 
 ### L0：人工 Prompt
 
@@ -2491,9 +2491,9 @@ Worker → Verifier → Worker
 
 ---
 
-## V.14 系统选型建议
+## 22.14 系统选型建议
 
-### V.14.1 个人或小团队 Coding Loop
+### 22.14.1 个人或小团队 Coding Loop
 
 推荐：
 
@@ -2516,7 +2516,7 @@ Claude Code 或 Codex
 
 ---
 
-### V.14.2 GitHub 原生研发闭环
+### 22.14.2 GitHub 原生研发闭环
 
 推荐：
 
@@ -2540,7 +2540,7 @@ GitHub Copilot Coding Agent
 
 ---
 
-### V.14.3 自定义 Agent 产品
+### 22.14.3 自定义 Agent 产品
 
 | 需求 | 优先评估 |
 |---|---|
@@ -2555,7 +2555,7 @@ GitHub Copilot Coding Agent
 
 ---
 
-### V.14.4 长时间、高价值、高风险任务
+### 22.14.4 长时间、高价值、高风险任务
 
 采用双层架构：
 
@@ -2579,7 +2579,7 @@ Microsoft Agent Framework + Azure Runtime
 
 ---
 
-### V.14.5 低代码业务 Loop
+### 22.14.5 低代码业务 Loop
 
 - 显式循环和人工输入：**Dify**
 - 企业 SaaS 连接与审批：**n8n**
@@ -2588,7 +2588,7 @@ Microsoft Agent Framework + Azure Runtime
 
 ---
 
-### V.14.6 选型原则
+### 22.14.6 选型原则
 
 不要只比较“模型智能”，应比较：
 
@@ -2605,9 +2605,9 @@ Microsoft Agent Framework + Azure Runtime
 
 ---
 
-## V.15 完整示例：Governed SCM Delivery
+## 22.15 完整示例：Governed SCM Delivery
 
-### V.15.1 执行图
+### 22.15.1 执行图
 
 ```mermaid
 flowchart TB
@@ -2654,7 +2654,7 @@ flowchart TB
 
 ---
 
-### V.15.2 四类 Engineering 在示例中的位置
+### 22.15.2 四类 Engineering 在示例中的位置
 
 ### Prompt Engineering
 
@@ -2719,7 +2719,7 @@ Implementation
 
 ---
 
-### V.15.3 统一定义示例
+### 22.15.3 统一定义示例
 
 ```yaml
 graph:
@@ -2828,13 +2828,13 @@ graph:
 
 ---
 
-## V.16 VaneHub AI 推荐架构
+## 22.16 VaneHub AI 推荐架构
 
 VaneHub AI 的定位是统一管理和编排 Claude Code、Codex、OpenCode、OnePiece 等 Coding Agent。最合适的方向不是绑定某个 Agent 框架，而是构建**框架中立的 Loop 与 Graph Control Plane**。
 
 ---
 
-### V.16.1 总体架构
+### 22.16.1 总体架构
 
 ```mermaid
 flowchart TB
@@ -2884,7 +2884,7 @@ flowchart TB
 
 ---
 
-### V.16.2 核心设计原则
+### 22.16.2 核心设计原则
 
 ### 1. Controller 不直接依赖具体 CLI
 
@@ -2942,7 +2942,7 @@ Agent 可以提出 Prompt、Skill、Context、Verifier、Graph 和 Policy 修改
 
 ---
 
-### V.16.3 Prompt Registry
+### 22.16.3 Prompt Registry
 
 职责：
 
@@ -2966,7 +2966,7 @@ PromptEvaluation
 
 ---
 
-### V.16.4 Context Engine
+### 22.16.4 Context Engine
 
 职责：
 
@@ -2996,7 +2996,7 @@ TrustLevel
 
 ---
 
-### V.16.5 Loop Runtime
+### 22.16.5 Loop Runtime
 
 职责：
 
@@ -3027,7 +3027,7 @@ EscalationRequest
 
 ---
 
-### V.16.6 Graph Orchestrator
+### 22.16.6 Graph Orchestrator
 
 职责：
 
@@ -3059,7 +3059,7 @@ SubgraphReference
 
 ---
 
-### V.16.7 Agent Adapter
+### 22.16.7 Agent Adapter
 
 建议统一接口：
 
@@ -3108,7 +3108,7 @@ CustomAgentAdapter
 
 ---
 
-### V.16.8 Verifier Engine
+### 22.16.8 Verifier Engine
 
 建议支持：
 
@@ -3152,7 +3152,7 @@ verification:
 
 ---
 
-### V.16.9 State Spine
+### 22.16.9 State Spine
 
 建议采用：
 
@@ -3168,7 +3168,7 @@ OpenTelemetry：跨模块 Trace
 
 ---
 
-### V.16.10 Loop Center UI
+### 22.16.10 Loop Center UI
 
 建议核心视图：
 
@@ -3185,7 +3185,7 @@ OpenTelemetry：跨模块 Trace
 
 ---
 
-## V.17 实施路线图
+## 22.17 实施路线图
 
 ### Phase 1：单 Agent 有界 Loop
 
@@ -3268,7 +3268,7 @@ Claude Code / Codex
 
 ---
 
-## V.18 故障定位速查
+## 22.18 故障定位速查
 
 | 故障表现 | 优先检查 |
 |---|---|
@@ -3293,9 +3293,9 @@ Claude Code / Codex
 
 ---
 
-## V.19 最终结论
+## 22.19 最终结论
 
-### V.19.1 核心判断
+### 22.19.1 核心判断
 
 Loop Engineering 的本质不是“让 Agent 多执行几轮”，而是把以下问题工程化：
 
@@ -3311,7 +3311,7 @@ Loop Engineering 的本质不是“让 Agent 多执行几轮”，而是把以�
 
 ---
 
-### V.19.2 最可靠的当前架构
+### 22.19.2 最可靠的当前架构
 
 不推荐：
 
@@ -3338,7 +3338,7 @@ Loop Engineering 的本质不是“让 Agent 多执行几轮”，而是把以�
 
 ---
 
-### V.19.3 行业竞争重点
+### 22.19.3 行业竞争重点
 
 未来竞争重点不会只是谁的 Coding Agent 更聪明，而是谁能够把多个 Agent 组织成：
 
@@ -3449,4 +3449,4 @@ Loop Engineering 的本质不是“让 Agent 多执行几轮”，而是把以�
 
 ---
 
-> **使用提示**：与其他附录的分工——A 讲模型机制、B 讲方法论、C 记来源、D 列产品、E 辨异同、F 索引图版、G 详解 OTel 与 Agent 观测、H 上手 DeepEval、I 评测观测平台选型、J 上手 Mem0、K 详解记忆晋升机制、L 盘点 Coding Agent 赛道、M 盘点可观测赛道、N 盘点评估赛道、O 盘点 Memory 赛道、P 盘点自进化赛道、Q 盘点多 Agent 赛道、R 盘点 MCP 生态、S 盘点沙箱赛道、T 盘点 RAG 赛道、U 盘点 LLM Wiki 赛道、**V 盘点 Loop Engineering 赛道**、W 解析 Pi 源码、X 解析 Claude Code 源码、Y 解析 Codex 源码、Z 解析 OpenCode 源码。对照阅读：四类 Engineering 统一认知（V.1）对附录 B.1–B.4 与附录 E.6、Prompt/Context（V.2–V.3）对第 5/6 章、Loop 主体（V.4 起）对第 3 章（有界性铁律见附录 E.4）、Graph 模式（V.8）对第 17/18 章、Loop Contract 与状态恢复（V.9–V.10）对第 3 章终止三层与第 12 章 checkpoint、安全审批（V.11）对第 13 章、可观测评测（V.12）对第 14/15 章、成熟度分级（V.13）对第 26 章三问框架。信息基准 2026-09-01（[C-49]），发行前按附录 C 清单复核。
+> **使用提示**：与其他附录的分工——1 讲模型机制、2 讲方法论、3 记来源、4 列产品、5 辨异同、6 索引图版、7 详解 OTel 与 Agent 观测、8 上手 DeepEval、9 评测观测平台选型、10 上手 Mem0、11 详解记忆晋升机制、12 盘点 Coding Agent 赛道、13 盘点可观测赛道、14 盘点评估赛道、15 盘点 Memory 赛道、16 盘点自进化赛道、17 盘点多 Agent 赛道、18 盘点 MCP 生态、19 盘点沙箱赛道、20 盘点 RAG 赛道、21 盘点 LLM Wiki 赛道、**22 盘点 Loop Engineering 赛道**、23 解析 Pi 源码、24 解析 Claude Code 源码、25 解析 Codex 源码、26 解析 OpenCode 源码。对照阅读：四类 Engineering 统一认知（22.1）对附录 2.1–2.4 与附录 5.6、Prompt/Context（22.2–22.3）对第 5/6 章、Loop 主体（22.4 起）对第 3 章（有界性铁律见附录 5.4）、Graph 模式（22.8）对第 17/18 章、Loop Contract 与状态恢复（22.9–22.10）对第 3 章终止三层与第 12 章 checkpoint、安全审批（22.11）对第 13 章、可观测评测（22.12）对第 14/15 章、成熟度分级（22.13）对第 26 章三问框架。信息基准 2026-09-01（[C-49]），发行前按附录 3 清单复核。

@@ -1,10 +1,10 @@
-# 附录 H：DeepEval 实战指南
+# 附录 8：DeepEval 实战指南
 
-> 定位：**DeepEval 的完整实战教程**。正文第 15 章讲评测方法论（五层指标体系、回流闭环、框架与平台选型），本附录讲"DeepEval 具体怎么用"——从安装、数据模型、指标配置，到 RAG/Agent/多轮三条实战线、自定义扩展与 CI/CD 工程化，再到内置评估器全景与 Benchmark 关系，全文收录、按节查阅。API 快照为 **DeepEval Python 4.2.0**（教程 v1.1，2026-08-30 验证），升级前先读 Release Notes（文档与发布入口见 [C-31]）；RAG 指标的方法论口径见第 11 章 2.8，评测体系全貌见第 15 章，五平台选型对比见附录 I。
+> 定位：**DeepEval 的完整实战教程**。正文第 15 章讲评测方法论（五层指标体系、回流闭环、框架与平台选型），本附录讲"DeepEval 具体怎么用"——从安装、数据模型、指标配置，到 RAG/Agent/多轮三条实战线、自定义扩展与 CI/CD 工程化，再到内置评估器全景与 Benchmark 关系，全文收录、按节查阅。API 快照为 **DeepEval Python 4.2.0**（教程 v1.1，2026-08-30 验证），升级前先读 Release Notes（文档与发布入口见 [C-31]）；RAG 指标的方法论口径见第 11 章 2.8，评测体系全貌见第 15 章，五平台选型对比见附录 9。
 
 ---
 
-## H.1 DeepEval 是什么
+## 8.1 DeepEval 是什么
 
 **DeepEval 是一个面向 LLM 应用的开源评估框架。** 它把 LLM、RAG、Agent、聊天机器人、工具调用和多模态系统的质量要求，转换为可重复执行、可评分、可设置阈值、可进入 CI/CD 的自动化测试。
 
@@ -36,7 +36,7 @@ DeepEval 的主要能力包括：
 
 ---
 
-## H.2 为什么 LLM 应用需要专门的评估框架
+## 8.2 为什么 LLM 应用需要专门的评估框架
 
 传统程序通常可以做确定性断言：
 
@@ -76,7 +76,7 @@ reason  = "回答正确覆盖了退款期限，且未引入额外条件。"
 
 ---
 
-## H.3 DeepEval 的整体工作模型
+## 8.3 DeepEval 的整体工作模型
 
 ```mermaid
 flowchart LR
@@ -102,7 +102,7 @@ flowchart LR
     L -->|否| N[失败 / 阻断发布]
 ```
 
-### H.3.1 四个关键概念
+### 8.3.1 四个关键概念
 
 | 概念 | 作用 | 典型内容 |
 |---|---|---|
@@ -111,7 +111,7 @@ flowchart LR
 | `Metric` | 质量判定器 | 相关性、忠实度、任务完成度、工具正确性 |
 | `Trace / Span` | Agent 或复杂系统的执行过程 | 规划、LLM、Retriever、Tool、子 Agent |
 
-### H.3.2 三种评估粒度
+### 8.3.2 三种评估粒度
 
 | 粒度 | 评估对象 | 适用问题 |
 |---|---|---|
@@ -119,7 +119,7 @@ flowchart LR
 | 轨迹级评估 | Agent 的完整有序执行链 | “Agent 是否完成任务、路径是否高效？” |
 | 组件级评估 | 某一个 Retriever、Tool、LLM 或子 Agent Span | “到底是哪个组件导致失败？” |
 
-### H.3.3 单轮与多轮
+### 8.3.3 单轮与多轮
 
 | 类型 | 测试用例 | 典型场景 |
 |---|---|---|
@@ -130,9 +130,9 @@ flowchart LR
 
 ---
 
-## H.4 环境准备与安装
+## 8.4 环境准备与安装
 
-### H.4.1 推荐环境
+### 8.4.1 推荐环境
 
 DeepEval 4.2.0 的官方 Python 版本要求为 **Python 3.9 及以上、低于 Python 4**。本教程建议使用：
 
@@ -174,7 +174,7 @@ pip install -U deepeval
 
 生产项目更建议固定版本，并在升级前执行完整基准集。
 
-### H.4.2 配置 Judge 模型密钥
+### 8.4.2 配置 Judge 模型密钥
 
 大量指标属于 LLM-as-a-Judge，需要一个评估模型。使用默认 OpenAI Judge 时：
 
@@ -205,7 +205,7 @@ __pycache__/
 .deepeval/
 ```
 
-### H.4.3 验证安装
+### 8.4.3 验证安装
 
 ```bash
 deepeval --help
@@ -220,7 +220,7 @@ deepeval diagnose
 
 ---
 
-## H.5 五分钟完成第一个评估
+## 8.5 五分钟完成第一个评估
 
 创建 `test_first_eval.py`：
 
@@ -280,9 +280,9 @@ deepeval test run test_first_eval.py::test_refund_answer
 
 ---
 
-## H.6 核心数据模型
+## 8.6 核心数据模型
 
-### H.6.1 `LLMTestCase`
+### 8.6.1 `LLMTestCase`
 
 单轮评估使用 `LLMTestCase`。DeepEval 4.x 的核心字段包括：
 
@@ -362,7 +362,7 @@ LLMTestCase(
 
 这里第二条召回内容与问题无关，可能降低 Contextual Relevancy；但第一条足以支持答案，因此 Faithfulness 仍可能较高。
 
-### H.6.2 `ToolCall`
+### 8.6.2 `ToolCall`
 
 ```python
 from deepeval.test_case import ToolCall
@@ -387,7 +387,7 @@ call = ToolCall(
 | `output` | 工具返回值 |
 | `type` | Function 或 MCP 工具类型 |
 
-### H.6.3 `Golden`
+### 8.6.3 `Golden`
 
 `Golden` 是“运行应用之前”的测试模板，通常没有 `actual_output`：
 
@@ -413,7 +413,7 @@ LLMTestCase
   输入、实际输出、真实检索结果、真实工具调用
 ```
 
-### H.6.4 `EvaluationDataset`
+### 8.6.4 `EvaluationDataset`
 
 `EvaluationDataset` 用于集中管理一组 Golden 或 Test Case，并支持保存、加载、批量执行和回归测试：
 
@@ -439,9 +439,9 @@ dataset = EvaluationDataset(
 
 ---
 
-## H.7 三种评估执行方式
+## 8.7 三种评估执行方式
 
-### H.7.1 直接调用 `metric.measure()`
+### 8.7.1 直接调用 `metric.measure()`
 
 适合快速调试单个指标：
 
@@ -471,7 +471,7 @@ print("success:", metric.is_successful())
 
 不适合作为完整评估流水线，因为不会自动获得全部缓存、并发、统一报告和 Pytest 门禁能力。
 
-### H.7.2 使用 `evaluate()`
+### 8.7.2 使用 `evaluate()`
 
 适合脚本、Notebook、离线批处理：
 
@@ -512,7 +512,7 @@ print(result)
 - 支持缓存、显示、错误和并发配置；
 - 不像 `assert_test()` 那样天然用于测试失败门禁。
 
-### H.7.3 使用 `assert_test()` + `deepeval test run`
+### 8.7.3 使用 `assert_test()` + `deepeval test run`
 
 适合单元测试和 CI/CD：
 
@@ -553,7 +553,7 @@ deepeval test run tests/evals
 
 ---
 
-## H.8 Metric 的通用配置与语义
+## 8.8 Metric 的通用配置与语义
 
 DeepEval 4.2.0 统一了常规数值型指标的方向：
 
@@ -594,7 +594,7 @@ metric = FaithfulnessMetric(
 )
 ```
 
-### H.8.1 `strict_mode`
+### 8.8.1 `strict_mode`
 
 普通模式：
 
@@ -620,7 +620,7 @@ score < 1.0  -> 失败
 
 不适合主观写作质量，因为会显著增加 Flaky。
 
-### H.8.2 `flaky`
+### 8.8.2 `flaky`
 
 LLM 评估存在随机性，边界样本可能在阈值附近抖动。可把测试用例或单个 Metric 标记为 Flaky：
 
@@ -649,7 +649,7 @@ Flaky 只应作为临时治理手段，不能替代：
 - 修正含糊 Golden；
 - 使用更稳定的 Judge。
 
-### H.8.3 `verbose_mode`
+### 8.8.3 `verbose_mode`
 
 ```python
 metric = FaithfulnessMetric(verbose_mode=True)
@@ -665,7 +665,7 @@ metric.measure(case)
 
 ---
 
-## H.9 如何选择评估指标
+## 8.9 如何选择评估指标
 
 不要“指标越多越好”。通常一个测试套件使用 **2～5 个关键指标**更有效：
 
@@ -675,7 +675,7 @@ metric.measure(case)
 1～2 个业务自定义指标
 ```
 
-### H.9.1 指标选择决策表
+### 8.9.1 指标选择决策表
 
 | 系统 | 首选指标 | 解决的问题 |
 |---|---|---|
@@ -690,7 +690,7 @@ metric.measure(case)
 | JSON 输出 | `JsonCorrectnessMetric` 或确定性 Schema 校验 | 结构是否符合契约 |
 | 安全 | Bias、Toxicity、PII、Misuse 等安全指标 | 是否存在风险输出 |
 
-### H.9.2 Reference-based 与 Referenceless
+### 8.9.2 Reference-based 与 Referenceless
 
 ```text
 Reference-based
@@ -712,7 +712,7 @@ Referenceless
 
 ---
 
-## H.10 G-Eval：定义业务专属指标
+## 8.10 G-Eval：定义业务专属指标
 
 `GEval` 是最通用的自定义指标。它适合：
 
@@ -724,7 +724,7 @@ Referenceless
 - 业务规则遵循；
 - 输出是否适合目标用户。
 
-### H.10.1 使用 `criteria`
+### 8.10.1 使用 `criteria`
 
 ```python
 from deepeval.metrics import GEval
@@ -744,7 +744,7 @@ helpfulness = GEval(
 )
 ```
 
-### H.10.2 使用 `evaluation_steps`
+### 8.10.2 使用 `evaluation_steps`
 
 对于高风险或复杂业务，显式步骤通常比一句宽泛 Criteria 更稳定：
 
@@ -769,7 +769,7 @@ policy_compliance = GEval(
 )
 ```
 
-### H.10.3 编写 G-Eval 的原则
+### 8.10.3 编写 G-Eval 的原则
 
 差的 Criteria：
 
@@ -795,7 +795,7 @@ policy_compliance = GEval(
 
 ---
 
-## H.11 DAG Metric：构建结构化判定流程
+## 8.11 DAG Metric：构建结构化判定流程
 
 `DAGMetric` 适合把复杂规则拆为可控的判定图：
 
@@ -830,9 +830,9 @@ DAG 仍可能在部分分支中使用 LLM 判断，所以它不是完全无随�
 
 ---
 
-## H.12 RAG 评估完整教程
+## 8.12 RAG 评估完整教程
 
-### H.12.1 RAG 评估不能只看最终答案
+### 8.12.1 RAG 评估不能只看最终答案
 
 ```mermaid
 flowchart LR
@@ -859,7 +859,7 @@ flowchart LR
 
 因此应分开评估 Retriever 与 Generator。
 
-### H.12.2 五个核心 RAG 指标
+### 8.12.2 五个核心 RAG 指标
 
 | 指标 | 主要比较对象 | 必要字段 | 定位 |
 |---|---|---|---|
@@ -869,7 +869,7 @@ flowchart LR
 | `ContextualPrecisionMetric` | 相关 Chunk 的排序位置 | `input`、`actual_output`、`expected_output`、`retrieval_context` | 排序 / Reranker 质量 |
 | `ContextualRecallMetric` | `expected_output` 中的事实是否可由召回内容支持 | `input`、`actual_output`、`expected_output`、`retrieval_context` | 关键事实是否召全 |
 
-### H.12.3 端到端 RAG 测试
+### 8.12.3 端到端 RAG 测试
 
 ```python
 from deepeval import assert_test
@@ -917,7 +917,7 @@ def test_refund_rag() -> None:
 deepeval test run test_rag.py -v
 ```
 
-### H.12.4 如何解释组合分数
+### 8.12.4 如何解释组合分数
 
 #### 情况 A
 
@@ -972,7 +972,7 @@ Answer Relevancy = 0.46
 
 说明回答忠实于 Context，但没有直接回答问题，可能在复述文档或输出无关背景。优先检查 Generator Prompt，而不是 Retriever。
 
-### H.12.5 组件级 RAG 评估
+### 8.12.5 组件级 RAG 评估
 
 对 Generator Span 单独评估：
 
@@ -1032,7 +1032,7 @@ for golden in dataset.evals_iterator(
 
 这样可以直接把失败定位到 `generate` Span，而不是只知道整个 RAG 应用失败。
 
-### H.12.6 RAG 数据集建议
+### 8.12.6 RAG 数据集建议
 
 至少覆盖：
 
@@ -1050,7 +1050,7 @@ for golden in dataset.evals_iterator(
 
 ---
 
-## H.13 Agent 评估完整教程
+## 8.13 Agent 评估完整教程
 
 Agent 的质量不能只看最终文本。完整评估至少包含：
 
@@ -1065,7 +1065,7 @@ Agent 的质量不能只看最终文本。完整评估至少包含：
 失败后是否正确恢复
 ```
 
-### H.13.1 Agent 指标
+### 8.13.1 Agent 指标
 
 | 指标 | 评估问题 | 粒度 |
 |---|---|---|
@@ -1076,7 +1076,7 @@ Agent 的质量不能只看最终文本。完整评估至少包含：
 | `ToolCorrectnessMetric` | 是否选择正确工具 | Test Case / 组件 |
 | `ArgumentCorrectnessMetric` | 工具参数是否正确 | Test Case / 组件 |
 
-### H.13.2 最小 Agent 轨迹评估
+### 8.13.2 最小 Agent 轨迹评估
 
 ```python
 import pytest
@@ -1126,7 +1126,7 @@ def test_math_agent(golden: Golden) -> None:
 deepeval test run test_agent.py
 ```
 
-### H.13.3 同时评估完成度、效率和计划
+### 8.13.3 同时评估完成度、效率和计划
 
 ```python
 from deepeval.metrics import (
@@ -1157,7 +1157,7 @@ Plan Quality 低 + Task Completion 高
 = 可能偶然成功，流程不稳定，不适合复杂任务
 ```
 
-### H.13.4 工具调用正确性
+### 8.13.4 工具调用正确性
 
 ```python
 from deepeval import assert_test
@@ -1208,7 +1208,7 @@ def test_weather_tool_selection() -> None:
 
 `should_exact_match=True` 主要约束工具名称、类型和调用列表；只有把输入参数或输出加入 `evaluation_params`，这些字段才会参与严格匹配。对于没有 `expected_tools` 的线上样本，可使用 `ArgumentCorrectnessMetric`，让 Judge 根据用户输入判断实际工具参数是否合理；需要确定性参数比对时，仍应使用 `ToolCorrectnessMetric` 加 `ToolCallParams.INPUT_PARAMETERS`。
 
-### H.13.5 工具评估应结合确定性规则
+### 8.13.5 工具评估应结合确定性规则
 
 不要只使用 LLM Judge。推荐组合：
 
@@ -1243,9 +1243,9 @@ assert_test(
 
 ---
 
-## H.14 Tracing、轨迹级与组件级评估
+## 8.14 Tracing、轨迹级与组件级评估
 
-### H.14.1 Trace 与 Span
+### 8.14.1 Trace 与 Span
 
 ```mermaid
 flowchart TB
@@ -1261,7 +1261,7 @@ flowchart TB
 - **轨迹指标**：读取完整有序 Trace；
 - **组件指标**：只读取某个 Span 对应的 `LLMTestCase`。
 
-### H.14.2 手工埋点
+### 8.14.2 手工埋点
 
 顶层函数：
 
@@ -1297,7 +1297,7 @@ def generate_answer(query: str) -> str:
     return output
 ```
 
-### H.14.3 同时运行 Trace 与 Span 指标
+### 8.14.3 同时运行 Trace 与 Span 指标
 
 ```python
 for golden in dataset.evals_iterator(
@@ -1328,7 +1328,7 @@ Trace
 
 这样可以直接判断：任务完成，但 Generator 出现不忠实声明。
 
-### H.14.4 异步 Agent
+### 8.14.4 异步 Agent
 
 ```python
 import asyncio
@@ -1355,7 +1355,7 @@ async def main() -> None:
 asyncio.run(main())
 ```
 
-### H.14.5 本地查看 Trace
+### 8.14.5 本地查看 Trace
 
 安装扩展：
 
@@ -1379,11 +1379,11 @@ deepeval inspect
 
 ---
 
-## H.15 多轮对话评估
+## 8.15 多轮对话评估
 
 多轮评估关注整个对话，而不是单次回答。
 
-### H.15.1 手工创建对话测试用例
+### 8.15.1 手工创建对话测试用例
 
 ```python
 from deepeval import evaluate
@@ -1422,7 +1422,7 @@ evaluate(
 )
 ```
 
-### H.15.2 常见多轮指标
+### 8.15.2 常见多轮指标
 
 | 指标 | 关注点 |
 |---|---|
@@ -1432,7 +1432,7 @@ evaluate(
 | `RoleAdherenceMetric` | 是否持续遵循设定角色 |
 | `ConversationalGEval` | 自定义整体对话标准 |
 
-### H.15.3 使用 `ConversationSimulator`
+### 8.15.3 使用 `ConversationSimulator`
 
 先定义 Golden：
 
@@ -1507,9 +1507,9 @@ evaluate(
 
 ---
 
-## H.16 数据集与 Golden 管理
+## 8.16 数据集与 Golden 管理
 
-### H.16.1 创建数据集
+### 8.16.1 创建数据集
 
 ```python
 from deepeval.dataset import EvaluationDataset, Golden
@@ -1540,7 +1540,7 @@ dataset.add_golden(
 )
 ```
 
-### H.16.2 Golden 转 Test Case
+### 8.16.2 Golden 转 Test Case
 
 ```python
 from deepeval.test_case import LLMTestCase
@@ -1561,7 +1561,7 @@ for golden in dataset.goldens:
     )
 ```
 
-### H.16.3 保存数据集
+### 8.16.3 保存数据集
 
 ```python
 dataset.save_as(
@@ -1587,7 +1587,7 @@ JSONL 更适合版本控制和追加：
 {"input":"退款是否收手续费？","expected_output":"符合条件时不收取额外手续费。"}
 ```
 
-### H.16.4 加载数据集
+### 8.16.4 加载数据集
 
 ```python
 from deepeval.dataset import EvaluationDataset
@@ -1610,7 +1610,7 @@ dataset.add_goldens_from_jsonl_file(
 
 对于大型数据集，可优先使用 JSONL，并按 Marker、目录或数据切片分批运行。
 
-### H.16.5 数据集分层
+### 8.16.5 数据集分层
 
 推荐分为：
 
@@ -1634,7 +1634,7 @@ human_gold
   专家标注、用于校准 Judge 与阈值的高质量样本
 ```
 
-### H.16.6 Golden 设计原则
+### 8.16.6 Golden 设计原则
 
 一条好 Golden 应满足：
 
@@ -1663,7 +1663,7 @@ human_gold
 
 ---
 
-## H.17 合成评估数据
+## 8.17 合成评估数据
 
 当没有现成评估集时，可使用 Golden Synthesizer 生成单轮或多轮 Golden。单轮生成主要有四种入口：
 
@@ -1767,7 +1767,7 @@ flowchart LR
 
 ---
 
-## H.18 接入自定义 Judge 模型
+## 8.18 接入自定义 Judge 模型
 
 DeepEval 支持继承 `DeepEvalBaseLLM` 接入任意模型，包括：
 
@@ -1779,7 +1779,7 @@ DeepEval 支持继承 `DeepEvalBaseLLM` 接入任意模型，包括：
 - Hugging Face 模型；
 - 其他兼容文本生成接口。
 
-### H.18.1 自定义模型接口
+### 8.18.1 自定义模型接口
 
 ```python
 from typing import Any
@@ -1834,7 +1834,7 @@ metric = GEval(
 )
 ```
 
-### H.18.2 接口要求
+### 8.18.2 接口要求
 
 自定义 Judge 通常需要实现：
 
@@ -1852,7 +1852,7 @@ get_model_name() -> str
 - 若 `a_generate` 内部仍调用同步接口，会阻塞事件循环并降低吞吐；
 - Judge 输出必须能够遵循 DeepEval 所需的结构化格式。
 
-### H.18.3 Judge 选择原则
+### 8.18.3 Judge 选择原则
 
 Judge 模型应具备：
 
@@ -1868,7 +1868,7 @@ Judge 模型应具备：
 
 ---
 
-## H.19 开发自定义 Metric
+## 8.19 开发自定义 Metric
 
 当内置指标与 G-Eval 都不适合时，可以继承 `BaseMetric`。
 
@@ -1947,7 +1947,7 @@ metric = RequiredTermsMetric(
 assert_test(test_case=case, metrics=[metric])
 ```
 
-### H.19.1 自定义 Metric 的实现要求
+### 8.19.1 自定义 Metric 的实现要求
 
 通常需要：
 
@@ -1962,7 +1962,7 @@ assert_test(test_case=case, metrics=[metric])
 
 多轮指标应继承 `BaseConversationalMetric`，并接收 `ConversationalTestCase`。
 
-### H.19.2 何时使用确定性 Metric
+### 8.19.2 何时使用确定性 Metric
 
 适合：
 
@@ -1988,9 +1988,9 @@ LLM Judge Metric
 
 ---
 
-## H.20 并发、缓存、错误处理与稳定性
+## 8.20 并发、缓存、错误处理与稳定性
 
-### H.20.1 `AsyncConfig`
+### 8.20.1 `AsyncConfig`
 
 默认情况下，`evaluate()` 会并发运行指标。可限制并发：
 
@@ -2023,7 +2023,7 @@ AsyncConfig(run_async=False)
 - 调试单个失败样本；
 - 自定义模型没有真正异步接口。
 
-### H.20.2 CLI 并行
+### 8.20.2 CLI 并行
 
 ```bash
 deepeval test run tests/evals -n 4
@@ -2039,7 +2039,7 @@ Pytest 进程数
 
 全部设置过高，否则容易触发 Rate Limit、超时和成本突增。
 
-### H.20.3 缓存
+### 8.20.3 缓存
 
 ```bash
 deepeval test run tests/evals -c
@@ -2061,7 +2061,7 @@ deepeval test run tests/evals -c
 - 评估线上动态输出；
 - 测试随机性与重复运行分布。
 
-### H.20.4 忽略单个错误
+### 8.20.4 忽略单个错误
 
 ```bash
 deepeval test run tests/evals -i
@@ -2075,7 +2075,7 @@ deepeval test run tests/evals -i
 
 正式质量门禁不应长期使用 `-i` 掩盖系统性错误。
 
-### H.20.5 缺少参数时跳过
+### 8.20.5 缺少参数时跳过
 
 ```bash
 deepeval test run tests/evals -s
@@ -2090,7 +2090,7 @@ deepeval test run tests/evals -s
 - 明确每类 Metric 的字段契约；
 - 在构建 Test Case 时进行 Schema 校验。
 
-### H.20.6 重复运行
+### 8.20.6 重复运行
 
 ```bash
 deepeval test run tests/evals -r 3
@@ -2115,7 +2115,7 @@ deepeval test run tests/evals -r 3
 
 而不是只看单次分数。
 
-### H.20.7 重试环境变量
+### 8.20.7 重试环境变量
 
 DeepEval 4.x 支持通过环境变量调整重试和超时。常见配置：
 
@@ -2131,9 +2131,9 @@ DEEPEVAL_RETRY_CAP_SECONDS=8
 
 ---
 
-## H.21 CLI 命令与常用参数
+## 8.21 CLI 命令与常用参数
 
-### H.21.1 运行测试
+### 8.21.1 运行测试
 
 ```bash
 # 单文件
@@ -2146,7 +2146,7 @@ deepeval test run tests/evals
 deepeval test run tests/evals/test_rag.py::test_refund_rag
 ```
 
-### H.21.2 常用参数
+### 8.21.2 常用参数
 
 | 参数 | 作用 |
 |---|---|
@@ -2181,19 +2181,19 @@ deepeval test run tests/evals \
   -- --tb=short
 ```
 
-### H.21.3 Trace 查看
+### 8.21.3 Trace 查看
 
 ```bash
 deepeval inspect
 ```
 
-### H.21.4 配置诊断
+### 8.21.4 配置诊断
 
 ```bash
 deepeval diagnose
 ```
 
-### H.21.5 记录超参数
+### 8.21.5 记录超参数
 
 在 `evaluate()` 中：
 
@@ -2228,9 +2228,9 @@ def hyperparameters() -> dict[str, str | int | float]:
 
 ---
 
-## H.22 CI/CD 质量门禁
+## 8.22 CI/CD 质量门禁
 
-### H.22.1 GitHub Actions 示例
+### 8.22.1 GitHub Actions 示例
 
 `.github/workflows/deepeval.yml`：
 
@@ -2279,7 +2279,7 @@ deepeval==4.2.0
 pytest>=8,<9
 ```
 
-### H.22.2 分层门禁
+### 8.22.2 分层门禁
 
 推荐：
 
@@ -2308,7 +2308,7 @@ Release
 - 与官方基准版本对比
 ```
 
-### H.22.3 不要用降低阈值“修复”失败
+### 8.22.3 不要用降低阈值“修复”失败
 
 错误做法：
 
@@ -2331,9 +2331,9 @@ Faithfulness 0.62，阈值 0.8
 
 ---
 
-## H.23 阈值校准与评估实验设计
+## 8.23 阈值校准与评估实验设计
 
-### H.23.1 阈值不能凭感觉设置
+### 8.23.1 阈值不能凭感觉设置
 
 推荐流程：
 
@@ -2348,7 +2348,7 @@ flowchart LR
     G --> H[进入 CI/CD]
 ```
 
-### H.23.2 校准集组成
+### 8.23.2 校准集组成
 
 需要同时包含：
 
@@ -2359,7 +2359,7 @@ flowchart LR
 - 只存在轻微措辞问题的样本；
 - 不同语言、长度和表达风格。
 
-### H.23.3 评估 Judge 本身
+### 8.23.3 评估 Judge 本身
 
 可计算：
 
@@ -2375,7 +2375,7 @@ F1
 
 高风险场景优先优化“严重错误漏报率”，而不是只追求整体准确率。
 
-### H.23.4 A/B 实验
+### 8.23.4 A/B 实验
 
 比较两个 Prompt 或模型时：
 
@@ -2406,9 +2406,9 @@ B 是否让 3 条高风险样本从通过变为失败？
 
 ---
 
-## H.24 成本、性能与数据安全
+## 8.24 成本、性能与数据安全
 
-### H.24.1 评估成本模型
+### 8.24.1 评估成本模型
 
 粗略成本由以下因素共同决定：
 
@@ -2430,7 +2430,7 @@ B 是否让 3 条高风险样本从通过变为失败？
 = 约 12,000 次模型调用
 ```
 
-### H.24.2 成本优化
+### 8.24.2 成本优化
 
 按优先级：
 
@@ -2444,7 +2444,7 @@ B 是否让 3 条高风险样本从通过变为失败？
 8. 对低风险样本使用较低成本 Judge；
 9. 对失败样本再使用高能力 Judge 复核。
 
-### H.24.3 数据安全
+### 8.24.3 数据安全
 
 虽然 DeepEval 可以本地运行，但 LLM-as-a-Judge 可能把以下数据发送到模型提供方：
 
@@ -2466,7 +2466,7 @@ B 是否让 3 条高风险样本从通过变为失败？
 - 为评估日志设置保留期限；
 - 对测试报告实施访问控制。
 
-### H.24.4 复现性
+### 8.24.4 复现性
 
 至少记录：
 
@@ -2487,7 +2487,7 @@ Tool Schema 版本
 
 ---
 
-## H.25 推荐项目结构
+## 8.25 推荐项目结构
 
 ```text
 project/
@@ -2572,9 +2572,9 @@ deepeval test run tests/evals -m "smoke and not slow"
 
 ---
 
-## H.26 常见问题与排查方法
+## 8.26 常见问题与排查方法
 
-### H.26.1 评估一直停在 0% 或运行很慢
+### 8.26.1 评估一直停在 0% 或运行很慢
 
 优先检查：
 
@@ -2603,7 +2603,7 @@ config = AsyncConfig(
 deepeval diagnose
 ```
 
-### H.26.2 分数波动很大
+### 8.26.2 分数波动很大
 
 检查：
 
@@ -2615,7 +2615,7 @@ deepeval diagnose
 - 是否需要 DAG 或确定性规则；
 - 是否需要 `-r 3` 重复评估。
 
-### H.26.3 Faithfulness 高，但回答明显错误
+### 8.26.3 Faithfulness 高，但回答明显错误
 
 Faithfulness 只判断是否与 `retrieval_context` 一致。如果检索内容本身错误或过期，回答仍可能忠实。
 
@@ -2626,7 +2626,7 @@ Faithfulness 只判断是否与 `retrieval_context` 一致。如果检索内容�
 - 文档时效性和来源验证；
 - 静态 `context` Ground Truth。
 
-### H.26.4 Answer Relevancy 高，但回答编造事实
+### 8.26.4 Answer Relevancy 高，但回答编造事实
 
 Answer Relevancy 只关注是否切题，不保证事实正确。组合使用：
 
@@ -2640,7 +2640,7 @@ Answer Relevancy + Faithfulness
 Correctness GEval
 ```
 
-### H.26.5 Contextual Relevancy 低，但答案仍正确
+### 8.26.5 Contextual Relevancy 低，但答案仍正确
 
 可能是：
 
@@ -2650,7 +2650,7 @@ Correctness GEval
 
 这意味着当前样本可能暂时成功，但系统成本和稳定性较差，应优化 Retriever。
 
-### H.26.6 `expected_output` 应该写多详细
+### 8.26.6 `expected_output` 应该写多详细
 
 应包含：
 
@@ -2667,7 +2667,7 @@ Correctness GEval
 
 除非当前 Metric 明确评估格式或语气。
 
-### H.26.7 可以只使用 G-Eval 吗
+### 8.26.7 可以只使用 G-Eval 吗
 
 可以启动，但不建议长期只使用 G-Eval。
 
@@ -2685,7 +2685,7 @@ Agent -> Task Completion / Tool Metrics
 
 系统专用指标有更清晰的评分目标，故障定位通常更直接。
 
-### H.26.8 可以用 DeepEval 代替传统测试吗
+### 8.26.8 可以用 DeepEval 代替传统测试吗
 
 不能。DeepEval 应与以下测试共存：
 
@@ -2710,7 +2710,7 @@ LLM 语义评估
 生产监控
 ```
 
-### H.26.9 是否必须使用 Confident AI
+### 8.26.9 是否必须使用 Confident AI
 
 不是。DeepEval 可在本地运行。只有以下能力通常需要云平台：
 
@@ -2720,7 +2720,7 @@ LLM 语义评估
 - 线上 Trace 监控；
 - 官方基准运行和团队协作。
 
-### H.26.10 升级 DeepEval 后分数方向异常
+### 8.26.10 升级 DeepEval 后分数方向异常
 
 DeepEval 4.2.0 已统一为“越高越好”。从旧版本升级时应：
 
@@ -2733,7 +2733,7 @@ DeepEval 4.2.0 已统一为“越高越好”。从旧版本升级时应：
 
 ---
 
-## H.27 落地检查清单
+## 8.27 落地检查清单
 
 ### 环境
 
@@ -2788,9 +2788,9 @@ DeepEval 4.2.0 已统一为“越高越好”。从旧版本升级时应：
 
 ---
 
-## H.28 DeepEval 内置评估器全景
+## 8.28 DeepEval 内置评估器全景
 
-### H.28.1 “评估器”在 DeepEval 中具体指什么
+### 8.28.1 “评估器”在 DeepEval 中具体指什么
 
 在 DeepEval 语境中，中文常说的“评估器”通常对应 **Metric**。它是针对某个质量维度执行判定并输出分数的对象，而不是被评估模型本身。
 
@@ -2815,7 +2815,7 @@ Benchmark 是统一试卷和考试规则
 Harness 是组织考试并执行判分的系统
 ```
 
-### H.28.2 4.2.0 版本到底有多少个评估器
+### 8.28.2 4.2.0 版本到底有多少个评估器
 
 以 DeepEval Python **4.2.0** 标签中的 `deepeval.metrics.__all__` 为准：
 
@@ -2829,7 +2829,7 @@ Harness 是组织考试并执行判分的系统
 
 > 本节的清单固定到 DeepEval Python 4.2.0。升级 SDK 后，应重新检查官方文档、Release Notes 和 `deepeval.metrics.__all__`，不要假定类名与导入路径长期不变。
 
-### H.28.3 自定义与比较型评估器
+### 8.28.3 自定义与比较型评估器
 
 | Metric | 主要对象 | 机制 | 评估内容 | 典型用途 |
 |---|---|---|---|---|
@@ -2855,7 +2855,7 @@ Harness 是组织考试并执行判分的系统
 - Pairwise 方法更容易判断“谁更好”，但结果是相对偏好，不等于每个候选都达到生产阈值；
 - 为降低位置偏差，应保留其盲化和随机化机制，而不是自行把候选名称写进 Judge Prompt。
 
-### H.28.4 确定性与结构正确性评估器
+### 8.28.4 确定性与结构正确性评估器
 
 | Metric | 是否调用 LLM | 主要输入 | 评估内容 | 适合做 CI 硬门禁吗 |
 |---|---:|---|---|---:|
@@ -2891,7 +2891,7 @@ StepEfficiencyMetric
   由 Judge 结合完整任务与 Trace 做语义判断
 ```
 
-### H.28.5 RAG 与内容质量评估器
+### 8.28.5 RAG 与内容质量评估器
 
 #### 28.5.1 原生 RAG 指标
 
@@ -2936,7 +2936,7 @@ Answer Relevancy
 
 只有在明确需要区分召回覆盖率与排序质量时，再同时加入 Contextual Recall 和 Contextual Precision。
 
-### H.28.6 Agent 与工具调用评估器
+### 8.28.6 Agent 与工具调用评估器
 
 Agent 评估至少要区分四个层次：
 
@@ -3004,7 +3004,7 @@ ToolPermission
 - `TaskCompletionMetric` 面向 traced Agent 的完整执行轨迹；
 - 两者都关注任务结果，但输入模型、适用执行方式和诊断粒度不同。
 
-### H.28.7 多轮对话评估器
+### 8.28.7 多轮对话评估器
 
 | Metric | 评估粒度 | 评估内容 | 典型场景 |
 |---|---|---|---|
@@ -3024,7 +3024,7 @@ ToolPermission
 
 注意：DeepEval 的源代码分类和使用场景分类会有重叠。例如，`RoleAdherenceMetric` 在导出列表中被归入安全与合规，但在实际使用中也是核心多轮对话指标。选择 Metric 时应按测试对象和业务目标，而不是机械依赖目录标签。
 
-### H.28.8 MCP 评估器
+### 8.28.8 MCP 评估器
 
 DeepEval 4.2.0 提供三类 MCP 相关 Metric：
 
@@ -3052,7 +3052,7 @@ Prompts
 
 如果没有记录实际调用 Primitive，`MCPUseMetric` 仍可判断“本轮是否本应调用某个 MCP Primitive”，但诊断能力会弱于完整轨迹。
 
-### H.28.9 安全、合规与行为边界评估器
+### 8.28.9 安全、合规与行为边界评估器
 
 | Metric | 机制 | 评估内容 | 关键配置或输入 |
 |---|---|---|---|
@@ -3097,7 +3097,7 @@ DeepEval 安全语义指标
 人工复核高风险样本
 ```
 
-### H.28.10 图像与多模态评估器
+### 8.28.10 图像与多模态评估器
 
 | Metric | 主要用途 | 评估内容 |
 |---|---|---|
@@ -3118,7 +3118,7 @@ DeepEval 安全语义指标
 
 多模态评估不能只看文本 `actual_output`，否则无法判断模型是否真的依据图像作答，还是仅凭文本先验猜测。
 
-### H.28.11 语音 Agent 评估器
+### 8.28.11 语音 Agent 评估器
 
 DeepEval 4.2.0 的顶层接口导出以下 7 个 Voice Metric：
 
@@ -3144,7 +3144,7 @@ ASR / 文本内容正确性指标
 分层人工听测
 ```
 
-### H.28.12 可选 RAGAS 包装指标
+### 8.28.12 可选 RAGAS 包装指标
 
 DeepEval 还在 `deepeval.metrics.ragas` 中提供：
 
@@ -3168,7 +3168,7 @@ from deepeval.metrics.ragas import RagasMetric
 
 它们的定位是把 RAGAS 接入 DeepEval 的 Dataset、Pytest、缓存和报告生态，而不是 DeepEval 原生指标的升级版。官方更推荐优先使用 DeepEval 原生 RAG 指标，只有在团队已经基于 RAGAS 建立历史基线或必须与既有结果对齐时，才使用这些兼容包装器。
 
-### H.28.13 评估器选择矩阵
+### 8.28.13 评估器选择矩阵
 
 | 被测系统 | 最小推荐组合 | 可选增强 | 不建议单独依赖 |
 |---|---|---|---|
@@ -3184,7 +3184,7 @@ from deepeval.metrics.ragas import RagasMetric
 | 图像应用 | 对应 Image Metric + 业务 `GEval` | OCR、对象检测等确定性检查 | 仅评估文字说明 |
 | 语音 Agent | Voice Metric + 内容正确性 + 任务完成度 | 人工听测、网络故障集 | 单一自然度分数 |
 
-### H.28.14 推荐组合示例
+### 8.28.14 推荐组合示例
 
 #### RAG 回归套件
 
@@ -3261,7 +3261,7 @@ metrics = [
 不要把所有维度压成一个无法解释的总分
 ```
 
-### H.28.15 常见误用
+### 8.28.15 常见误用
 
 #### 误用一：一次挂十几个 Metric
 
@@ -3295,9 +3295,9 @@ metrics = [
 
 ---
 
-## H.29 DeepEval 与 SWE-bench 等 Benchmark 的关系
+## 8.29 DeepEval 与 SWE-bench 等 Benchmark 的关系
 
-### H.29.1 先区分 Metric、Benchmark 与 Evaluation Framework
+### 8.29.1 先区分 Metric、Benchmark 与 Evaluation Framework
 
 这三个术语经常被混用，但所处层级不同：
 
@@ -3326,7 +3326,7 @@ flowchart TB
 
 因此，DeepEval 与 SWE-bench **不是同一层面的替代品**。
 
-### H.29.2 DeepEval 自身也提供标准 Benchmark 适配器
+### 8.29.2 DeepEval 自身也提供标准 Benchmark 适配器
 
 DeepEval 不只是自定义 Metric 框架，也包含 `deepeval.benchmarks` 模块。以 Python 4.2.0 源码公开导出为准，共有以下 17 个 Benchmark 类：
 
@@ -3372,7 +3372,7 @@ print(benchmark.predictions)
 
 > 官方 Benchmark 概览页仍重点列出 7 个经典基准，而 4.2.0 的源码顶层接口已导出 17 个类。遇到文档与安装包差异时，应以当前锁定版本的源码和可导入接口为准。
 
-### H.29.3 SWE-bench 是什么
+### 8.29.3 SWE-bench 是什么
 
 官方名称是 **SWE-bench**。它面向真实软件工程 Issue 解决能力，而不是普通问答或短代码补全。
 
@@ -3412,7 +3412,7 @@ SWE-bench Leaderboard 的主要指标是：
 
 这是 SWE-bench 的核心可信度来源：**最终结果由可执行代码和测试判定，而不是主要依赖主观 Judge。**
 
-### H.29.4 DeepEval 与 SWE-bench 的核心关系
+### 8.29.4 DeepEval 与 SWE-bench 的核心关系
 
 最准确的关系是：
 
@@ -3438,7 +3438,7 @@ SWE-bench
 - SWE-bench 适合回答“这个 Coding Agent 在公开真实仓库任务上能解决多少问题”；
 - DeepEval 更适合回答“这个具体应用是否满足团队自己的质量、策略、成本和回归要求”。
 
-### H.29.5 对比表
+### 8.29.5 对比表
 
 | 维度 | DeepEval | SWE-bench | MMLU / GSM8K 等传统 Benchmark | HumanEval |
 |---|---|---|---|---|
@@ -3453,7 +3453,7 @@ SWE-bench
 | 是否有公开可比性 | 自定义数据通常没有；内置 benchmark 有 | 有 | 有 | 有 |
 | 是否解释执行过程 | 支持 Trace / Span | 原生重点是最终 Patch 是否通过 | 通常不解释 | 通常不解释 |
 
-### H.29.6 DeepEval 4.2.0 是否原生支持 SWE-bench
+### 8.29.6 DeepEval 4.2.0 是否原生支持 SWE-bench
 
 **不原生支持。**
 
@@ -3520,7 +3520,7 @@ Telemetry / Cost Collector
 
 但是，即使做了 Dataset 映射，**最终 Patch 判分仍应调用 SWE-bench 原生 Harness**。不要让 LLM Judge 读取 Patch 后自行决定“是否修好”。
 
-### H.29.7 推荐的联合评估结果模型
+### 8.29.7 推荐的联合评估结果模型
 
 不要把所有结果过早压成一个加权总分。建议至少保留四组独立维度：
 
@@ -3577,7 +3577,7 @@ Resolved 较低，但单位成本很低
 
 这些都不能由单一 `% Resolved` 解释。
 
-### H.29.8 公共 Benchmark 与私有评估集分别回答什么问题
+### 8.29.8 公共 Benchmark 与私有评估集分别回答什么问题
 
 | 问题 | 公共 Benchmark | DeepEval 私有 Dataset |
 |---|---:|---:|
@@ -3606,7 +3606,7 @@ Resolved 较低，但单位成本很低
   验证真实分布、长尾问题和用户价值
 ```
 
-### H.29.9 不同 Benchmark 适合测什么
+### 8.29.9 不同 Benchmark 适合测什么
 
 | 目标 | 更合适的评估方式 |
 |---|---|
@@ -3633,7 +3633,7 @@ RAG Eval 的单位通常是一次问答或一次检索链路
 
 不同单位的分数不可直接横向比较。
 
-### H.29.10 为什么不能只看 SWE-bench 分数
+### 8.29.10 为什么不能只看 SWE-bench 分数
 
 #### 一、结果受 Agent Harness 影响
 
@@ -3691,7 +3691,7 @@ Model
 
 因此，SWE-bench 高分是有价值的能力证据，但不是产品验收的充分条件。
 
-### H.29.11 推荐的分层评估架构
+### 8.29.11 推荐的分层评估架构
 
 ```mermaid
 flowchart TB
@@ -3734,7 +3734,7 @@ flowchart TB
 
 ---
 
-## H.30 参考资料
+## 8.30 参考资料
 
 以下内容以 DeepEval 官方文档和官方 GitHub 仓库为主要依据：
 
@@ -3826,4 +3826,4 @@ DeepEval 自定义评估
 
 ---
 
-> **使用提示**：与其他附录的分工——A 讲模型机制、B 讲方法论、C 记来源、D 列产品、E 辨异同、F 索引图版、G 详解 OTel、**H 上手 DeepEval**、I 评测观测平台选型、J 上手 Mem0、K 详解记忆晋升机制、L 盘点 Coding Agent 赛道、M 盘点可观测赛道、N 盘点评估赛道、O 盘点 Memory 赛道、P 盘点自进化赛道、Q 盘点多 Agent 赛道、R 盘点 MCP 生态、S 盘点沙箱赛道、T 盘点 RAG 赛道、U 盘点 LLM Wiki 赛道、V 盘点 Loop Engineering 赛道、W 解析 Pi 源码、X 解析 Claude Code 源码、Y 解析 Codex 源码、Z 解析 OpenCode 源码。第 15 章是"评什么、为什么评"，本附录是"用 DeepEval 怎么评"；第 11 章 2.8 的 RAG 指标组合诊断在 H.12/H.14 有自动化取数方案。API 快照为 4.2.0，动手前对照 [C-31] 核验当前版本。
+> **使用提示**：与其他附录的分工——1 讲模型机制、2 讲方法论、3 记来源、4 列产品、5 辨异同、6 索引图版、7 详解 OTel、**8 上手 DeepEval**、9 评测观测平台选型、10 上手 Mem0、11 详解记忆晋升机制、12 盘点 Coding Agent 赛道、13 盘点可观测赛道、14 盘点评估赛道、15 盘点 Memory 赛道、16 盘点自进化赛道、17 盘点多 Agent 赛道、18 盘点 MCP 生态、19 盘点沙箱赛道、20 盘点 RAG 赛道、21 盘点 LLM Wiki 赛道、22 盘点 Loop Engineering 赛道、23 解析 Pi 源码、24 解析 Claude Code 源码、25 解析 Codex 源码、26 解析 OpenCode 源码。第 15 章是"评什么、为什么评"，本附录是"用 DeepEval 怎么评"；第 11 章 2.8 的 RAG 指标组合诊断在 8.12/H.14 有自动化取数方案。API 快照为 4.2.0，动手前对照 [C-31] 核验当前版本。

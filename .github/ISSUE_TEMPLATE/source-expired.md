@@ -5,7 +5,7 @@ title: "[来源] C-XX "
 labels: sources, freshness
 ---
 
-**来源编号**：C-XX（见 `references/sources.yaml` / 附录 C）
+**来源编号**：C-XX（见 `references/sources.yaml` / 附录 3）
 
 **问题**：链接失效 / 版本已更新 / 结论已变 / 产品状态变化
 
