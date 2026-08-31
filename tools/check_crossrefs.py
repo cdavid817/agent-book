@@ -53,7 +53,8 @@ def maxfig_of(text: str) -> int:
 def main(argv: list[str]) -> int:
     root = Path(argv[1]) if len(argv) > 1 else Path(__file__).resolve().parents[1]
     mds = [m for m in sorted(root.rglob("*.md"))
-           if "/.git/" not in str(m) and "/__pycache__/" not in str(m)]
+           if "/.git/" not in str(m) and "/__pycache__/" not in str(m)
+           and "node_modules" not in str(m)]
     chapters = {int(CHAP_RE.search(m.name).group(1)): m
                 for m in mds if CHAP_RE.search(m.name)}
     ch_maxfig = {n: maxfig_of(p.read_text(encoding="utf-8"))

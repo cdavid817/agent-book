@@ -20,8 +20,9 @@ help:
 	@echo "make check-crossrefs 章/附录/图号内部引用有效"
 	@echo "make check-snippets  章节代码片段与源码零漂移"
 	@echo "make check-diagrams  D2 图源已渲染、被引用且可在 GitHub 显示"
-	@echo "make check-mermaid   Mermaid 块可被 mermaid.js 解析（需 node; 依赖 npm i --no-save mermaid jsdom）"
+	@echo "make check-mermaid   Mermaid 块可被 mermaid.js 解析（需 node; 首次先 npm ci）"
 	@echo "make check-sources   来源账本一致、协议版本一致（CI 非严格）"
+	@echo "make check-links     外链存活检查（定时/发行前跑，非 PR 门禁）"
 	@echo "make check-sources-strict  发行前：待确认/过期升级为失败"
 	@echo "make baseline        重新生成仓库基线报告（信息性）"
 
@@ -67,7 +68,7 @@ check-sources-strict:
 	$(PY) tools/check_sources.py --strict
 
 check-links:
-	@echo "check-links: 外链检查为可选 nightly（非代码正确性门禁，见计划 11.4）"
+	$(PY) tools/check_links.py
 
 lint typecheck docs-build:
 	@echo "$@: pending（lint/typecheck/docs-build 随 TG6 后续与 TG7 接入）"

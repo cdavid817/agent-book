@@ -1,0 +1,12 @@
+{
+  "name": "agent-book-gates",
+  "private": true,
+  "description": "书稿门禁的 Node 依赖：mermaid 解析校验（tools/check_mermaid.mjs）",
+  "devDependencies": {
+    "jsdom": "30.0.1",
+    "mermaid": "11.17.2"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

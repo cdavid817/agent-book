@@ -63,7 +63,8 @@ def main(argv: list[str]) -> int:
     # 2) 磁盘章节 == book.yml 章节（无孤儿/无缺失）
     disk_ch = {int(CHAP_RE.search(p.name).group(1)): p
                for p in root.rglob("*.md")
-               if CHAP_RE.search(p.name) and "/.git/" not in str(p)}
+               if CHAP_RE.search(p.name) and "/.git/" not in str(p)
+               and "node_modules" not in str(p)}
     yaml_numbers = [ch["number"] for ch, _ in yaml_chapters]
     disk_numbers = set(disk_ch)
     missing = disk_numbers - set(yaml_numbers)

@@ -42,6 +42,8 @@ def main(argv: list[str]) -> int:
     bad = []
     checked = 0
     for md in sorted(root.rglob("*.md")):
+        if "node_modules" in str(md):
+            continue
         if "/.git/" in str(md) or "/__pycache__/" in str(md):
             continue
         checked += 1

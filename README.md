@@ -180,10 +180,11 @@ make verify     # 运行全部真实门禁
 | `cross-reference-check` | 章/附录/图号内部引用全部指向真实目标 |
 | `snippet-sync-check` | 章节内代码与贯穿项目源码**逐字符一致**，漂移即失败 |
 | `diagram-source-check` | 每个 D2 图源已渲染为 SVG、被正文引用且可在 GitHub 显示 |
+| `mermaid-check` | 全书 1300+ 幅 Mermaid 经 mermaid.js 真实解析（与 GitHub 同引擎），语法失效即失败 |
 | `contract-tests` | 贯穿项目 `pytest`（事件契约 + OTel/成本消费者，真实 OTel SDK） |
 | `source-freshness` | `references/sources.yaml` 与正文/附录 3/代码常量一致，协议版本一致，时效与「待确认」可机器判定 |
 
-> 目录单一来源 `book.yml`（`book-structure`）与来源账本 `references/sources.yaml`（`source-freshness`）均已接入：新增章节改 `book.yml` + 正文即可，时效性来源与「待确认」条目可机器判定。发行前用 `make check-sources-strict` 把「待确认」/过期升级为失败。外链存活检查与文档站构建（`check-links` / `docs-build`）为后续里程碑，当前在 `Makefile` 中显式标注 pending，不伪造通过。
+> 目录单一来源 `book.yml`（`book-structure`）与来源账本 `references/sources.yaml`（`source-freshness`）均已接入：新增章节改 `book.yml` + 正文即可，时效性来源与「待确认」条目可机器判定。发行前用 `make check-sources-strict` 把「待确认」/过期升级为失败。外链存活检查已实装为独立定时 workflow（`links.yml`，每周 + 手动触发，非 PR 门禁；发行前跑 `make check-links` 清零硬失败）。文档站构建（`docs-build`）为后续里程碑，在 `Makefile` 中显式标注 pending。
 
 ## 全书的五条不折旧判断
 

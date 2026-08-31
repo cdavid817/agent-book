@@ -1,0 +1,24 @@
+name: links
+
+# 外链存活检查：每周一次 + 手动触发。非 PR 门禁——外部站点抖动不应阻断书稿迭代；
+# 发行前手动跑一次并清零硬失败。
+
+on:
+  schedule:
+    - cron: "0 2 * * 1"   # 每周一 02:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check-links:
+    name: check-links (外链存活)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python tools/check_links.py
