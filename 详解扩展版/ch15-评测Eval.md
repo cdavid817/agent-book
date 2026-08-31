@@ -1,12 +1,3 @@
----
-title: 第 15 章：Agent 评测（Eval）——从“感觉不错”到可验证、可回归、可发布
-description: 面向生产级单 Agent 系统的完整评测方法论、指标体系、数据集治理、轨迹评测、LLM-as-a-Judge、CI/CD 门禁与线上闭环
-version: 2.0
-author: awesome-agent-tutorial 扩展版
-last_updated: 2026-08-31
-source_chapter: 第三篇·单 Agent 生产工程化·第 15 章
----
-
 # 第 15 章：Agent 评测（Eval）——从“感觉不错”到可验证、可回归、可发布
 
 > **本章核心结论**：Agent 评测不是“给最终回复打一个分”，而是一套把产品目标转化为可执行测试、把运行轨迹转化为证据、把统计结果转化为发布决策、再把线上失败转化为回归数据的工程系统。

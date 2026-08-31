@@ -1,6 +1,6 @@
 # 附录 G：OpenTelemetry 详解与 Agent 可观测性指南
 
-> 定位：**OTel 机制兜底 + Agent 观测接入原理的完整指南**（全文收录，信息基准 2026-08-31，规范与文档入口见 [C-28]）。正文第 14 章讲"本书的 Agent 怎么用 OTel"（四层 Span、指标框架、采样策略），附录 M 盘点可观测赛道的平台产品，本附录讲两层原理：**OTel 本体**（G.2 的 24 个小节：数据模型、五信号、API/SDK、语义约定与 Schema 治理、OTLP、Collector 与部署形态、采样、排障）与 **Agent 观测机制**（四层观测模型、Agent 对象到遥测的映射、Python 零侵入探针原理、LangChain/LangGraph/OpenAI SDK/ChromaDB 的接入机制、Span 所有权与重复埋点治理、敏感数据治理、自研 Runtime 的原生观测设计）。一句话分工：第 14 章讲用法、L 讲平台、本附录讲机制与接入原理。
+> 定位：**OTel 机制兜底 + Agent 观测接入原理的完整指南**（全文收录，信息基准 2026-08-31，规范与文档入口见 [C-28]）。正文第 14 章讲"本书的 Agent 怎么用 OTel"（四层 Span、指标框架、采样策略），附录 M 盘点可观测赛道的平台产品，本附录讲两层原理：**OTel 本体**（G.2 的 24 个小节：数据模型、五信号、API/SDK、语义约定与 Schema 治理、OTLP、Collector 与部署形态、采样、排障）与 **Agent 观测机制**（四层观测模型、Agent 对象到遥测的映射、Python 零侵入探针原理、LangChain/LangGraph/OpenAI SDK/ChromaDB 的接入机制、Span 所有权与重复埋点治理、敏感数据治理、自研 Runtime 的原生观测设计）。一句话分工：第 14 章讲用法、M 讲平台、本附录讲机制与接入原理。
 
 ---
 
