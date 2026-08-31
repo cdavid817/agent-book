@@ -1,10 +1,10 @@
-# 附录 T：主流 LLM Wiki 系统全景
+# 附录 U：主流 LLM Wiki 系统全景
 
 > 定位：**LLM Wiki（知识编译系统）赛道的全景调研报告**（全文收录，信息基准 2026-08-31，各产品官方入口见 [C-47]）。这是一个与 RAG 相邻但立意不同的赛道：RAG 在查询时检索原文片段，LLM Wiki 在写入时把知识**编译**成结构化、可导航、面向 LLM 与人双读者的百科——本附录讲清这条辨析（Wiki vs RAG vs 知识图谱），再盘点四路生态：代码仓库型（DeepWiki/Code Wiki/AutoWiki——第 23 章 Repo Map 与项目知识文件的产品化放大）、持久知识编译型、企业知识 Wiki 与企业搜索（Notion AI/Glean/Rovo 等）、开源 RAG 与 Agent 知识平台；收尾于企业参考架构、核心机制详解、面向 Agent 的接口设计、选型与失败模式。注意与本书附录 A（LLM 基础 Wiki）无关——附录 A 是"关于 LLM 的词条书"，本附录讲的是"用 LLM 编译知识的系统"。名单会过期，"检索时增强 vs 写入时编译"的辨析框架不过期。
 
 ---
 
-## T.1 核心结论
+## U.1 核心结论
 
 当前“LLM Wiki”并不是单一产品类别，而是六条正在汇合的技术路线：
 
@@ -37,9 +37,9 @@
 
 ---
 
-## T.2 什么是真正的 LLM Wiki
+## U.2 什么是真正的 LLM Wiki
 
-### T.2.1 广义定义
+### U.2.1 广义定义
 
 广义 LLM Wiki 是指利用大语言模型完成以下一种或多种能力的知识系统：
 
@@ -52,7 +52,7 @@
 
 Notion AI、GitBook AI、Rovo、Glean 等都属于广义 LLM Wiki 生态。
 
-### T.2.2 狭义定义：知识编译型 Wiki
+### U.2.2 狭义定义：知识编译型 Wiki
 
 Andrej Karpathy 发布的 LLM Wiki idea file 给出了一种非常清晰的狭义定义：
 
@@ -78,7 +78,7 @@ Wiki：由 LLM 生成并持续维护的结构化知识
 
 如果答案是否定的，它通常更接近 RAG 问答系统，而不是知识编译型 Wiki。
 
-### T.2.3 LLM Wiki 的本质
+### U.2.3 LLM Wiki 的本质
 
 从工程角度看，LLM Wiki 的本质不是“让 AI 写文档”，而是建立一条长期运行的知识编译流水线：
 
@@ -98,7 +98,7 @@ flowchart LR
 
 ---
 
-## T.3 LLM Wiki、RAG 与知识图谱的区别
+## U.3 LLM Wiki、RAG 与知识图谱的区别
 
 | 维度 | 传统 RAG | 知识图谱 | LLM Wiki |
 |---|---|---|---|
@@ -129,7 +129,7 @@ flowchart LR
 
 ---
 
-## T.4 主流 LLM Wiki 生态全景
+## U.4 主流 LLM Wiki 生态全景
 
 ```mermaid
 flowchart TB
@@ -171,7 +171,7 @@ flowchart TB
     DOCS --> G1["GitBook AI / GitBook Agent"]
 ```
 
-### T.4.1 生态分类对比
+### U.4.1 生态分类对比
 
 | 类别 | 代表系统 | 核心知识单位 | 主要价值 |
 |---|---|---|---|
@@ -185,7 +185,7 @@ flowchart TB
 
 ---
 
-## T.5 代码仓库型 LLM Wiki
+## U.5 代码仓库型 LLM Wiki
 
 这是目前最成熟、最容易看到 LLM Wiki 价值的一条路线。
 
@@ -199,7 +199,7 @@ flowchart TB
 
 因此，代码 Wiki 比普通企业知识库更容易形成稳定的结构化页面。
 
-### T.5.1 DeepWiki
+### U.5.1 DeepWiki
 
 DeepWiki 由 Cognition/Devin 团队提供。它会自动索引代码仓库，并生成：
 
@@ -235,7 +235,7 @@ DeepWiki 还提供 MCP 服务，主要暴露：
 
 ---
 
-### T.5.2 Google Code Wiki
+### U.5.2 Google Code Wiki
 
 Google Code Wiki 的目标是为代码仓库维护持续更新的结构化 Wiki。其能力包括：
 
@@ -258,7 +258,7 @@ Google Code Wiki 的重要特征是：
 
 ---
 
-### T.5.3 Factory AutoWiki
+### U.5.3 Factory AutoWiki
 
 Factory AutoWiki 会从 Droid CLI 分析仓库，生成结构化 Markdown Wiki，覆盖：
 
@@ -285,7 +285,7 @@ AutoWiki 支持在 Factory App 中查看、搜索、导出和浏览历史版本�
 
 ---
 
-### T.5.4 LangChain OpenWiki
+### U.5.4 LangChain OpenWiki
 
 OpenWiki 是开源代码 Wiki Agent，主要能力包括：
 
@@ -312,7 +312,7 @@ OpenWiki 是开源代码 Wiki Agent，主要能力包括：
 
 ---
 
-### T.5.5 OpenDeepWiki 与 DeepWiki-Open
+### U.5.5 OpenDeepWiki 与 DeepWiki-Open
 
 ### OpenDeepWiki
 
@@ -343,7 +343,7 @@ DeepWiki-Open 支持 GitHub、GitLab 和 Bitbucket，能够生成：
 
 ---
 
-### T.5.6 CodeWiki、RepoAgent 与 Zread
+### U.5.6 CodeWiki、RepoAgent 与 Zread
 
 ### CodeWiki
 
@@ -365,11 +365,11 @@ Zread 更偏向“代码阅读助手”，可以为仓库生成 Wiki 风格文�
 
 ---
 
-## T.6 持久知识编译型 LLM Wiki
+## U.6 持久知识编译型 LLM Wiki
 
 这是最符合狭义 LLM Wiki 定义的一类。
 
-### T.6.1 nashsu/llm_wiki
+### U.6.1 nashsu/llm_wiki
 
 这是 Karpathy LLM Wiki 思路的桌面应用实现，采用：
 
@@ -421,7 +421,7 @@ Raw Sources → Schema / Purpose → Wiki
 
 ---
 
-### T.6.2 llm-wiki-compiler
+### U.6.2 llm-wiki-compiler
 
 `llm-wiki-compiler` 更接近一个真正的“知识编译器”，而不是单纯桌面笔记应用。
 
@@ -459,7 +459,7 @@ Raw Sources → Schema / Purpose → Wiki
 
 ---
 
-### T.6.3 nvk/llm-wiki
+### U.6.3 nvk/llm-wiki
 
 这一实现更强调 Agent 工作流，包括：
 
@@ -478,7 +478,7 @@ Raw Sources → Schema / Purpose → Wiki
 
 ---
 
-### T.6.4 RAGFlow：从 RAG 向知识编译迈进
+### U.6.4 RAGFlow：从 RAG 向知识编译迈进
 
 RAGFlow 最初是强调复杂文档解析和可追溯回答的 RAG 引擎。
 
@@ -506,7 +506,7 @@ RAGFlow 还能够检测知识库中文档的新增和删除，并提示用户更
 
 ---
 
-## T.7 企业知识 Wiki 与企业搜索系统
+## U.7 企业知识 Wiki 与企业搜索系统
 
 这类系统通常不是严格的 LLM Wiki，而是：
 
@@ -519,7 +519,7 @@ RAGFlow 还能够检测知识库中文档的新增和删除，并提示用户更
 + Agent 与业务动作
 ```
 
-### T.7.1 Notion AI
+### U.7.1 Notion AI
 
 Notion AI 的优势在于页面和数据库本身就是长期知识载体。主要能力包括：
 
@@ -547,7 +547,7 @@ Notion AI 更接近：
 
 ---
 
-### T.7.2 Atlassian Rovo
+### U.7.2 Atlassian Rovo
 
 Rovo 建立在 Confluence、Jira 和 Atlassian Teamwork Graph 之上，包含：
 
@@ -578,7 +578,7 @@ Rovo Agent 可以限定知识范围：
 
 ---
 
-### T.7.3 Glean
+### U.7.3 Glean
 
 Glean 的核心不是 Wiki 页面，而是企业级搜索索引与 Enterprise Knowledge Graph。
 
@@ -607,7 +607,7 @@ Glean 还提供 MCP，将统一企业知识图谱暴露给外部 Agent。
 
 ---
 
-### T.7.4 Microsoft 365 Copilot + SharePoint
+### U.7.4 Microsoft 365 Copilot + SharePoint
 
 Microsoft 路线以 SharePoint、OneDrive、Teams、Microsoft Graph 和 Copilot Studio 为中心。
 
@@ -634,7 +634,7 @@ Copilot in SharePoint 进一步支持通过自然语言查询、创建和操作�
 
 ---
 
-### T.7.5 GitBook AI 与 GitBook Agent
+### U.7.5 GitBook AI 与 GitBook Agent
 
 GitBook 主要服务开发者文档和外部产品文档。
 
@@ -662,7 +662,7 @@ GitBook 主要服务开发者文档和外部产品文档。
 
 ---
 
-### T.7.6 Guru
+### U.7.6 Guru
 
 Guru 已经从传统企业知识卡片系统演进为 Knowledge Agent 平台。
 
@@ -689,7 +689,7 @@ Guru 的突出价值是知识质量治理：
 
 ---
 
-### T.7.7 Slite
+### U.7.7 Slite
 
 Slite 将自己定位为 Self-maintaining Knowledge Base。
 
@@ -715,7 +715,7 @@ Slite 还提供文档 Verification：
 
 ---
 
-## T.8 个人研究型：Gemini Notebook
+## U.8 个人研究型：Gemini Notebook
 
 Gemini Notebook 是以资料为中心的研究产品，支持基于用户提供的资料生成：
 
@@ -750,11 +750,11 @@ Gemini Notebook 是以资料为中心的研究产品，支持基于用户提供�
 
 ---
 
-## T.9 开源 RAG 与 Agent 知识平台
+## U.9 开源 RAG 与 Agent 知识平台
 
 这些系统大多不是开箱即用的 Wiki，但可以作为构建 LLM Wiki 的基础设施。
 
-### T.9.1 Dify
+### U.9.1 Dify
 
 Dify 提供：
 
@@ -778,7 +778,7 @@ Dify 更适合构建：
 
 ---
 
-### T.9.2 Onyx
+### U.9.2 Onyx
 
 Onyx 是开源企业搜索与 Agent 平台，支持：
 
@@ -794,7 +794,7 @@ Onyx 更接近开源版的企业搜索和 Agent 入口，而不是页面型 Wiki
 
 ---
 
-### T.9.3 AnythingLLM
+### U.9.3 AnythingLLM
 
 AnythingLLM 提供：
 
@@ -818,7 +818,7 @@ AnythingLLM 提供：
 
 ---
 
-### T.9.4 MaxKB
+### U.9.4 MaxKB
 
 MaxKB 是面向企业的开源智能体平台，覆盖：
 
@@ -842,7 +842,7 @@ MaxKB 是面向企业的开源智能体平台，覆盖：
 
 ---
 
-### T.9.5 FastGPT
+### U.9.5 FastGPT
 
 FastGPT 强项包括：
 
@@ -858,7 +858,7 @@ FastGPT 更适合作为国内企业知识 Agent 平台，而不是自动生成�
 
 ---
 
-## T.10 推荐的企业级 LLM Wiki 架构
+## U.10 推荐的企业级 LLM Wiki 架构
 
 ```mermaid
 flowchart LR
@@ -923,7 +923,7 @@ flowchart LR
     G --> C
 ```
 
-### T.10.1 架构分层说明
+### U.10.1 架构分层说明
 
 | 层级 | 主要职责 | 典型技术 |
 |---|---|---|
@@ -936,9 +936,9 @@ flowchart LR
 
 ---
 
-## T.11 核心机制详解
+## U.11 核心机制详解
 
-### T.11.1 原始资料与 Wiki 必须分离
+### U.11.1 原始资料与 Wiki 必须分离
 
 原始资料是事实源，Wiki 是派生视图。
 
@@ -967,7 +967,7 @@ erDiagram
 
 ---
 
-### T.11.2 页面不是大段总结，而是类型化知识对象
+### U.11.2 页面不是大段总结，而是类型化知识对象
 
 页面应具有明确 Schema，例如：
 
@@ -1006,7 +1006,7 @@ related:
 
 ---
 
-### T.11.3 使用 Claim 作为最小知识单元
+### U.11.3 使用 Claim 作为最小知识单元
 
 页面只是一种展示结构，真正需要治理的是 Claim。
 
@@ -1046,7 +1046,7 @@ draft
 
 ---
 
-### T.11.4 增量维护优于全量重建
+### U.11.4 增量维护优于全量重建
 
 正确的更新流程应该是：
 
@@ -1087,7 +1087,7 @@ sequenceDiagram
 
 ---
 
-### T.11.5 查询采用三级检索
+### U.11.5 查询采用三级检索
 
 ### 第一级：Wiki 页面检索
 
@@ -1139,7 +1139,7 @@ flowchart TD
 
 ---
 
-### T.11.6 权限必须下沉到 Claim 和证据层
+### U.11.6 权限必须下沉到 Claim 和证据层
 
 企业 LLM Wiki 最危险的问题是：
 
@@ -1164,7 +1164,7 @@ flowchart TD
 
 ---
 
-### T.11.7 Wiki 必须有 Lint 与 Eval
+### U.11.7 Wiki 必须有 Lint 与 Eval
 
 建议至少监控以下指标：
 
@@ -1196,7 +1196,7 @@ quality_gate:
 
 ---
 
-### T.11.8 冲突检测与时间建模
+### U.11.8 冲突检测与时间建模
 
 同一知识在不同时间可能都正确：
 
@@ -1231,7 +1231,7 @@ claim:
 
 ---
 
-### T.11.9 人工审查不能成为吞吐瓶颈
+### U.11.9 人工审查不能成为吞吐瓶颈
 
 所有内容都人工审批会失去自动化价值。建议按风险分级：
 
@@ -1244,7 +1244,7 @@ claim:
 
 ---
 
-## T.12 面向 Agent 的接口设计
+## U.12 面向 Agent 的接口设计
 
 不要让 Agent 每次加载整个 Wiki，而应提供标准化工具：
 
@@ -1286,7 +1286,7 @@ build_context_pack
 }
 ```
 
-### T.12.1 为什么需要 Context Pack
+### U.12.1 为什么需要 Context Pack
 
 直接让 Agent 自行搜索全部知识库会产生：
 
@@ -1309,7 +1309,7 @@ Context Pack 应由知识系统集中构建，包含：
 - 新鲜度和置信度；
 - Token Budget。
 
-### T.12.2 MCP 在 LLM Wiki 中的作用
+### U.12.2 MCP 在 LLM Wiki 中的作用
 
 MCP 可以把 Wiki 能力暴露为统一工具，让不同 Agent 共用相同知识底座：
 
@@ -1335,7 +1335,7 @@ MCP 解决的是工具协议和上下文访问问题，但不会自动解决：
 
 ---
 
-## T.13 系统选型建议
+## U.13 系统选型建议
 
 | 使用场景 | 推荐系统 | 原因 |
 |---|---|---|
@@ -1354,7 +1354,7 @@ MCP 解决的是工具协议和上下文访问问题，但不会自动解决：
 | 国内私有化知识问答 | FastGPT、MaxKB、RAGFlow | 中文生态、连接器和本地部署 |
 | 从 RAG 升级为 Wiki | RAGFlow 或自建 Compiler | 已具备或可扩展 Wiki/Graph/Tree 编译能力 |
 
-### T.13.1 按建设方式选择
+### U.13.1 按建设方式选择
 
 ### 直接采购 SaaS
 
@@ -1406,9 +1406,9 @@ MCP 解决的是工具协议和上下文访问问题，但不会自动解决：
 
 ---
 
-## T.14 常见失败模式
+## U.14 常见失败模式
 
-### T.14.1 把向量数据库当 Wiki
+### U.14.1 把向量数据库当 Wiki
 
 向量数据库只解决“找到相似片段”，并不负责：
 
@@ -1422,7 +1422,7 @@ MCP 解决的是工具协议和上下文访问问题，但不会自动解决：
 
 ---
 
-### T.14.2 让 LLM 无来源改写页面
+### U.14.2 让 LLM 无来源改写页面
 
 必须要求 Claim 绑定来源，否则多轮维护后会出现“知识漂移”。
 
@@ -1435,7 +1435,7 @@ MCP 解决的是工具协议和上下文访问问题，但不会自动解决：
 
 ---
 
-### T.14.3 每次全量生成
+### U.14.3 每次全量生成
 
 大型知识库应使用：
 
@@ -1456,7 +1456,7 @@ MCP 解决的是工具协议和上下文访问问题，但不会自动解决：
 
 ---
 
-### T.14.4 只生成页面，不维护页面
+### U.14.4 只生成页面，不维护页面
 
 一次性的 AI 文档生成器不等于 LLM Wiki。真正难点是后续：
 
@@ -1471,7 +1471,7 @@ MCP 解决的是工具协议和上下文访问问题，但不会自动解决：
 
 ---
 
-### T.14.5 把所有内容塞入 Agent Context
+### U.14.5 把所有内容塞入 Agent Context
 
 Wiki 的作用不是扩大 Prompt，而是帮助 Agent 精确选择上下文。
 
@@ -1488,7 +1488,7 @@ Wiki 的作用不是扩大 Prompt，而是帮助 Agent 精确选择上下文。
 
 ---
 
-### T.14.6 忽略权限传播
+### U.14.6 忽略权限传播
 
 企业 Wiki 必须将源系统权限带入：
 
@@ -1502,7 +1502,7 @@ Wiki 的作用不是扩大 Prompt，而是帮助 Agent 精确选择上下文。
 
 ---
 
-### T.14.7 没有人工 Review 边界
+### U.14.7 没有人工 Review 边界
 
 以下内容不应默认自动发布：
 
@@ -1516,7 +1516,7 @@ Wiki 的作用不是扩大 Prompt，而是帮助 Agent 精确选择上下文。
 
 ---
 
-### T.14.8 只评估问答，不评估知识资产
+### U.14.8 只评估问答，不评估知识资产
 
 RAG 系统通常只评估“答案是否正确”，但 LLM Wiki 还要评估：
 
@@ -1530,9 +1530,9 @@ RAG 系统通常只评估“答案是否正确”，但 LLM Wiki 还要评估：
 
 ---
 
-## T.15 未来趋势
+## U.15 未来趋势
 
-### T.15.1 从 RAG 转向 Knowledge Compilation
+### U.15.1 从 RAG 转向 Knowledge Compilation
 
 知识平台正在从“Chunk 管理”演进为：
 
@@ -1549,7 +1549,7 @@ RAG 不会消失，而会成为知识编译和证据回退的基础能力。
 
 ---
 
-### T.15.2 从静态文档转向持续维护
+### U.15.2 从静态文档转向持续维护
 
 代码 Wiki 已经明确采用：
 
@@ -1572,7 +1572,7 @@ RAG 不会消失，而会成为知识编译和证据回退的基础能力。
 
 ---
 
-### T.15.3 从人类阅读转向 Agent 消费
+### U.15.3 从人类阅读转向 Agent 消费
 
 Wiki 会同时面向：
 
@@ -1588,7 +1588,7 @@ Wiki 会同时面向：
 
 ---
 
-### T.15.4 从知识页面转向可执行 Skills
+### U.15.4 从知识页面转向可执行 Skills
 
 未来链路会变成：
 
@@ -1614,7 +1614,7 @@ Source
 
 ---
 
-### T.15.5 从单一向量检索转向混合上下文系统
+### U.15.5 从单一向量检索转向混合上下文系统
 
 主流架构将同时使用：
 
@@ -1633,7 +1633,7 @@ Source
 
 ---
 
-### T.15.6 从“答案正确”转向“知识资产健康”
+### U.15.6 从“答案正确”转向“知识资产健康”
 
 系统不仅要评估一次回答，还要持续评估：
 
@@ -1647,7 +1647,7 @@ Source
 
 ---
 
-### T.15.7 Wiki 将成为多 Agent 的共享长期状态层
+### U.15.7 Wiki 将成为多 Agent 的共享长期状态层
 
 在多 Agent 系统中，常见问题包括：
 
@@ -1678,11 +1678,11 @@ flowchart TB
 
 ---
 
-## T.16 最终判断
+## U.16 最终判断
 
 当前主流系统可以归纳为三大阵营。
 
-### T.16.1 第一阵营：企业知识入口
+### U.16.1 第一阵营：企业知识入口
 
 代表：
 
@@ -1697,7 +1697,7 @@ flowchart TB
 
 > **连接组织数据、继承权限、提供搜索、问答和业务动作。**
 
-### T.16.2 第二阵营：代码仓库 Wiki
+### U.16.2 第二阵营：代码仓库 Wiki
 
 代表：
 
@@ -1711,7 +1711,7 @@ flowchart TB
 
 > **把代码仓库编译成结构化、持续更新、可供开发者和 CodingAgent 使用的系统说明。**
 
-### T.16.3 第三阵营：知识编译型 LLM Wiki
+### U.16.3 第三阵营：知识编译型 LLM Wiki
 
 代表：
 
@@ -1799,4 +1799,4 @@ flowchart TB
 
 ---
 
-> **使用提示**：与其他附录的分工——A 讲模型机制、B 讲方法论、C 记来源、D 列产品、E 辨异同、F 索引图版、G 详解 OTel、H 上手 DeepEval、I 评测观测平台选型、J 上手 Mem0、K 盘点 Coding Agent 赛道、L 盘点可观测赛道、M 盘点评估赛道、N 盘点 Memory 赛道、O 盘点自进化赛道、P 盘点多 Agent 赛道、Q 盘点 MCP 生态、R 盘点沙箱赛道、S 盘点 RAG 赛道、**T 盘点 LLM Wiki 赛道**、U 解析 Pi 源码、V 解析 Claude Code 源码、W 解析 Codex 源码、X 解析 OpenCode 源码。对照阅读：Wiki/RAG/知识图谱之辨（T.3）对第 11 章与附录 E.1/E.5、代码仓库型 Wiki（T.5）对第 23 章 Repo Map 与项目知识文件（DeepWiki 类即其托管放大版）、知识编译机制（T.11）对第 11 章 2.2 入库管线与附录 S、面向 Agent 的接口（T.12）对第 8 章 MCP 与第 11 章"检索即工具"、企业搜索（T.7）对第 21 章存量集成、失败模式（T.14）对附录 S 失败归因。信息基准 2026-08-31（[C-47]），发行前按附录 C 清单复核。
+> **使用提示**：与其他附录的分工——A 讲模型机制、B 讲方法论、C 记来源、D 列产品、E 辨异同、F 索引图版、G 详解 OTel、H 上手 DeepEval、I 评测观测平台选型、J 上手 Mem0、K 详解记忆晋升机制、L 盘点 Coding Agent 赛道、M 盘点可观测赛道、N 盘点评估赛道、O 盘点 Memory 赛道、P 盘点自进化赛道、Q 盘点多 Agent 赛道、R 盘点 MCP 生态、S 盘点沙箱赛道、T 盘点 RAG 赛道、**U 盘点 LLM Wiki 赛道**、V 解析 Pi 源码、W 解析 Claude Code 源码、X 解析 Codex 源码、Y 解析 OpenCode 源码。对照阅读：Wiki/RAG/知识图谱之辨（U.3）对第 11 章与附录 E.1/E.5、代码仓库型 Wiki（U.5）对第 23 章 Repo Map 与项目知识文件（DeepWiki 类即其托管放大版）、知识编译机制（U.11）对第 11 章 2.2 入库管线与附录 T、面向 Agent 的接口（U.12）对第 8 章 MCP 与第 11 章"检索即工具"、企业搜索（U.7）对第 21 章存量集成、失败模式（U.14）对附录 T 失败归因。信息基准 2026-08-31（[C-47]），发行前按附录 C 清单复核。

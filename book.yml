@@ -276,71 +276,76 @@ appendices:
     status: draft
   - id: appendix-k
     letter: K
-    title: 主流 Coding Agent 系统全景
-    path: 附录/附录K-主流CodingAgent系统全景.md
+    title: Agent 记忆机制详解——从短期到长期
+    path: 附录/附录K-Agent记忆机制详解.md
     status: draft
   - id: appendix-l
     letter: L
-    title: 主流 Agent 可观测系统全景
-    path: 附录/附录L-主流Agent可观测系统全景.md
+    title: 主流 Coding Agent 系统全景
+    path: 附录/附录L-主流CodingAgent系统全景.md
     status: draft
   - id: appendix-m
     letter: M
-    title: 主流 Agent 评估系统全景
-    path: 附录/附录M-主流Agent评估系统全景.md
+    title: 主流 Agent 可观测系统全景
+    path: 附录/附录M-主流Agent可观测系统全景.md
     status: draft
   - id: appendix-n
     letter: N
-    title: 主流 Agent Memory 系统全景
-    path: 附录/附录N-主流AgentMemory系统全景.md
+    title: 主流 Agent 评估系统全景
+    path: 附录/附录N-主流Agent评估系统全景.md
     status: draft
   - id: appendix-o
     letter: O
-    title: 主流 Agent 自进化系统全景
-    path: 附录/附录O-主流Agent自进化系统全景.md
+    title: 主流 Agent Memory 系统全景
+    path: 附录/附录O-主流AgentMemory系统全景.md
     status: draft
   - id: appendix-p
     letter: P
-    title: 主流多 Agent 系统全景
-    path: 附录/附录P-主流多Agent系统全景.md
+    title: 主流 Agent 自进化系统全景
+    path: 附录/附录P-主流Agent自进化系统全景.md
     status: draft
   - id: appendix-q
     letter: Q
-    title: 主流 MCP 系统全景
-    path: 附录/附录Q-主流MCP系统全景.md
+    title: 主流多 Agent 系统全景
+    path: 附录/附录Q-主流多Agent系统全景.md
     status: draft
   - id: appendix-r
     letter: R
-    title: 主流 Agent 沙箱系统全景
-    path: 附录/附录R-主流Agent沙箱系统全景.md
+    title: 主流 MCP 系统全景
+    path: 附录/附录R-主流MCP系统全景.md
     status: draft
   - id: appendix-s
     letter: S
-    title: 主流 RAG 系统全景与工程实践
-    path: 附录/附录S-主流RAG系统全景与工程实践.md
+    title: 主流 Agent 沙箱系统全景
+    path: 附录/附录S-主流Agent沙箱系统全景.md
     status: draft
   - id: appendix-t
     letter: T
-    title: 主流 LLM Wiki 系统全景
-    path: 附录/附录T-主流LLMWiki系统全景.md
+    title: 主流 RAG 系统全景与工程实践
+    path: 附录/附录T-主流RAG系统全景与工程实践.md
     status: draft
   - id: appendix-u
     letter: U
-    title: Pi 源码架构全景解析
-    path: 附录/附录U-Pi源码架构全景解析.md
+    title: 主流 LLM Wiki 系统全景
+    path: 附录/附录U-主流LLMWiki系统全景.md
     status: draft
   - id: appendix-v
     letter: V
-    title: Claude Code 源码架构深度解析
-    path: 附录/附录V-ClaudeCode源码架构深度解析.md
+    title: Pi 源码架构全景解析
+    path: 附录/附录V-Pi源码架构全景解析.md
     status: draft
   - id: appendix-w
     letter: W
-    title: Codex 源码架构深度解析
-    path: 附录/附录W-Codex源码架构深度解析.md
+    title: Claude Code 源码架构深度解析
+    path: 附录/附录W-ClaudeCode源码架构深度解析.md
     status: draft
   - id: appendix-x
     letter: X
+    title: Codex 源码架构深度解析
+    path: 附录/附录X-Codex源码架构深度解析.md
+    status: draft
+  - id: appendix-y
+    letter: Y
     title: OpenCode 源码全景技术解析
-    path: 附录/附录X-OpenCode源码全景技术解析.md
+    path: 附录/附录Y-OpenCode源码全景技术解析.md
     status: draft

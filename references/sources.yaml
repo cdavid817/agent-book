@@ -307,93 +307,93 @@ sources:
     status: verified
     url: "https://docs.ragas.io/"
   - id: C-33
-    title: "Pi (earendil-works/pi) 源码仓库（附录 U 分析锁定 main@853a80d）"
+    title: "Pi (earendil-works/pi) 源码仓库（附录 V 分析锁定 main@853a80d）"
     publisher: "earendil-works"
     source_type: repo
-    claim_scope: [appendix-u]
+    claim_scope: [appendix-v]
     verified_at: "2026-08-30"
     expires_at: "2026-11-30"
     status: verified
     url: "https://github.com/earendil-works/pi"
   - id: C-34
-    title: "Claude Code 还原源码仓库（附录 V 审阅基线 b78dd22；source map 还原，非官方）"
+    title: "Claude Code 还原源码仓库（附录 W 审阅基线 b78dd22；source map 还原，非官方）"
     publisher: "pengchengneo（社区）"
     source_type: community
-    claim_scope: [appendix-v]
+    claim_scope: [appendix-w]
     verified_at: "2026-08-30"
     expires_at: "2026-11-30"
     status: verified
     url: "https://github.com/pengchengneo/Claude-Code"
   - id: C-35
-    title: "OpenAI Codex 源码仓库（附录 W 快照锁定 main@0ae94fd）"
+    title: "OpenAI Codex 源码仓库（附录 X 快照锁定 main@0ae94fd）"
     publisher: "OpenAI"
     source_type: repo
-    claim_scope: [appendix-w]
+    claim_scope: [appendix-x]
     verified_at: "2026-08-30"
     expires_at: "2026-11-30"
     status: verified
     url: "https://github.com/openai/codex"
   - id: C-36
-    title: "主流 Coding Agent 产品与项目官方页面（附录 K 全景盘点，信息基准 2026-08-30）"
+    title: "主流 Coding Agent 产品与项目官方页面（附录 L 全景盘点，信息基准 2026-08-30）"
     publisher: "各产品供应商与开源社区"
-    source_type: vendor-page
-    claim_scope: [appendix-k]
-    verified_at: "2026-08-30"
-    expires_at: "2026-11-30"
-    status: verified
-    url: "https://github.com/anthropics/claude-code"
-  - id: C-37
-    title: "主流 Agent 可观测平台官方页面与 OTel GenAI Observability（附录 L 全景盘点，信息基准 2026-08）"
-    publisher: "各平台供应商与 OpenTelemetry 社区"
     source_type: vendor-page
     claim_scope: [appendix-l]
     verified_at: "2026-08-30"
     expires_at: "2026-11-30"
     status: verified
-    url: "https://opentelemetry.io/blog/2026/genai-observability/"
-  - id: C-38
-    title: "主流 Agent 评估平台/框架/Benchmark 官方页面（附录 M 全景盘点，信息基准 2026-08-30）"
-    publisher: "各平台供应商、评估框架社区与 Benchmark 官方"
+    url: "https://github.com/anthropics/claude-code"
+  - id: C-37
+    title: "主流 Agent 可观测平台官方页面与 OTel GenAI Observability（附录 M 全景盘点，信息基准 2026-08）"
+    publisher: "各平台供应商与 OpenTelemetry 社区"
     source_type: vendor-page
     claim_scope: [appendix-m]
     verified_at: "2026-08-30"
     expires_at: "2026-11-30"
     status: verified
-    url: "https://www.swebench.com/"
-  - id: C-39
-    title: "主流 Agent Memory 系统官方页面与论文（附录 N 全景盘点，信息基准 2026-08）"
-    publisher: "各 Memory 系统供应商、框架社区与研究团队"
+    url: "https://opentelemetry.io/blog/2026/genai-observability/"
+  - id: C-38
+    title: "主流 Agent 评估平台/框架/Benchmark 官方页面（附录 N 全景盘点，信息基准 2026-08-30）"
+    publisher: "各平台供应商、评估框架社区与 Benchmark 官方"
     source_type: vendor-page
     claim_scope: [appendix-n]
     verified_at: "2026-08-30"
     expires_at: "2026-11-30"
     status: verified
+    url: "https://www.swebench.com/"
+  - id: C-39
+    title: "主流 Agent Memory 系统官方页面与论文（附录 O 全景盘点，信息基准 2026-08）"
+    publisher: "各 Memory 系统供应商、框架社区与研究团队"
+    source_type: vendor-page
+    claim_scope: [appendix-o]
+    verified_at: "2026-08-30"
+    expires_at: "2026-11-30"
+    status: verified
     url: "https://github.com/mem0ai/mem0"
   - id: C-40
-    title: "主流 Agent 自进化系统与论文（附录 O 全景盘点，信息基准 2026-08-30；研究为主，非大规模商业部署）"
+    title: "主流 Agent 自进化系统与论文（附录 P 全景盘点，信息基准 2026-08-30；研究为主，非大规模商业部署）"
     publisher: "各研究团队与开源社区"
     source_type: community
-    claim_scope: [appendix-o]
+    claim_scope: [appendix-p]
     verified_at: "2026-08-30"
     expires_at: "2026-11-30"
     status: verified
     url: "https://arxiv.org/abs/2303.11366"
 
   - id: C-41
-    title: "主流多 Agent 框架与平台官方页面（附录 P 全景盘点，信息基准 2026-08-30）"
+    title: "主流多 Agent 框架与平台官方页面（附录 Q 全景盘点，信息基准 2026-08-30）"
     publisher: "各框架供应商、云厂商与开源社区"
     source_type: vendor-page
-    claim_scope: [appendix-p]
+    claim_scope: [appendix-q]
     verified_at: "2026-08-31"
     expires_at: "2026-11-30"
     status: verified
     url: "https://langchain-ai.github.io/langgraph/"
 
   - id: C-42
-    title: "MCP 生态官方页面：Host/SDK/Server/Registry/Gateway 各方（附录 Q 全景盘点，信息基准 2026-08-30）"
+    title: "MCP 生态官方页面：Host/SDK/Server/Registry/Gateway 各方（附录 R 全景盘点，信息基准 2026-08-30）"
     publisher: "Model Context Protocol 社区与各供应商"
     source_type: vendor-page
-    claim_scope: [appendix-q]
+    claim_scope: [appendix-r]
     verified_at: "2026-08-31"
     expires_at: "2026-11-30"
     status: verified
@@ -411,44 +411,54 @@ sources:
     url: "https://docs.mem0.ai/"
 
   - id: C-44
-    title: "主流 Agent 沙箱产品与隔离技术官方页面（附录 R 全景盘点，信息基准 2026-08-30）"
+    title: "主流 Agent 沙箱产品与隔离技术官方页面（附录 S 全景盘点，信息基准 2026-08-30）"
     publisher: "各沙箱供应商、云厂商与开源社区"
     source_type: vendor-page
-    claim_scope: [appendix-r]
+    claim_scope: [appendix-s]
     verified_at: "2026-08-31"
     expires_at: "2026-11-30"
     status: verified
     url: "https://e2b.dev/docs"
 
   - id: C-45
-    title: "OpenCode 源码仓库（附录 X 分析锁定 dev@10765ff，v1.18.25）"
+    title: "OpenCode 源码仓库（附录 Y 分析锁定 dev@10765ff，v1.18.25）"
     publisher: "anomalyco / SST 社区"
     source_type: repo
-    claim_scope: [appendix-x]
+    claim_scope: [appendix-y]
     verified_at: "2026-08-31"
     expires_at: "2026-11-30"
     status: verified
     url: "https://github.com/anomalyco/opencode"
 
   - id: C-46
-    title: "主流 RAG 产品/框架/基础设施官方页面（附录 S 全景盘点，信息基准 2026-08-31）"
+    title: "主流 RAG 产品/框架/基础设施官方页面（附录 T 全景盘点，信息基准 2026-08-31）"
     publisher: "各 RAG 平台、框架与向量数据库供应商"
     source_type: vendor-page
-    claim_scope: [appendix-s]
+    claim_scope: [appendix-t]
     verified_at: "2026-08-31"
     expires_at: "2026-11-30"
     status: verified
     url: "https://github.com/infiniflow/ragflow"
 
   - id: C-47
-    title: "主流 LLM Wiki 与知识编译系统官方页面（附录 T 全景盘点，信息基准 2026-08-31）"
+    title: "主流 LLM Wiki 与知识编译系统官方页面（附录 U 全景盘点，信息基准 2026-08-31）"
     publisher: "各产品供应商与开源社区"
     source_type: vendor-page
-    claim_scope: [appendix-t]
+    claim_scope: [appendix-u]
     verified_at: "2026-08-31"
     expires_at: "2026-11-30"
     status: verified
     url: "https://deepwiki.com/"
+
+  - id: C-48
+    title: "Agent 记忆晋升机制的主流方案与框架文档（附录 K，信息基准 2026-08-31）"
+    publisher: "各框架供应商与研究社区"
+    source_type: vendor-page
+    claim_scope: [appendix-k]
+    verified_at: "2026-08-31"
+    expires_at: "2026-11-30"
+    status: verified
+    url: "https://docs.mem0.ai/"
 
 # 协议版本一致性锚点：check_sources 校验 C-03.version 与第 8 章 PROTOCOL_VERSION 常量相等。
 version_anchors:

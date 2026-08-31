@@ -1,10 +1,10 @@
-# 附录 R：主流 Agent 沙箱系统全景
+# 附录 S：主流 Agent 沙箱系统全景
 
 > 定位：**Agent 沙箱赛道的全景调研报告**（全文收录，信息基准 2026-08-30，各产品官方入口见 [C-44]）。与相邻内容的分工：第 9 章讲沙箱的机制原理（三层沙箱各拦什么、副作用分级），第 23 章 2.6 讲 Coding 场景的风险面与审批特化，本附录是整个赛道的地图——"Computer as an API"形态收敛、全景分层、原生云沙箱与云厂商方案盘点、Coding Agent 各家沙箱对照、浏览器/桌面沙箱、K8s 自建控制平面、底层隔离技术比较（容器/microVM/gVisor 谱系）、参考架构、状态模型与多 Agent 模式、安全威胁矩阵与凭证设计、可观测指标、评测与选型。名单会过期，"隔离强度谱系 + 网络默认拒绝"的框架不过期。
 
 ---
 
-## R.1 什么是 Agent 沙箱
+## S.1 什么是 Agent 沙箱
 
 完整的 Agent 沙箱并不等于 Docker，也不等于“执行命令前弹出确认框”。
 
@@ -30,7 +30,7 @@
 
 ---
 
-## R.2 Agent 沙箱全景分层
+## S.2 Agent 沙箱全景分层
 
 ```mermaid
 flowchart TB
@@ -87,9 +87,9 @@ flowchart TB
 
 ---
 
-## R.3 主流 Agent 原生云沙箱
+## S.3 主流 Agent 原生云沙箱
 
-### R.3.1 核心产品对比
+### S.3.1 核心产品对比
 
 | 系统 | 主要隔离形态 | 状态与生命周期 | 突出能力 | 适合场景 |
 |---|---|---|---|---|
@@ -181,9 +181,9 @@ Cloudflare 全球网络
 
 ---
 
-## R.4 云厂商和模型厂商沙箱
+## S.4 云厂商和模型厂商沙箱
 
-### R.4.1 模型原生代码解释器
+### S.4.1 模型原生代码解释器
 
 | 系统 | 执行能力 | 网络与状态 | 适合场景 |
 |---|---|---|---|
@@ -207,7 +207,7 @@ Gemini 的代码执行工具允许模型生成和迭代执行 Python；Google �
 
 因此，它们更像 **模型的计算工具**，而不是通用 Agent 计算机。
 
-### R.4.2 AWS、Azure、Google Cloud
+### S.4.2 AWS、Azure、Google Cloud
 
 ### AWS Bedrock AgentCore
 
@@ -249,9 +249,9 @@ GKE Agent Sandbox 明确面向不可信的 LLM 生成代码以及需要保持状
 
 ---
 
-## R.5 Coding Agent 的沙箱方案
+## S.5 Coding Agent 的沙箱方案
 
-### R.5.1 Docker Sandboxes
+### S.5.1 Docker Sandboxes
 
 Docker Sandboxes 专门面向编码 Agent。每个沙箱运行在独立 MicroVM 中，拥有自己的 Docker daemon、文件系统和网络环境，因此 Agent 可以在沙箱内部构建容器，而不需要直接访问宿主机 Docker Socket。官方还提供了面向 Codex、Claude Code、Copilot、Gemini 等 Agent 的集成方式。
 
@@ -274,7 +274,7 @@ flowchart LR
 
 Docker Agent 沙箱模式还可以通过代理控制网络访问，并在沙箱生命周期内保留环境变更。
 
-### R.5.2 Codex CLI
+### S.5.2 Codex CLI
 
 Codex CLI 的沙箱策略会分别限制：
 
@@ -291,7 +291,7 @@ Codex CLI 的沙箱策略会分别限制：
 
 这是一种低开销的本地进程级隔离，适合个人开发机，但安全强度和环境可复现性与专用 MicroVM 并不完全相同。
 
-### R.5.3 Claude Code
+### S.5.3 Claude Code
 
 Claude Code 同时提供：
 
@@ -303,11 +303,11 @@ Claude Code 同时提供：
 
 Claude Code Web 中每个任务运行在隔离环境内，并受到文件系统和网络限制。
 
-### R.5.4 Gemini CLI
+### S.5.4 Gemini CLI
 
 Gemini CLI 支持通过 Docker 或配置项启用容器沙箱。它属于可选隔离：不开启沙箱时，Agent 命令直接运行在本地环境；开启后，文件、进程和依赖会受到容器边界限制。
 
-### R.5.5 GitHub Copilot Coding Agent
+### S.5.5 GitHub Copilot Coding Agent
 
 GitHub Copilot Coding Agent 在由 GitHub Actions 驱动的临时开发环境中执行任务，适合从 Issue 创建分支、修改代码、运行测试并提交 Pull Request。GitHub 还区分了云端沙箱和本地 CLI 沙箱能力。
 
@@ -317,7 +317,7 @@ GitHub Copilot Coding Agent 在由 GitHub Actions 驱动的临时开发环境中
 - 每个任务具有相对独立的临时执行环境；
 - 交付结果通常是 Commit 或 Pull Request，而不是持久工作区。
 
-### R.5.6 OpenHands Runtime
+### S.5.6 OpenHands Runtime
 
 OpenHands 支持 Docker、Process 和 Remote 等运行模式。其中 Process 模式直接在宿主机进程中运行，官方明确说明它不提供隔离，可以访问宿主环境，因此只适合受信任的本地调试。生产环境应使用 Docker 或远程 Sandbox Server。
 
@@ -327,7 +327,7 @@ OpenHands 支持 Docker、Process 和 Remote 等运行模式。其中 Process �
 
 ---
 
-## R.6 浏览器和桌面沙箱
+## S.6 浏览器和桌面沙箱
 
 浏览器 Agent 面临的风险与代码 Agent 不完全相同：
 
@@ -374,9 +374,9 @@ flowchart LR
 
 ---
 
-## R.7 Kubernetes 与自建沙箱控制平面
+## S.7 Kubernetes 与自建沙箱控制平面
 
-### R.7.1 Kubernetes SIG Agent Sandbox
+### S.7.1 Kubernetes SIG Agent Sandbox
 
 Kubernetes SIG Agent Sandbox 是面向 AI Agent 工作负载的开源 Kubernetes 项目，重点解决：
 
@@ -410,7 +410,7 @@ Kubernetes Agent Sandbox
 - Secret Broker；
 - 节点隔离和租户调度策略。
 
-### R.7.2 OpenKruise Agents
+### S.7.2 OpenKruise Agents
 
 OpenKruise Agents 提供面向 Agent 沙箱的控制器和 Sandbox Manager，支持：
 
@@ -429,9 +429,9 @@ OpenKruise 暴露 E2B 风格接口，说明 E2B API 正在成为部分 Kubernete
 
 ---
 
-## R.8 底层隔离技术比较
+## S.8 底层隔离技术比较
 
-### R.8.1 隔离强度不是简单的“容器还是虚拟机”
+### S.8.1 隔离强度不是简单的“容器还是虚拟机”
 
 | 技术 | 内核模型 | 启动与密度 | 兼容性 | 典型用途 |
 |---|---|---:|---:|---|
@@ -504,7 +504,7 @@ Wasmtime 等 WebAssembly Runtime 默认采用 Capability-based 模型：模块�
 
 ---
 
-## R.9 标准 Agent 沙箱参考架构
+## S.9 标准 Agent 沙箱参考架构
 
 ```mermaid
 flowchart TB
@@ -558,7 +558,7 @@ flowchart TB
 
 ---
 
-## R.10 MCP、Skill 与沙箱的关系
+## S.10 MCP、Skill 与沙箱的关系
 
 MCP、Skill 和 Tool Calling 都不能替代沙箱。
 
@@ -615,9 +615,9 @@ MCP Gateway 应当承担：
 
 ---
 
-## R.11 Agent 沙箱的状态模型
+## S.11 Agent 沙箱的状态模型
 
-### R.11.1 四类状态形态
+### S.11.1 四类状态形态
 
 | 类型 | 生命周期 | 特点 | 适合 |
 |---|---|---|---|
@@ -628,7 +628,7 @@ MCP Gateway 应当承担：
 
 Runloop、CodeSandbox、Vercel 和 OpenKruise 等系统都在不同程度上支持快照、暂停、恢复或 Fork，说明状态管理正在成为 Agent 沙箱区别于传统 Serverless 函数的重要能力。
 
-### R.11.2 标准生命周期
+### S.11.2 标准生命周期
 
 ```mermaid
 stateDiagram-v2
@@ -663,7 +663,7 @@ stateDiagram-v2
 
 ---
 
-## R.12 多 Agent 沙箱模式
+## S.12 多 Agent 沙箱模式
 
 ### 模式一：所有 Agent 共用一个沙箱
 
@@ -728,7 +728,7 @@ Vercel 的 Sandbox Group、CodeSandbox 的 Fork、Runloop 的 Snapshot 以及 Op
 
 ---
 
-## R.13 Coding Agent 中的 LSP、AST 和索引应该放在哪里
+## S.13 Coding Agent 中的 LSP、AST 和索引应该放在哪里
 
 对于 Coding Agent，沙箱不仅是 Shell 容器，还应承载完整的代码理解运行时：
 
@@ -791,7 +791,7 @@ Sandbox
 
 ---
 
-## R.14 主要安全威胁与防护矩阵
+## S.14 主要安全威胁与防护矩阵
 
 | 威胁 | 典型来源 | 关键控制 |
 |---|---|---|
@@ -850,7 +850,7 @@ network:
 
 ---
 
-## R.15 凭证安全设计
+## S.15 凭证安全设计
 
 最危险的实现方式是：
 
@@ -885,11 +885,11 @@ sequenceDiagram
 
 ---
 
-## R.16 沙箱可观测性指标
+## S.16 沙箱可观测性指标
 
 沙箱可观测性应覆盖五类指标。
 
-### R.16.1 生命周期指标
+### S.16.1 生命周期指标
 
 - `sandbox_create_latency_p50/p95/p99`
 - `sandbox_ready_latency`
@@ -902,7 +902,7 @@ sequenceDiagram
 - `cleanup_failure_rate`
 - `warm_pool_hit_rate`
 
-### R.16.2 执行指标
+### S.16.2 执行指标
 
 - 命令数量和失败率；
 - 进程峰值；
@@ -912,7 +912,7 @@ sequenceDiagram
 - OOM、磁盘耗尽和 PID 限制事件；
 - 构建与测试耗时。
 
-### R.16.3 网络与安全指标
+### S.16.3 网络与安全指标
 
 - 被拒绝的域名和 IP；
 - 私网访问尝试；
@@ -924,7 +924,7 @@ sequenceDiagram
 - 跨租户隔离测试成功率；
 - 异常下载和上传流量。
 
-### R.16.4 Agent 效果指标
+### S.16.4 Agent 效果指标
 
 - 任务成功率；
 - 沙箱初始化失败对任务的影响；
@@ -935,7 +935,7 @@ sequenceDiagram
 - 环境恢复后的任务一致性；
 - 每个成功任务的沙箱成本。
 
-### R.16.5 核心计算公式
+### S.16.5 核心计算公式
 
 ```text
 每成功任务成本
@@ -960,7 +960,7 @@ sequenceDiagram
 
 ---
 
-## R.17 如何评测一个 Agent 沙箱
+## S.17 如何评测一个 Agent 沙箱
 
 建议采用以下权重，而不是只比较启动时间：
 
@@ -999,7 +999,7 @@ sequenceDiagram
 
 ---
 
-## R.18 选型矩阵
+## S.18 选型矩阵
 
 | 场景 | 优先考察的方案 | 原因 |
 |---|---|---|
@@ -1018,9 +1018,9 @@ sequenceDiagram
 
 ---
 
-## R.19 推荐的默认技术路线
+## S.19 推荐的默认技术路线
 
-### R.19.1 个人或本地 Coding Agent
+### S.19.1 个人或本地 Coding Agent
 
 ```text
 OS Process Sandbox
@@ -1033,7 +1033,7 @@ OS Process Sandbox
 
 需要运行 Docker 或不可信依赖时，升级为 Docker Sandboxes 或本地 MicroVM。
 
-### R.19.2 面向互联网的 Agent SaaS
+### S.19.2 面向互联网的 Agent SaaS
 
 ```text
 Agent Orchestrator
@@ -1047,7 +1047,7 @@ Agent Orchestrator
 
 可优先评估 E2B、Vercel、Runloop、Daytona、Modal 和 Cloudflare，再根据语言、云平台、状态和并发需求缩小范围。
 
-### R.19.3 企业私有化平台
+### S.19.3 企业私有化平台
 
 ```text
 Kubernetes
@@ -1065,7 +1065,7 @@ Kubernetes
 
 ---
 
-## R.20 建议的供应商无关接口
+## S.20 建议的供应商无关接口
 
 为了避免被某个沙箱厂商绑定，Agent 平台可以定义统一 Port：
 
@@ -1149,7 +1149,7 @@ export interface SandboxProvider {
 
 ---
 
-## R.21 未来发展趋势
+## S.21 未来发展趋势
 
 ### 1. 从 Code Interpreter 走向完整 Computer API
 
@@ -1249,7 +1249,7 @@ Terminal
 
 ---
 
-## R.22 核心结论
+## S.22 核心结论
 
 1. **Agent 沙箱不是 Docker 容器的同义词**。它是隔离运行时、权限、网络、凭证、状态、生命周期和审计的组合系统。
 
@@ -1306,4 +1306,4 @@ Terminal
 
 ---
 
-> **使用提示**：与其他附录的分工——A 讲模型机制、B 讲方法论、C 记来源、D 列产品、E 辨异同、F 索引图版、G 详解 OTel、H 上手 DeepEval、I 评测观测平台选型、J 上手 Mem0、K 盘点 Coding Agent 赛道、L 盘点可观测赛道、M 盘点评估赛道、N 盘点 Memory 赛道、O 盘点自进化赛道、P 盘点多 Agent 赛道、Q 盘点 MCP 生态、**R 盘点沙箱赛道**、S 盘点 RAG 赛道、T 盘点 LLM Wiki 赛道、U 解析 Pi 源码、V 解析 Claude Code 源码、W 解析 Codex 源码、X 解析 OpenCode 源码。对照阅读：什么是 Agent 沙箱与分层（R.1–R.2）对第 9 章三层沙箱、Coding Agent 沙箱对照（R.5）对第 23 章 2.6 产品表与附录 U/V/W 源码、底层隔离比较（R.8）对第 9 章机制、MCP 与沙箱（R.10）对第 8 章与附录 Q、多 Agent 沙箱模式（R.12）对第 17/19 章、安全威胁矩阵与凭证（R.14–R.15）对第 13 章与第 21 章凭证三形态、可观测指标（R.16）对第 14 章与附录 L。信息基准 2026-08-30（[C-44]），发行前按附录 C 清单复核。
+> **使用提示**：与其他附录的分工——A 讲模型机制、B 讲方法论、C 记来源、D 列产品、E 辨异同、F 索引图版、G 详解 OTel、H 上手 DeepEval、I 评测观测平台选型、J 上手 Mem0、K 详解记忆晋升机制、L 盘点 Coding Agent 赛道、M 盘点可观测赛道、N 盘点评估赛道、O 盘点 Memory 赛道、P 盘点自进化赛道、Q 盘点多 Agent 赛道、R 盘点 MCP 生态、**S 盘点沙箱赛道**、T 盘点 RAG 赛道、U 盘点 LLM Wiki 赛道、V 解析 Pi 源码、W 解析 Claude Code 源码、X 解析 Codex 源码、Y 解析 OpenCode 源码。对照阅读：什么是 Agent 沙箱与分层（S.1–S.2）对第 9 章三层沙箱、Coding Agent 沙箱对照（S.5）对第 23 章 2.6 产品表与附录 V/W/X 源码、底层隔离比较（S.8）对第 9 章机制、MCP 与沙箱（S.10）对第 8 章与附录 R、多 Agent 沙箱模式（S.12）对第 17/19 章、安全威胁矩阵与凭证（S.14–S.15）对第 13 章与第 21 章凭证三形态、可观测指标（S.16）对第 14 章与附录 M。信息基准 2026-08-30（[C-44]），发行前按附录 C 清单复核。
