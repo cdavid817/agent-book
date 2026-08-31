@@ -58,8 +58,18 @@ def _appendix_letters() -> set:
         return set("abcdef")
 
 
+def _series_ids() -> set:
+    try:
+        import yaml
+        root = pathlib.Path(__file__).resolve().parents[1]
+        book = yaml.safe_load((root / "book.yml").read_text(encoding="utf-8"))
+        return {s["id"] for s in (book.get("series") or [])}
+    except Exception:
+        return set()
+
+
 VALID_SCOPE = {f"ch{n:02d}" for n in range(1, _chapter_count() + 1)} | \
-              {f"appendix-{c}" for c in _appendix_letters()}
+              {f"appendix-{c}" for c in _appendix_letters()} | _series_ids()
 
 
 def valid_date(s: str) -> bool:

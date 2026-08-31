@@ -56,6 +56,9 @@ def main(argv: list[str]) -> int:
     for ap in appendices:
         if not (root / ap["path"]).is_file():
             errors.append(f"[路径缺失] {ap['id']} 文件不存在: {ap['path']}")
+    for se in (book.get("series") or []):
+        if not (root / se["path"]).is_file():
+            errors.append(f"[路径缺失] {se['id']} 文件不存在: {se['path']}")
 
     # 2) 磁盘章节 == book.yml 章节（无孤儿/无缺失）
     disk_ch = {int(CHAP_RE.search(p.name).group(1)): p

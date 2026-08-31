@@ -354,3 +354,8 @@ appendices:
     title: OpenCode 源码全景技术解析
     path: 附录/附录Z-OpenCode源码全景技术解析.md
     status: draft
+
+# 资料系列（2026-09-01 起）：附录字母表 A–Z 已冻结，新增全文收录文档进编号系列。
+# 命名：资料系列/{全景|详解|源码}NN-标题.md；id 形如 series-quanjing-01。
+# check_sources 的 claim_scope 接受此处登记的 series id；check_book 校验 path 存在。
+series: []
