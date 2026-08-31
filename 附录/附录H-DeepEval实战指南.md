@@ -3826,4 +3826,4 @@ DeepEval 自定义评估
 
 ---
 
-> **使用提示**：与其他附录的分工——A 讲模型机制、B 讲方法论、C 记来源、D 列产品、E 辨异同、F 索引图版、G 详解 OTel、**H 上手 DeepEval**、I 评测观测平台选型、J 上手 Mem0、K 盘点 Coding Agent 赛道、L 盘点可观测赛道、M 盘点评估赛道、N 盘点 Memory 赛道、O 盘点自进化赛道、P 盘点多 Agent 赛道、Q 盘点 MCP 生态、R 盘点沙箱赛道、S 解析 Pi 源码、T 解析 Claude Code 源码、U 解析 Codex 源码、V 解析 OpenCode 源码。第 15 章是"评什么、为什么评"，本附录是"用 DeepEval 怎么评"；第 11 章 2.8 的 RAG 指标组合诊断在 H.12/H.14 有自动化取数方案。API 快照为 4.2.0，动手前对照 [C-31] 核验当前版本。
+> **使用提示**：与其他附录的分工——A 讲模型机制、B 讲方法论、C 记来源、D 列产品、E 辨异同、F 索引图版、G 详解 OTel、**H 上手 DeepEval**、I 评测观测平台选型、J 上手 Mem0、K 盘点 Coding Agent 赛道、L 盘点可观测赛道、M 盘点评估赛道、N 盘点 Memory 赛道、O 盘点自进化赛道、P 盘点多 Agent 赛道、Q 盘点 MCP 生态、R 盘点沙箱赛道、S 盘点 RAG 赛道、T 解析 Pi 源码、U 解析 Claude Code 源码、V 解析 Codex 源码、W 解析 OpenCode 源码。第 15 章是"评什么、为什么评"，本附录是"用 DeepEval 怎么评"；第 11 章 2.8 的 RAG 指标组合诊断在 H.12/H.14 有自动化取数方案。API 快照为 4.2.0，动手前对照 [C-31] 核验当前版本。

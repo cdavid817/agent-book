@@ -204,4 +204,4 @@ xychart-beta
 
 ---
 
-> **使用提示**：本附录与附录 B 的分工——A 回答"模型为什么是这样"（机制兜底），B 回答"工程方法叫什么、在哪一章"（方法论导航）。各附录分工：A 机制、B 方法论、C 来源、D 产品、E 易混概念辨析、F 图版索引、G OTel 详解、H DeepEval 实战、I 评测观测平台选型、J 上手 Mem0、K Coding Agent 赛道全景、L 可观测赛道全景、M 评估赛道全景、N Memory 赛道全景、O 自进化赛道全景、P 多 Agent 赛道全景、Q MCP 生态全景、R 沙箱赛道全景、S Pi 源码解析、T Claude Code 源码解析、U Codex 源码解析、V OpenCode 源码解析。都是工具书，不必通读，正文引用到时查阅即可。
+> **使用提示**：本附录与附录 B 的分工——A 回答"模型为什么是这样"（机制兜底），B 回答"工程方法叫什么、在哪一章"（方法论导航）。各附录分工：A 机制、B 方法论、C 来源、D 产品、E 易混概念辨析、F 图版索引、G OTel 详解、H DeepEval 实战、I 评测观测平台选型、J 上手 Mem0、K Coding Agent 赛道全景、L 可观测赛道全景、M 评估赛道全景、N Memory 赛道全景、O 自进化赛道全景、P 多 Agent 赛道全景、Q MCP 生态全景、R 沙箱赛道全景、S RAG 赛道全景、T Pi 源码解析、U Claude Code 源码解析、V Codex 源码解析、W OpenCode 源码解析。都是工具书，不必通读，正文引用到时查阅即可。

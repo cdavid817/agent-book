@@ -1,6 +1,6 @@
-# 附录 V：OpenCode 源码全景技术解析
+# 附录 W：OpenCode 源码全景技术解析
 
-> 定位：**开源 Coding Agent「OpenCode」的整仓源码解析**（全文收录）。分析对象锁定 `anomalyco/opencode` 仓库 `dev` 分支提交 `10765ff`（版本 1.18.25，基线 2026-08-30，仓库入口见 [C-45]）；源码高频演进，固定提交的分析不过期。全文按"源码事实 / 架构推断 / 工程建议"三级证据分层。与附录 S（Pi）、T（Claude Code 还原源码）、U（Codex）合为四册源码解剖——OpenCode 的独特看点是 **V1/V2 双内核迁移期的活标本**：现行 SessionPrompt 聚合运行时与新一代 Durable Input/Event Store/Projector 可恢复架构并存，迁移契约、事件溯源与多产品表面（CLI/TUI/Web/Electron/Server）如何共享内核，都是其他三册没有的课题。附录 D.7 的 opencode 条目是产品定位，本附录是源码级证据链。
+> 定位：**开源 Coding Agent「OpenCode」的整仓源码解析**（全文收录）。分析对象锁定 `anomalyco/opencode` 仓库 `dev` 分支提交 `10765ff`（版本 1.18.25，基线 2026-08-30，仓库入口见 [C-45]）；源码高频演进，固定提交的分析不过期。全文按"源码事实 / 架构推断 / 工程建议"三级证据分层。与附录 T（Pi）、T（Claude Code 还原源码）、U（Codex）合为四册源码解剖——OpenCode 的独特看点是 **V1/V2 双内核迁移期的活标本**：现行 SessionPrompt 聚合运行时与新一代 Durable Input/Event Store/Projector 可恢复架构并存，迁移契约、事件溯源与多产品表面（CLI/TUI/Web/Electron/Server）如何共享内核，都是其他三册没有的课题。附录 D.7 的 opencode 条目是产品定位，本附录是源码级证据链。
 
 ---
 
@@ -230,7 +230,7 @@ flowchart LR
 ---
 
 
-## V.1 Monorepo、包边界与构建工具链
+## W.1 Monorepo、包边界与构建工具链
 
 > 领域分类：**全局架构**　｜　源码基线：`dev@10765ff2a9da`
 
@@ -475,7 +475,7 @@ stateDiagram-v2
 ---
 
 
-## V.2 CLI 入口、命令路由与进程退出
+## W.2 CLI 入口、命令路由与进程退出
 
 > 领域分类：**运行时入口**　｜　源码基线：`dev@10765ff2a9da`
 
@@ -720,7 +720,7 @@ stateDiagram-v2
 ---
 
 
-## V.3 Effect AppNode、LayerNode、Location 与依赖图
+## W.3 Effect AppNode、LayerNode、Location 与依赖图
 
 > 领域分类：**运行时内核**　｜　源码基线：`dev@10765ff2a9da`
 
@@ -983,7 +983,7 @@ stateDiagram-v2
 ---
 
 
-## V.4 Project 身份、目录登记、Git Worktree 与 Sandbox
+## W.4 Project 身份、目录登记、Git Worktree 与 Sandbox
 
 > 领域分类：**项目与工作区**　｜　源码基线：`dev@10765ff2a9da`
 
@@ -1256,7 +1256,7 @@ stateDiagram-v2
 ---
 
 
-## V.5 配置发现、优先级、Schema、迁移与策略
+## W.5 配置发现、优先级、Schema、迁移与策略
 
 > 领域分类：**配置系统**　｜　源码基线：`dev@10765ff2a9da`
 
@@ -1525,7 +1525,7 @@ stateDiagram-v2
 ---
 
 
-## V.6 Agent 注册表、系统提示、Skill 与 Reference
+## W.6 Agent 注册表、系统提示、Skill 与 Reference
 
 > 领域分类：**Agent 上下文**　｜　源码基线：`dev@10765ff2a9da`
 
@@ -1801,7 +1801,7 @@ stateDiagram-v2
 ---
 
 
-## V.7 V1 SessionPrompt：现行会话主循环
+## W.7 V1 SessionPrompt：现行会话主循环
 
 > 领域分类：**会话运行时**　｜　源码基线：`dev@10765ff2a9da`
 
@@ -2082,7 +2082,7 @@ stateDiagram-v2
 ---
 
 
-## V.8 LLM 流式适配、Provider 变换与 SessionProcessor
+## W.8 LLM 流式适配、Provider 变换与 SessionProcessor
 
 > 领域分类：**模型调用链**　｜　源码基线：`dev@10765ff2a9da`
 
@@ -2358,7 +2358,7 @@ stateDiagram-v2
 ---
 
 
-## V.9 V2 SessionRunner、Durable Input 与本地执行协调
+## W.9 V2 SessionRunner、Durable Input 与本地执行协调
 
 > 领域分类：**V2 会话内核**　｜　源码基线：`dev@10765ff2a9da`
 
@@ -2645,7 +2645,7 @@ stateDiagram-v2
 ---
 
 
-## V.10 Event Store、Projector、SQLite 与会话投影
+## W.10 Event Store、Projector、SQLite 与会话投影
 
 > 领域分类：**持久化内核**　｜　源码基线：`dev@10765ff2a9da`
 
@@ -2938,7 +2938,7 @@ stateDiagram-v2
 ---
 
 
-## V.11 Provider、Model Catalog、认证与多供应商适配
+## W.11 Provider、Model Catalog、认证与多供应商适配
 
 > 领域分类：**模型生态**　｜　源码基线：`dev@10765ff2a9da`
 
@@ -3223,7 +3223,7 @@ stateDiagram-v2
 ---
 
 
-## V.12 工具 Registry、本地工具、插件工具与 MCP 工具汇聚
+## W.12 工具 Registry、本地工具、插件工具与 MCP 工具汇聚
 
 > 领域分类：**工具平台**　｜　源码基线：`dev@10765ff2a9da`
 
@@ -3512,7 +3512,7 @@ stateDiagram-v2
 ---
 
 
-## V.13 文件读取、检索、编辑、Patch、Snapshot 与 Revert
+## W.13 文件读取、检索、编辑、Patch、Snapshot 与 Revert
 
 > 领域分类：**代码修改链路**　｜　源码基线：`dev@10765ff2a9da`
 
@@ -3812,7 +3812,7 @@ stateDiagram-v2
 ---
 
 
-## V.14 Shell、PTY、后台任务、Task 与子 Agent
+## W.14 Shell、PTY、后台任务、Task 与子 Agent
 
 > 领域分类：**执行系统**　｜　源码基线：`dev@10765ff2a9da`
 
@@ -4103,7 +4103,7 @@ stateDiagram-v2
 ---
 
 
-## V.15 Permission、Question、Always 规则与 Doom Loop
+## W.15 Permission、Question、Always 规则与 Doom Loop
 
 > 领域分类：**权限策略**　｜　源码基线：`dev@10765ff2a9da`
 
@@ -4390,7 +4390,7 @@ stateDiagram-v2
 ---
 
 
-## V.16 上下文压缩、Tool Prune 与 Overflow 恢复
+## W.16 上下文压缩、Tool Prune 与 Overflow 恢复
 
 > 领域分类：**上下文工程**　｜　源码基线：`dev@10765ff2a9da`
 
@@ -4673,7 +4673,7 @@ stateDiagram-v2
 ---
 
 
-## V.17 MCP Client、OAuth、资源、提示与动态能力
+## W.17 MCP Client、OAuth、资源、提示与动态能力
 
 > 领域分类：**扩展协议**　｜　源码基线：`dev@10765ff2a9da`
 
@@ -4962,7 +4962,7 @@ stateDiagram-v2
 ---
 
 
-## V.18 LSP Server 生命周期、诊断与符号能力
+## W.18 LSP Server 生命周期、诊断与符号能力
 
 > 领域分类：**代码智能**　｜　源码基线：`dev@10765ff2a9da`
 
@@ -5247,7 +5247,7 @@ stateDiagram-v2
 ---
 
 
-## V.19 插件 Host、Hook 总线与扩展信任边界
+## W.19 插件 Host、Hook 总线与扩展信任边界
 
 > 领域分类：**插件系统**　｜　源码基线：`dev@10765ff2a9da`
 
@@ -5532,7 +5532,7 @@ stateDiagram-v2
 ---
 
 
-## V.20 V1/V2 Server、Protocol、Client、SDK 与内嵌模式
+## W.20 V1/V2 Server、Protocol、Client、SDK 与内嵌模式
 
 > 领域分类：**服务与协议**　｜　源码基线：`dev@10765ff2a9da`
 
@@ -5831,7 +5831,7 @@ stateDiagram-v2
 ---
 
 
-## V.21 TUI：OpenTUI、Solid、路由与终端交互状态树
+## W.21 TUI：OpenTUI、Solid、路由与终端交互状态树
 
 > 领域分类：**终端界面**　｜　源码基线：`dev@10765ff2a9da`
 
@@ -6120,7 +6120,7 @@ stateDiagram-v2
 ---
 
 
-## V.22 共享 Web App、Session UI、协议兼容与多 Server 路由
+## W.22 共享 Web App、Session UI、协议兼容与多 Server 路由
 
 > 领域分类：**Web 界面**　｜　源码基线：`dev@10765ff2a9da`
 
@@ -6411,7 +6411,7 @@ stateDiagram-v2
 ---
 
 
-## V.23 Electron Desktop、Sidecar、IPC、自动更新与 WSL
+## W.23 Electron Desktop、Sidecar、IPC、自动更新与 WSL
 
 > 领域分类：**桌面宿主**　｜　源码基线：`dev@10765ff2a9da`
 
@@ -6714,7 +6714,7 @@ stateDiagram-v2
 ---
 
 
-## V.24 日志、事件、错误、遥测与运行时可观测性
+## W.24 日志、事件、错误、遥测与运行时可观测性
 
 > 领域分类：**可观测性**　｜　源码基线：`dev@10765ff2a9da`
 
@@ -7006,7 +7006,7 @@ stateDiagram-v2
 ---
 
 
-## V.25 安全模型、信任边界、Prompt Injection 与强隔离
+## W.25 安全模型、信任边界、Prompt Injection 与强隔离
 
 > 领域分类：**安全架构**　｜　源码基线：`dev@10765ff2a9da`
 
@@ -7305,7 +7305,7 @@ stateDiagram-v2
 ---
 
 
-## V.26 测试体系、CI 门禁、构建与发布矩阵
+## W.26 测试体系、CI 门禁、构建与发布矩阵
 
 > 领域分类：**工程质量**　｜　源码基线：`dev@10765ff2a9da`
 
@@ -7617,7 +7617,7 @@ stateDiagram-v2
 ---
 
 
-## V.27 Slack、Function、Console、Enterprise 与外围集成
+## W.27 Slack、Function、Console、Enterprise 与外围集成
 
 > 领域分类：**产品生态**　｜　源码基线：`dev@10765ff2a9da`
 
@@ -7915,7 +7915,7 @@ stateDiagram-v2
 ---
 
 
-## V.28 Monorepo 包清单
+## W.28 Monorepo 包清单
 
 | 包/目录 | 主要角色 | 当前源码定位 |
 | --- | --- | --- |
@@ -7964,7 +7964,7 @@ flowchart TB
 
 **依赖治理原则。** UI 不直接导入数据库、进程或 V1 内部实现；Client 不反向依赖 Server；Protocol 只描述契约；Core 不依赖 Electron 或浏览器；外围控制面通过 SDK 调用内核。迁移期确实存在兼容桥，但应被机器可检查的 import 规则标记，而不是任由临时依赖永久化。
 
-## V.29 V1/V2 迁移状态矩阵
+## W.29 V1/V2 迁移状态矩阵
 
 | 领域 | V1 事实中心 | V2 目标边界 | 当前判断 | 风险 |
 | --- | --- | --- | --- | --- |
@@ -8002,7 +8002,7 @@ flowchart LR
 
 迁移完成的定义应同时满足：外部请求/响应兼容；状态和事件可恢复；权限与副作用语义一致；取消和退出无资源泄漏；Linux/Windows/macOS 关键路径通过；旧数据库和历史 Session 可读取；Client 能通过 Capability 而不是目录名选择实现。
 
-## V.30 核心领域数据模型
+## W.30 核心领域数据模型
 
 ```mermaid
 erDiagram
@@ -8028,7 +8028,7 @@ erDiagram
 
 **事实与投影。** V2 Event 是可重放事实；Session/Message/Tool 等表是查询投影。Snapshot 是文件状态事实但只覆盖文件副作用；Permission Saved Rule 是策略事实；草稿和 UI Tabs 属于客户端本地状态。设计评审应给每个新字段标注它属于事实、投影、缓存还是界面状态，并定义删除、重建和版本迁移规则。
 
-## V.31 工具目录与风险分类
+## W.31 工具目录与风险分类
 
 | 工具族 | 主要用途 | 典型输出 | 主要风险 |
 | --- | --- | --- | --- |
@@ -8075,7 +8075,7 @@ stateDiagram-v2
 
 每个工具都应拥有 `source、version/hash、permission category、side-effect class、replay class、timeout、output policy、redaction policy`。没有这些元数据，V2 即使持久化了 Tool Event，也无法安全决定崩溃恢复、自动重试和上下文裁剪。
 
-## V.32 事件目录
+## W.32 事件目录
 
 | 事件族 | 表达的事实 | 主要消费者/投影 |
 | --- | --- | --- |
@@ -8106,7 +8106,7 @@ stateDiagram-v2
 
 事件命名只是第一步，更关键的是稳定的 Schema 版本、未知字段保留、解码失败处理、事件体隐私和重放测试。高频 Text/Reasoning/Progress Delta 应批量提交或形成可重建片段，控制 WAL 写放大；控制事件和终态事件则应优先保证低延迟、不可丢失。
 
-## V.33 配置优先级与热更新
+## W.33 配置优先级与热更新
 
 | 配置来源 | 相对优先级 | 职责与限制 |
 | --- | --- | --- |
@@ -8136,7 +8136,7 @@ flowchart LR
 
 配置热更新应把“发现新文件”“解析/Schema 校验”“动态 import/MCP/LSP 准备”“原子切换”和“旧 Scope 回收”分开。正在执行的 Turn 使用旧快照，避免模型、工具与权限在中途改变。安全强制策略不能依赖普通深合并，因为高优先级项目配置可能覆盖它。
 
-## V.34 安全威胁矩阵
+## W.34 安全威胁矩阵
 
 | 威胁 | 攻击路径 | 主要控制 | 剩余风险 |
 | --- | --- | --- | --- |
@@ -8174,7 +8174,7 @@ flowchart TB
 
 最重要的安全结论是：Permission 负责决策和可见性，隔离环境负责能力上限。两者互补，不能互相替代。把 Ask 弹窗称为“安全沙箱”会给用户错误保证；把所有操作都默认拒绝又会让编码 Agent 失去价值。因此产品需要安全配置档位、可解释的真实影响和官方隔离部署模板。
 
-## V.35 测试矩阵
+## W.35 测试矩阵
 
 | 测试域 | 关键场景 | 核心断言 | 特别环境 |
 | --- | --- | --- | --- |
@@ -8211,7 +8211,7 @@ flowchart TB
 
 测试数量不是唯一质量指标。对于 OpenCode，更有价值的指标包括状态机覆盖、故障注入边界、跨平台真实进程测试、历史数据库迁移、资源泄漏、V1/V2 差异、发布资产完整性和 Flaky Rate。任何无限重试都会隐藏并发和生命周期缺陷，应设置重试预算并输出首个真实失败。
 
-## V.36 故障演练与恢复案例
+## W.36 故障演练与恢复案例
 
 这一附录把源码中最容易被“正常路径测试”掩盖的问题改写为故障演练。每个案例都要求同时验证数据库事实、事件序列、外部副作用、进程资源、客户端状态和用户可见解释。
 
@@ -8451,7 +8451,7 @@ flowchart LR
 **设计复盘。** 若修复只是在 UI 增加重试按钮，而没有定义 Durable Boundary、幂等语义和恢复终态，问题只是被推迟。正确修复通常需要同时触及领域状态机、持久化、适配器 Finalizer、协议错误和前端恢复提示。
 
 
-## V.37 术语表
+## W.37 术语表
 
 | 术语 | 在本文中的含义 | 常见误区或注意点 |
 | --- | --- | --- |
@@ -8528,174 +8528,174 @@ flowchart LR
 | Monorepo | 在一个仓库管理多个相互依赖包的方式 | 统一版本不代表所有包属于同一运行时信任边界。 |
 | Turbo Task Graph | 根据包依赖和输入输出执行/缓存任务的构建图 | 缓存键必须包含平台、锁文件和生成配置。 |
 
-## V.38 固定提交源码路径索引
+## W.38 固定提交源码路径索引
 
 下表把正文引用的源码入口映射到章节。链接全部固定到 `10765ff2a9da8c3b88e4de873aa383a49c318912`，避免默认分支后续变化导致读者看到与本文不同的实现。目录级入口表示应继续阅读该目录下的导出、Schema、SQL、Adapter 和测试。
 
 | 固定提交源码入口 | 关联章节 | 类型 |
 | --- | --- | --- |
-| [`.github/workflows/publish.yml`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/.github/workflows/publish.yml) | V.26 测试体系、CI 门禁、构建与发布矩阵 | 文件 |
-| [`.github/workflows/test.yml`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/.github/workflows/test.yml) | V.26 测试体系、CI 门禁、构建与发布矩阵 | 文件 |
-| [`.github/workflows/typecheck.yml`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/.github/workflows/typecheck.yml) | V.26 测试体系、CI 门禁、构建与发布矩阵 | 文件 |
-| [`SECURITY.md`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/SECURITY.md) | V.15 Permission、Question、Always 规则与 Doom Loop；V.25 安全模型、信任边界、Prompt Injection 与强隔离 | 文件 |
-| [`install`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/install) | V.26 测试体系、CI 门禁、构建与发布矩阵 | 文件 |
-| [`package.json`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/package.json) | V.1 Monorepo、包边界与构建工具链 | 文件 |
-| [`packages/app/e2e`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/app/e2e) | V.26 测试体系、CI 门禁、构建与发布矩阵 | 目录/包入口 |
-| [`packages/app/package.json`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/app/package.json) | V.1 Monorepo、包边界与构建工具链 | 文件 |
-| [`packages/app/src/app.tsx`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/app/src/app.tsx) | V.22 共享 Web App、Session UI、协议兼容与多 Server 路由 | 文件 |
-| [`packages/app/src/components`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/app/src/components) | V.22 共享 Web App、Session UI、协议兼容与多 Server 路由 | 目录/包入口 |
-| [`packages/app/src/context`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/app/src/context) | V.22 共享 Web App、Session UI、协议兼容与多 Server 路由 | 目录/包入口 |
-| [`packages/app/src/entry.tsx`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/app/src/entry.tsx) | V.22 共享 Web App、Session UI、协议兼容与多 Server 路由；V.24 日志、事件、错误、遥测与运行时可观测性 | 文件 |
-| [`packages/app/src/pages`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/app/src/pages) | V.22 共享 Web App、Session UI、协议兼容与多 Server 路由 | 目录/包入口 |
-| [`packages/auth`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/auth) | V.11 Provider、Model Catalog、认证与多供应商适配；V.27 Slack、Function、Console、Enterprise 与外围集成 | 目录/包入口 |
-| [`packages/client/src`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/client/src) | V.20 V1/V2 Server、Protocol、Client、SDK 与内嵌模式 | 目录/包入口 |
-| [`packages/console`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/console) | V.27 Slack、Function、Console、Enterprise 与外围集成 | 目录/包入口 |
-| [`packages/containers`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/containers) | V.27 Slack、Function、Console、Enterprise 与外围集成 | 目录/包入口 |
-| [`packages/containers/README.md`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/containers/README.md) | V.26 测试体系、CI 门禁、构建与发布矩阵 | 文件 |
-| [`packages/core/package.json`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/package.json) | V.1 Monorepo、包边界与构建工具链 | 文件 |
-| [`packages/core/src/config.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/config.ts) | V.5 配置发现、优先级、Schema、迁移与策略 | 文件 |
-| [`packages/core/src/credential`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/credential) | V.11 Provider、Model Catalog、认证与多供应商适配；V.25 安全模型、信任边界、Prompt Injection 与强隔离 | 目录/包入口 |
-| [`packages/core/src/database/database.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/database/database.ts) | V.10 Event Store、Projector、SQLite 与会话投影 | 文件 |
-| [`packages/core/src/database/migration`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/database/migration) | V.10 Event Store、Projector、SQLite 与会话投影 | 目录/包入口 |
-| [`packages/core/src/database/sqlite.bun.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/database/sqlite.bun.ts) | V.10 Event Store、Projector、SQLite 与会话投影 | 文件 |
-| [`packages/core/src/effect/app-node-platform.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/effect/app-node-platform.ts) | V.3 Effect AppNode、LayerNode、Location 与依赖图 | 文件 |
-| [`packages/core/src/effect/app-node.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/effect/app-node.ts) | V.3 Effect AppNode、LayerNode、Location 与依赖图 | 文件 |
-| [`packages/core/src/effect/layer-node.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/effect/layer-node.ts) | V.3 Effect AppNode、LayerNode、Location 与依赖图 | 文件 |
-| [`packages/core/src/event`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/event) | V.24 日志、事件、错误、遥测与运行时可观测性 | 目录/包入口 |
-| [`packages/core/src/event.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/event.ts) | V.10 Event Store、Projector、SQLite 与会话投影 | 文件 |
-| [`packages/core/src/event/sql.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/event/sql.ts) | V.10 Event Store、Projector、SQLite 与会话投影 | 文件 |
-| [`packages/core/src/location-service-map.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/location-service-map.ts) | V.3 Effect AppNode、LayerNode、Location 与依赖图 | 文件 |
-| [`packages/core/src/location.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/location.ts) | V.3 Effect AppNode、LayerNode、Location 与依赖图 | 文件 |
-| [`packages/core/src/mcp`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/mcp) | V.17 MCP Client、OAuth、资源、提示与动态能力 | 目录/包入口 |
-| [`packages/core/src/permission`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/permission) | V.15 Permission、Question、Always 规则与 Doom Loop | 目录/包入口 |
-| [`packages/core/src/plugin`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/plugin) | V.19 插件 Host、Hook 总线与扩展信任边界 | 目录/包入口 |
-| [`packages/core/src/project/directories.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/project/directories.ts) | V.4 Project 身份、目录登记、Git Worktree 与 Sandbox | 文件 |
-| [`packages/core/src/project/schema.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/project/schema.ts) | V.4 Project 身份、目录登记、Git Worktree 与 Sandbox | 文件 |
-| [`packages/core/src/project/sql.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/project/sql.ts) | V.4 Project 身份、目录登记、Git Worktree 与 Sandbox | 文件 |
-| [`packages/core/src/pty`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/pty) | V.14 Shell、PTY、后台任务、Task 与子 Agent | 目录/包入口 |
-| [`packages/core/src/reference`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/reference) | V.6 Agent 注册表、系统提示、Skill 与 Reference | 目录/包入口 |
-| [`packages/core/src/session/compaction`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/session/compaction) | V.16 上下文压缩、Tool Prune 与 Overflow 恢复 | 目录/包入口 |
-| [`packages/core/src/session/context-epoch.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/session/context-epoch.ts) | V.9 V2 SessionRunner、Durable Input 与本地执行协调；V.16 上下文压缩、Tool Prune 与 Overflow 恢复 | 文件 |
-| [`packages/core/src/session/event.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/session/event.ts) | V.10 Event Store、Projector、SQLite 与会话投影 | 文件 |
-| [`packages/core/src/session/execution/local.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/session/execution/local.ts) | V.9 V2 SessionRunner、Durable Input 与本地执行协调 | 文件 |
-| [`packages/core/src/session/input.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/session/input.ts) | V.9 V2 SessionRunner、Durable Input 与本地执行协调 | 文件 |
-| [`packages/core/src/session/projector.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/session/projector.ts) | V.10 Event Store、Projector、SQLite 与会话投影 | 文件 |
-| [`packages/core/src/session/runner/index.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/session/runner/index.ts) | V.9 V2 SessionRunner、Durable Input 与本地执行协调 | 文件 |
-| [`packages/core/src/session/runner/llm.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/session/runner/llm.ts) | V.9 V2 SessionRunner、Durable Input 与本地执行协调 | 文件 |
-| [`packages/core/src/session/runner/model.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/session/runner/model.ts) | V.9 V2 SessionRunner、Durable Input 与本地执行协调；V.11 Provider、Model Catalog、认证与多供应商适配 | 文件 |
-| [`packages/core/src/session/runner/to-llm-message.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/session/runner/to-llm-message.ts) | V.9 V2 SessionRunner、Durable Input 与本地执行协调 | 文件 |
-| [`packages/core/src/session/sql.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/session/sql.ts) | V.10 Event Store、Projector、SQLite 与会话投影 | 文件 |
-| [`packages/core/src/skill`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/skill) | V.6 Agent 注册表、系统提示、Skill 与 Reference | 目录/包入口 |
-| [`packages/core/src/tool`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/tool) | V.12 工具 Registry、本地工具、插件工具与 MCP 工具汇聚 | 目录/包入口 |
-| [`packages/core/test`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/test) | V.26 测试体系、CI 门禁、构建与发布矩阵 | 目录/包入口 |
-| [`packages/desktop/electron-builder.yml`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/desktop/electron-builder.yml) | V.23 Electron Desktop、Sidecar、IPC、自动更新与 WSL；V.26 测试体系、CI 门禁、构建与发布矩阵 | 文件 |
-| [`packages/desktop/package.json`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/desktop/package.json) | V.1 Monorepo、包边界与构建工具链 | 文件 |
-| [`packages/desktop/src/main/index.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/desktop/src/main/index.ts) | V.23 Electron Desktop、Sidecar、IPC、自动更新与 WSL；V.24 日志、事件、错误、遥测与运行时可观测性 | 文件 |
-| [`packages/desktop/src/main/ipc.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/desktop/src/main/ipc.ts) | V.23 Electron Desktop、Sidecar、IPC、自动更新与 WSL；V.25 安全模型、信任边界、Prompt Injection 与强隔离 | 文件 |
-| [`packages/desktop/src/main/logging.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/desktop/src/main/logging.ts) | V.24 日志、事件、错误、遥测与运行时可观测性 | 文件 |
-| [`packages/desktop/src/main/server.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/desktop/src/main/server.ts) | V.23 Electron Desktop、Sidecar、IPC、自动更新与 WSL | 文件 |
-| [`packages/desktop/src/main/window.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/desktop/src/main/window.ts) | V.23 Electron Desktop、Sidecar、IPC、自动更新与 WSL | 文件 |
-| [`packages/desktop/src/main/wsl`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/desktop/src/main/wsl) | V.23 Electron Desktop、Sidecar、IPC、自动更新与 WSL | 目录/包入口 |
-| [`packages/desktop/src/preload/index.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/desktop/src/preload/index.ts) | V.23 Electron Desktop、Sidecar、IPC、自动更新与 WSL | 文件 |
-| [`packages/desktop/src/renderer/index.tsx`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/desktop/src/renderer/index.tsx) | V.23 Electron Desktop、Sidecar、IPC、自动更新与 WSL | 文件 |
-| [`packages/desktop/test`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/desktop/test) | V.26 测试体系、CI 门禁、构建与发布矩阵 | 目录/包入口 |
-| [`packages/enterprise`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/enterprise) | V.27 Slack、Function、Console、Enterprise 与外围集成 | 目录/包入口 |
-| [`packages/function/package.json`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/function/package.json) | V.27 Slack、Function、Console、Enterprise 与外围集成 | 文件 |
-| [`packages/function/src`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/function/src) | V.27 Slack、Function、Console、Enterprise 与外围集成 | 目录/包入口 |
-| [`packages/identity`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/identity) | V.27 Slack、Function、Console、Enterprise 与外围集成 | 目录/包入口 |
-| [`packages/llm`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/llm) | V.11 Provider、Model Catalog、认证与多供应商适配 | 目录/包入口 |
-| [`packages/opencode/package.json`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/package.json) | V.1 Monorepo、包边界与构建工具链 | 文件 |
-| [`packages/opencode/script/build.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/script/build.ts) | V.26 测试体系、CI 门禁、构建与发布矩阵 | 文件 |
-| [`packages/opencode/src/agent/agent.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/agent/agent.ts) | V.6 Agent 注册表、系统提示、Skill 与 Reference | 文件 |
-| [`packages/opencode/src/agent/prompt`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/agent/prompt) | V.6 Agent 注册表、系统提示、Skill 与 Reference | 目录/包入口 |
-| [`packages/opencode/src/agent/prompt/compaction.txt`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/agent/prompt/compaction.txt) | V.16 上下文压缩、Tool Prune 与 Overflow 恢复 | 文件 |
-| [`packages/opencode/src/background`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/background) | V.14 Shell、PTY、后台任务、Task 与子 Agent | 目录/包入口 |
-| [`packages/opencode/src/cli`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/cli) | V.2 CLI 入口、命令路由与进程退出 | 目录/包入口 |
-| [`packages/opencode/src/cli/cmd`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/cli/cmd) | V.2 CLI 入口、命令路由与进程退出 | 目录/包入口 |
-| [`packages/opencode/src/command`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/command) | V.14 Shell、PTY、后台任务、Task 与子 Agent | 目录/包入口 |
-| [`packages/opencode/src/config`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/config) | V.5 配置发现、优先级、Schema、迁移与策略 | 目录/包入口 |
-| [`packages/opencode/src/config/config.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/config/config.ts) | V.5 配置发现、优先级、Schema、迁移与策略 | 文件 |
-| [`packages/opencode/src/effect/instance-state.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/effect/instance-state.ts) | V.3 Effect AppNode、LayerNode、Location 与依赖图 | 文件 |
-| [`packages/opencode/src/global/event.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/global/event.ts) | V.24 日志、事件、错误、遥测与运行时可观测性 | 文件 |
-| [`packages/opencode/src/index.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/index.ts) | V.2 CLI 入口、命令路由与进程退出 | 文件 |
-| [`packages/opencode/src/integration/index.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/integration/index.ts) | V.11 Provider、Model Catalog、认证与多供应商适配 | 文件 |
-| [`packages/opencode/src/lsp/client.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/lsp/client.ts) | V.18 LSP Server 生命周期、诊断与符号能力 | 文件 |
-| [`packages/opencode/src/lsp/index.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/lsp/index.ts) | V.18 LSP Server 生命周期、诊断与符号能力 | 文件 |
-| [`packages/opencode/src/lsp/server.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/lsp/server.ts) | V.18 LSP Server 生命周期、诊断与符号能力 | 文件 |
-| [`packages/opencode/src/mcp/catalog.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/mcp/catalog.ts) | V.17 MCP Client、OAuth、资源、提示与动态能力 | 文件 |
-| [`packages/opencode/src/mcp/index.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/mcp/index.ts) | V.17 MCP Client、OAuth、资源、提示与动态能力；V.25 安全模型、信任边界、Prompt Injection 与强隔离 | 文件 |
-| [`packages/opencode/src/mcp/oauth-provider.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/mcp/oauth-provider.ts) | V.17 MCP Client、OAuth、资源、提示与动态能力 | 文件 |
-| [`packages/opencode/src/permission`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/permission) | V.15 Permission、Question、Always 规则与 Doom Loop | 目录/包入口 |
-| [`packages/opencode/src/permission/next.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/permission/next.ts) | V.15 Permission、Question、Always 规则与 Doom Loop；V.25 安全模型、信任边界、Prompt Injection 与强隔离 | 文件 |
-| [`packages/opencode/src/plugin/index.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/plugin/index.ts) | V.19 插件 Host、Hook 总线与扩展信任边界；V.25 安全模型、信任边界、Prompt Injection 与强隔离 | 文件 |
-| [`packages/opencode/src/project/instance-store.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/project/instance-store.ts) | V.4 Project 身份、目录登记、Git Worktree 与 Sandbox | 文件 |
-| [`packages/opencode/src/project/project.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/project/project.ts) | V.4 Project 身份、目录登记、Git Worktree 与 Sandbox | 文件 |
-| [`packages/opencode/src/provider/provider.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/provider/provider.ts) | V.8 LLM 流式适配、Provider 变换与 SessionProcessor；V.11 Provider、Model Catalog、认证与多供应商适配 | 文件 |
-| [`packages/opencode/src/provider/transform.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/provider/transform.ts) | V.8 LLM 流式适配、Provider 变换与 SessionProcessor；V.11 Provider、Model Catalog、认证与多供应商适配 | 文件 |
-| [`packages/opencode/src/question`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/question) | V.15 Permission、Question、Always 规则与 Doom Loop | 目录/包入口 |
-| [`packages/opencode/src/server/http.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/server/http.ts) | V.20 V1/V2 Server、Protocol、Client、SDK 与内嵌模式 | 文件 |
-| [`packages/opencode/src/session/compaction.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/session/compaction.ts) | V.16 上下文压缩、Tool Prune 与 Overflow 恢复 | 文件 |
-| [`packages/opencode/src/session/llm.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/session/llm.ts) | V.8 LLM 流式适配、Provider 变换与 SessionProcessor | 文件 |
-| [`packages/opencode/src/session/message-v2.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/session/message-v2.ts) | V.7 V1 SessionPrompt：现行会话主循环；V.8 LLM 流式适配、Provider 变换与 SessionProcessor | 文件 |
-| [`packages/opencode/src/session/processor.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/session/processor.ts) | V.7 V1 SessionPrompt：现行会话主循环；V.8 LLM 流式适配、Provider 变换与 SessionProcessor | 文件 |
-| [`packages/opencode/src/session/prompt.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/session/prompt.ts) | V.7 V1 SessionPrompt：现行会话主循环；V.16 上下文压缩、Tool Prune 与 Overflow 恢复 | 文件 |
-| [`packages/opencode/src/session/revert.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/session/revert.ts) | V.13 文件读取、检索、编辑、Patch、Snapshot 与 Revert | 文件 |
-| [`packages/opencode/src/session/status.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/session/status.ts) | V.7 V1 SessionPrompt：现行会话主循环 | 文件 |
-| [`packages/opencode/src/session/system.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/session/system.ts) | V.6 Agent 注册表、系统提示、Skill 与 Reference | 文件 |
-| [`packages/opencode/src/session/tools.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/session/tools.ts) | V.7 V1 SessionPrompt：现行会话主循环；V.12 工具 Registry、本地工具、插件工具与 MCP 工具汇聚 | 文件 |
-| [`packages/opencode/src/skill/index.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/skill/index.ts) | V.6 Agent 注册表、系统提示、Skill 与 Reference | 文件 |
-| [`packages/opencode/src/snapshot/index.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/snapshot/index.ts) | V.13 文件读取、检索、编辑、Patch、Snapshot 与 Revert | 文件 |
-| [`packages/opencode/src/tool`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/tool) | V.25 安全模型、信任边界、Prompt Injection 与强隔离 | 目录/包入口 |
-| [`packages/opencode/src/tool/bash.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/tool/bash.ts) | V.14 Shell、PTY、后台任务、Task 与子 Agent | 文件 |
-| [`packages/opencode/src/tool/edit.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/tool/edit.ts) | V.13 文件读取、检索、编辑、Patch、Snapshot 与 Revert；V.13 文件读取、检索、编辑、Patch、Snapshot 与 Revert | 文件 |
-| [`packages/opencode/src/tool/glob.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/tool/glob.ts) | V.13 文件读取、检索、编辑、Patch、Snapshot 与 Revert | 文件 |
-| [`packages/opencode/src/tool/grep.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/tool/grep.ts) | V.13 文件读取、检索、编辑、Patch、Snapshot 与 Revert | 文件 |
-| [`packages/opencode/src/tool/lsp.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/tool/lsp.ts) | V.18 LSP Server 生命周期、诊断与符号能力 | 文件 |
-| [`packages/opencode/src/tool/patch.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/tool/patch.ts) | V.13 文件读取、检索、编辑、Patch、Snapshot 与 Revert | 文件 |
-| [`packages/opencode/src/tool/read.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/tool/read.ts) | V.13 文件读取、检索、编辑、Patch、Snapshot 与 Revert | 文件 |
-| [`packages/opencode/src/tool/registry.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/tool/registry.ts) | V.12 工具 Registry、本地工具、插件工具与 MCP 工具汇聚 | 文件 |
-| [`packages/opencode/src/tool/task.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/tool/task.ts) | V.14 Shell、PTY、后台任务、Task 与子 Agent | 文件 |
-| [`packages/opencode/src/tool/tool.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/tool/tool.ts) | V.12 工具 Registry、本地工具、插件工具与 MCP 工具汇聚 | 文件 |
-| [`packages/opencode/src/tool/truncate.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/tool/truncate.ts) | V.12 工具 Registry、本地工具、插件工具与 MCP 工具汇聚 | 文件 |
-| [`packages/opencode/src/util/log.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/util/log.ts) | V.24 日志、事件、错误、遥测与运行时可观测性 | 文件 |
-| [`packages/opencode/src/worktree/index.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/worktree/index.ts) | V.4 Project 身份、目录登记、Git Worktree 与 Sandbox | 文件 |
-| [`packages/opencode/test`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/test) | V.26 测试体系、CI 门禁、构建与发布矩阵 | 目录/包入口 |
-| [`packages/plugin/src/index.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/plugin/src/index.ts) | V.19 插件 Host、Hook 总线与扩展信任边界 | 文件 |
-| [`packages/plugin/src/tool.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/plugin/src/tool.ts) | V.12 工具 Registry、本地工具、插件工具与 MCP 工具汇聚；V.19 插件 Host、Hook 总线与扩展信任边界 | 文件 |
-| [`packages/protocol/package.json`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/protocol/package.json) | V.1 Monorepo、包边界与构建工具链 | 文件 |
-| [`packages/protocol/src/api.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/protocol/src/api.ts) | V.20 V1/V2 Server、Protocol、Client、SDK 与内嵌模式 | 文件 |
-| [`packages/protocol/src/groups`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/protocol/src/groups) | V.20 V1/V2 Server、Protocol、Client、SDK 与内嵌模式 | 目录/包入口 |
-| [`packages/schema`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/schema) | V.5 配置发现、优先级、Schema、迁移与策略；V.17 MCP Client、OAuth、资源、提示与动态能力 | 目录/包入口 |
-| [`packages/schema/src/agent.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/schema/src/agent.ts) | V.6 Agent 注册表、系统提示、Skill 与 Reference | 文件 |
-| [`packages/schema/src/file-diff.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/schema/src/file-diff.ts) | V.13 文件读取、检索、编辑、Patch、Snapshot 与 Revert | 文件 |
-| [`packages/schema/src/lsp.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/schema/src/lsp.ts) | V.18 LSP Server 生命周期、诊断与符号能力 | 文件 |
-| [`packages/schema/src/plugin.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/schema/src/plugin.ts) | V.19 插件 Host、Hook 总线与扩展信任边界 | 文件 |
-| [`packages/sdk-next/src/opencode.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/sdk-next/src/opencode.ts) | V.20 V1/V2 Server、Protocol、Client、SDK 与内嵌模式 | 文件 |
-| [`packages/sdk/js/src`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/sdk/js/src) | V.20 V1/V2 Server、Protocol、Client、SDK 与内嵌模式 | 目录/包入口 |
-| [`packages/server/package.json`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/server/package.json) | V.1 Monorepo、包边界与构建工具链 | 文件 |
-| [`packages/server/src`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/server/src) | V.24 日志、事件、错误、遥测与运行时可观测性 | 目录/包入口 |
-| [`packages/server/src/api.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/server/src/api.ts) | V.20 V1/V2 Server、Protocol、Client、SDK 与内嵌模式 | 文件 |
-| [`packages/server/src/auth.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/server/src/auth.ts) | V.20 V1/V2 Server、Protocol、Client、SDK 与内嵌模式；V.25 安全模型、信任边界、Prompt Injection 与强隔离 | 文件 |
-| [`packages/server/src/handlers`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/server/src/handlers) | V.20 V1/V2 Server、Protocol、Client、SDK 与内嵌模式 | 目录/包入口 |
-| [`packages/server/src/handlers/pty.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/server/src/handlers/pty.ts) | V.14 Shell、PTY、后台任务、Task 与子 Agent | 文件 |
-| [`packages/server/src/routes.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/server/src/routes.ts) | V.20 V1/V2 Server、Protocol、Client、SDK 与内嵌模式 | 文件 |
-| [`packages/session-ui`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/session-ui) | V.22 共享 Web App、Session UI、协议兼容与多 Server 路由；V.24 日志、事件、错误、遥测与运行时可观测性 | 目录/包入口 |
-| [`packages/slack/package.json`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/slack/package.json) | V.27 Slack、Function、Console、Enterprise 与外围集成 | 文件 |
-| [`packages/slack/src`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/slack/src) | V.27 Slack、Function、Console、Enterprise 与外围集成 | 目录/包入口 |
-| [`packages/stats`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/stats) | V.27 Slack、Function、Console、Enterprise 与外围集成 | 目录/包入口 |
-| [`packages/tui/package.json`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/tui/package.json) | V.1 Monorepo、包边界与构建工具链 | 文件 |
-| [`packages/tui/src/app.tsx`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/tui/src/app.tsx) | V.21 TUI：OpenTUI、Solid、路由与终端交互状态树 | 文件 |
-| [`packages/tui/src/components`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/tui/src/components) | V.21 TUI：OpenTUI、Solid、路由与终端交互状态树 | 目录/包入口 |
-| [`packages/tui/src/context`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/tui/src/context) | V.21 TUI：OpenTUI、Solid、路由与终端交互状态树 | 目录/包入口 |
-| [`packages/tui/src/index.tsx`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/tui/src/index.tsx) | V.21 TUI：OpenTUI、Solid、路由与终端交互状态树 | 文件 |
-| [`packages/tui/src/routes`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/tui/src/routes) | V.21 TUI：OpenTUI、Solid、路由与终端交互状态树 | 目录/包入口 |
-| [`packages/tui/src/runtime.tsx`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/tui/src/runtime.tsx) | V.21 TUI：OpenTUI、Solid、路由与终端交互状态树 | 文件 |
-| [`packages/tui/src/ui`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/tui/src/ui) | V.21 TUI：OpenTUI、Solid、路由与终端交互状态树 | 目录/包入口 |
-| [`packages/ui`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/ui) | V.22 共享 Web App、Session UI、协议兼容与多 Server 路由 | 目录/包入口 |
-| [`packages/web`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/web) | V.27 Slack、Function、Console、Enterprise 与外围集成 | 目录/包入口 |
-| [`turbo.json`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/turbo.json) | V.1 Monorepo、包边界与构建工具链；V.26 测试体系、CI 门禁、构建与发布矩阵 | 文件 |
+| [`.github/workflows/publish.yml`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/.github/workflows/publish.yml) | W.26 测试体系、CI 门禁、构建与发布矩阵 | 文件 |
+| [`.github/workflows/test.yml`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/.github/workflows/test.yml) | W.26 测试体系、CI 门禁、构建与发布矩阵 | 文件 |
+| [`.github/workflows/typecheck.yml`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/.github/workflows/typecheck.yml) | W.26 测试体系、CI 门禁、构建与发布矩阵 | 文件 |
+| [`SECURITY.md`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/SECURITY.md) | W.15 Permission、Question、Always 规则与 Doom Loop；W.25 安全模型、信任边界、Prompt Injection 与强隔离 | 文件 |
+| [`install`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/install) | W.26 测试体系、CI 门禁、构建与发布矩阵 | 文件 |
+| [`package.json`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/package.json) | W.1 Monorepo、包边界与构建工具链 | 文件 |
+| [`packages/app/e2e`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/app/e2e) | W.26 测试体系、CI 门禁、构建与发布矩阵 | 目录/包入口 |
+| [`packages/app/package.json`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/app/package.json) | W.1 Monorepo、包边界与构建工具链 | 文件 |
+| [`packages/app/src/app.tsx`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/app/src/app.tsx) | W.22 共享 Web App、Session UI、协议兼容与多 Server 路由 | 文件 |
+| [`packages/app/src/components`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/app/src/components) | W.22 共享 Web App、Session UI、协议兼容与多 Server 路由 | 目录/包入口 |
+| [`packages/app/src/context`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/app/src/context) | W.22 共享 Web App、Session UI、协议兼容与多 Server 路由 | 目录/包入口 |
+| [`packages/app/src/entry.tsx`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/app/src/entry.tsx) | W.22 共享 Web App、Session UI、协议兼容与多 Server 路由；W.24 日志、事件、错误、遥测与运行时可观测性 | 文件 |
+| [`packages/app/src/pages`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/app/src/pages) | W.22 共享 Web App、Session UI、协议兼容与多 Server 路由 | 目录/包入口 |
+| [`packages/auth`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/auth) | W.11 Provider、Model Catalog、认证与多供应商适配；W.27 Slack、Function、Console、Enterprise 与外围集成 | 目录/包入口 |
+| [`packages/client/src`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/client/src) | W.20 V1/V2 Server、Protocol、Client、SDK 与内嵌模式 | 目录/包入口 |
+| [`packages/console`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/console) | W.27 Slack、Function、Console、Enterprise 与外围集成 | 目录/包入口 |
+| [`packages/containers`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/containers) | W.27 Slack、Function、Console、Enterprise 与外围集成 | 目录/包入口 |
+| [`packages/containers/README.md`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/containers/README.md) | W.26 测试体系、CI 门禁、构建与发布矩阵 | 文件 |
+| [`packages/core/package.json`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/package.json) | W.1 Monorepo、包边界与构建工具链 | 文件 |
+| [`packages/core/src/config.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/config.ts) | W.5 配置发现、优先级、Schema、迁移与策略 | 文件 |
+| [`packages/core/src/credential`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/credential) | W.11 Provider、Model Catalog、认证与多供应商适配；W.25 安全模型、信任边界、Prompt Injection 与强隔离 | 目录/包入口 |
+| [`packages/core/src/database/database.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/database/database.ts) | W.10 Event Store、Projector、SQLite 与会话投影 | 文件 |
+| [`packages/core/src/database/migration`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/database/migration) | W.10 Event Store、Projector、SQLite 与会话投影 | 目录/包入口 |
+| [`packages/core/src/database/sqlite.bun.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/database/sqlite.bun.ts) | W.10 Event Store、Projector、SQLite 与会话投影 | 文件 |
+| [`packages/core/src/effect/app-node-platform.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/effect/app-node-platform.ts) | W.3 Effect AppNode、LayerNode、Location 与依赖图 | 文件 |
+| [`packages/core/src/effect/app-node.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/effect/app-node.ts) | W.3 Effect AppNode、LayerNode、Location 与依赖图 | 文件 |
+| [`packages/core/src/effect/layer-node.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/effect/layer-node.ts) | W.3 Effect AppNode、LayerNode、Location 与依赖图 | 文件 |
+| [`packages/core/src/event`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/event) | W.24 日志、事件、错误、遥测与运行时可观测性 | 目录/包入口 |
+| [`packages/core/src/event.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/event.ts) | W.10 Event Store、Projector、SQLite 与会话投影 | 文件 |
+| [`packages/core/src/event/sql.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/event/sql.ts) | W.10 Event Store、Projector、SQLite 与会话投影 | 文件 |
+| [`packages/core/src/location-service-map.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/location-service-map.ts) | W.3 Effect AppNode、LayerNode、Location 与依赖图 | 文件 |
+| [`packages/core/src/location.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/location.ts) | W.3 Effect AppNode、LayerNode、Location 与依赖图 | 文件 |
+| [`packages/core/src/mcp`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/mcp) | W.17 MCP Client、OAuth、资源、提示与动态能力 | 目录/包入口 |
+| [`packages/core/src/permission`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/permission) | W.15 Permission、Question、Always 规则与 Doom Loop | 目录/包入口 |
+| [`packages/core/src/plugin`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/plugin) | W.19 插件 Host、Hook 总线与扩展信任边界 | 目录/包入口 |
+| [`packages/core/src/project/directories.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/project/directories.ts) | W.4 Project 身份、目录登记、Git Worktree 与 Sandbox | 文件 |
+| [`packages/core/src/project/schema.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/project/schema.ts) | W.4 Project 身份、目录登记、Git Worktree 与 Sandbox | 文件 |
+| [`packages/core/src/project/sql.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/project/sql.ts) | W.4 Project 身份、目录登记、Git Worktree 与 Sandbox | 文件 |
+| [`packages/core/src/pty`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/pty) | W.14 Shell、PTY、后台任务、Task 与子 Agent | 目录/包入口 |
+| [`packages/core/src/reference`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/reference) | W.6 Agent 注册表、系统提示、Skill 与 Reference | 目录/包入口 |
+| [`packages/core/src/session/compaction`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/session/compaction) | W.16 上下文压缩、Tool Prune 与 Overflow 恢复 | 目录/包入口 |
+| [`packages/core/src/session/context-epoch.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/session/context-epoch.ts) | W.9 V2 SessionRunner、Durable Input 与本地执行协调；W.16 上下文压缩、Tool Prune 与 Overflow 恢复 | 文件 |
+| [`packages/core/src/session/event.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/session/event.ts) | W.10 Event Store、Projector、SQLite 与会话投影 | 文件 |
+| [`packages/core/src/session/execution/local.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/session/execution/local.ts) | W.9 V2 SessionRunner、Durable Input 与本地执行协调 | 文件 |
+| [`packages/core/src/session/input.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/session/input.ts) | W.9 V2 SessionRunner、Durable Input 与本地执行协调 | 文件 |
+| [`packages/core/src/session/projector.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/session/projector.ts) | W.10 Event Store、Projector、SQLite 与会话投影 | 文件 |
+| [`packages/core/src/session/runner/index.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/session/runner/index.ts) | W.9 V2 SessionRunner、Durable Input 与本地执行协调 | 文件 |
+| [`packages/core/src/session/runner/llm.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/session/runner/llm.ts) | W.9 V2 SessionRunner、Durable Input 与本地执行协调 | 文件 |
+| [`packages/core/src/session/runner/model.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/session/runner/model.ts) | W.9 V2 SessionRunner、Durable Input 与本地执行协调；W.11 Provider、Model Catalog、认证与多供应商适配 | 文件 |
+| [`packages/core/src/session/runner/to-llm-message.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/session/runner/to-llm-message.ts) | W.9 V2 SessionRunner、Durable Input 与本地执行协调 | 文件 |
+| [`packages/core/src/session/sql.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/session/sql.ts) | W.10 Event Store、Projector、SQLite 与会话投影 | 文件 |
+| [`packages/core/src/skill`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/skill) | W.6 Agent 注册表、系统提示、Skill 与 Reference | 目录/包入口 |
+| [`packages/core/src/tool`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/src/tool) | W.12 工具 Registry、本地工具、插件工具与 MCP 工具汇聚 | 目录/包入口 |
+| [`packages/core/test`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/core/test) | W.26 测试体系、CI 门禁、构建与发布矩阵 | 目录/包入口 |
+| [`packages/desktop/electron-builder.yml`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/desktop/electron-builder.yml) | W.23 Electron Desktop、Sidecar、IPC、自动更新与 WSL；W.26 测试体系、CI 门禁、构建与发布矩阵 | 文件 |
+| [`packages/desktop/package.json`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/desktop/package.json) | W.1 Monorepo、包边界与构建工具链 | 文件 |
+| [`packages/desktop/src/main/index.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/desktop/src/main/index.ts) | W.23 Electron Desktop、Sidecar、IPC、自动更新与 WSL；W.24 日志、事件、错误、遥测与运行时可观测性 | 文件 |
+| [`packages/desktop/src/main/ipc.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/desktop/src/main/ipc.ts) | W.23 Electron Desktop、Sidecar、IPC、自动更新与 WSL；W.25 安全模型、信任边界、Prompt Injection 与强隔离 | 文件 |
+| [`packages/desktop/src/main/logging.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/desktop/src/main/logging.ts) | W.24 日志、事件、错误、遥测与运行时可观测性 | 文件 |
+| [`packages/desktop/src/main/server.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/desktop/src/main/server.ts) | W.23 Electron Desktop、Sidecar、IPC、自动更新与 WSL | 文件 |
+| [`packages/desktop/src/main/window.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/desktop/src/main/window.ts) | W.23 Electron Desktop、Sidecar、IPC、自动更新与 WSL | 文件 |
+| [`packages/desktop/src/main/wsl`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/desktop/src/main/wsl) | W.23 Electron Desktop、Sidecar、IPC、自动更新与 WSL | 目录/包入口 |
+| [`packages/desktop/src/preload/index.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/desktop/src/preload/index.ts) | W.23 Electron Desktop、Sidecar、IPC、自动更新与 WSL | 文件 |
+| [`packages/desktop/src/renderer/index.tsx`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/desktop/src/renderer/index.tsx) | W.23 Electron Desktop、Sidecar、IPC、自动更新与 WSL | 文件 |
+| [`packages/desktop/test`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/desktop/test) | W.26 测试体系、CI 门禁、构建与发布矩阵 | 目录/包入口 |
+| [`packages/enterprise`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/enterprise) | W.27 Slack、Function、Console、Enterprise 与外围集成 | 目录/包入口 |
+| [`packages/function/package.json`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/function/package.json) | W.27 Slack、Function、Console、Enterprise 与外围集成 | 文件 |
+| [`packages/function/src`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/function/src) | W.27 Slack、Function、Console、Enterprise 与外围集成 | 目录/包入口 |
+| [`packages/identity`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/identity) | W.27 Slack、Function、Console、Enterprise 与外围集成 | 目录/包入口 |
+| [`packages/llm`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/llm) | W.11 Provider、Model Catalog、认证与多供应商适配 | 目录/包入口 |
+| [`packages/opencode/package.json`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/package.json) | W.1 Monorepo、包边界与构建工具链 | 文件 |
+| [`packages/opencode/script/build.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/script/build.ts) | W.26 测试体系、CI 门禁、构建与发布矩阵 | 文件 |
+| [`packages/opencode/src/agent/agent.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/agent/agent.ts) | W.6 Agent 注册表、系统提示、Skill 与 Reference | 文件 |
+| [`packages/opencode/src/agent/prompt`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/agent/prompt) | W.6 Agent 注册表、系统提示、Skill 与 Reference | 目录/包入口 |
+| [`packages/opencode/src/agent/prompt/compaction.txt`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/agent/prompt/compaction.txt) | W.16 上下文压缩、Tool Prune 与 Overflow 恢复 | 文件 |
+| [`packages/opencode/src/background`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/background) | W.14 Shell、PTY、后台任务、Task 与子 Agent | 目录/包入口 |
+| [`packages/opencode/src/cli`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/cli) | W.2 CLI 入口、命令路由与进程退出 | 目录/包入口 |
+| [`packages/opencode/src/cli/cmd`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/cli/cmd) | W.2 CLI 入口、命令路由与进程退出 | 目录/包入口 |
+| [`packages/opencode/src/command`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/command) | W.14 Shell、PTY、后台任务、Task 与子 Agent | 目录/包入口 |
+| [`packages/opencode/src/config`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/config) | W.5 配置发现、优先级、Schema、迁移与策略 | 目录/包入口 |
+| [`packages/opencode/src/config/config.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/config/config.ts) | W.5 配置发现、优先级、Schema、迁移与策略 | 文件 |
+| [`packages/opencode/src/effect/instance-state.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/effect/instance-state.ts) | W.3 Effect AppNode、LayerNode、Location 与依赖图 | 文件 |
+| [`packages/opencode/src/global/event.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/global/event.ts) | W.24 日志、事件、错误、遥测与运行时可观测性 | 文件 |
+| [`packages/opencode/src/index.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/index.ts) | W.2 CLI 入口、命令路由与进程退出 | 文件 |
+| [`packages/opencode/src/integration/index.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/integration/index.ts) | W.11 Provider、Model Catalog、认证与多供应商适配 | 文件 |
+| [`packages/opencode/src/lsp/client.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/lsp/client.ts) | W.18 LSP Server 生命周期、诊断与符号能力 | 文件 |
+| [`packages/opencode/src/lsp/index.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/lsp/index.ts) | W.18 LSP Server 生命周期、诊断与符号能力 | 文件 |
+| [`packages/opencode/src/lsp/server.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/lsp/server.ts) | W.18 LSP Server 生命周期、诊断与符号能力 | 文件 |
+| [`packages/opencode/src/mcp/catalog.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/mcp/catalog.ts) | W.17 MCP Client、OAuth、资源、提示与动态能力 | 文件 |
+| [`packages/opencode/src/mcp/index.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/mcp/index.ts) | W.17 MCP Client、OAuth、资源、提示与动态能力；W.25 安全模型、信任边界、Prompt Injection 与强隔离 | 文件 |
+| [`packages/opencode/src/mcp/oauth-provider.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/mcp/oauth-provider.ts) | W.17 MCP Client、OAuth、资源、提示与动态能力 | 文件 |
+| [`packages/opencode/src/permission`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/permission) | W.15 Permission、Question、Always 规则与 Doom Loop | 目录/包入口 |
+| [`packages/opencode/src/permission/next.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/permission/next.ts) | W.15 Permission、Question、Always 规则与 Doom Loop；W.25 安全模型、信任边界、Prompt Injection 与强隔离 | 文件 |
+| [`packages/opencode/src/plugin/index.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/plugin/index.ts) | W.19 插件 Host、Hook 总线与扩展信任边界；W.25 安全模型、信任边界、Prompt Injection 与强隔离 | 文件 |
+| [`packages/opencode/src/project/instance-store.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/project/instance-store.ts) | W.4 Project 身份、目录登记、Git Worktree 与 Sandbox | 文件 |
+| [`packages/opencode/src/project/project.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/project/project.ts) | W.4 Project 身份、目录登记、Git Worktree 与 Sandbox | 文件 |
+| [`packages/opencode/src/provider/provider.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/provider/provider.ts) | W.8 LLM 流式适配、Provider 变换与 SessionProcessor；W.11 Provider、Model Catalog、认证与多供应商适配 | 文件 |
+| [`packages/opencode/src/provider/transform.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/provider/transform.ts) | W.8 LLM 流式适配、Provider 变换与 SessionProcessor；W.11 Provider、Model Catalog、认证与多供应商适配 | 文件 |
+| [`packages/opencode/src/question`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/question) | W.15 Permission、Question、Always 规则与 Doom Loop | 目录/包入口 |
+| [`packages/opencode/src/server/http.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/server/http.ts) | W.20 V1/V2 Server、Protocol、Client、SDK 与内嵌模式 | 文件 |
+| [`packages/opencode/src/session/compaction.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/session/compaction.ts) | W.16 上下文压缩、Tool Prune 与 Overflow 恢复 | 文件 |
+| [`packages/opencode/src/session/llm.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/session/llm.ts) | W.8 LLM 流式适配、Provider 变换与 SessionProcessor | 文件 |
+| [`packages/opencode/src/session/message-v2.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/session/message-v2.ts) | W.7 V1 SessionPrompt：现行会话主循环；W.8 LLM 流式适配、Provider 变换与 SessionProcessor | 文件 |
+| [`packages/opencode/src/session/processor.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/session/processor.ts) | W.7 V1 SessionPrompt：现行会话主循环；W.8 LLM 流式适配、Provider 变换与 SessionProcessor | 文件 |
+| [`packages/opencode/src/session/prompt.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/session/prompt.ts) | W.7 V1 SessionPrompt：现行会话主循环；W.16 上下文压缩、Tool Prune 与 Overflow 恢复 | 文件 |
+| [`packages/opencode/src/session/revert.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/session/revert.ts) | W.13 文件读取、检索、编辑、Patch、Snapshot 与 Revert | 文件 |
+| [`packages/opencode/src/session/status.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/session/status.ts) | W.7 V1 SessionPrompt：现行会话主循环 | 文件 |
+| [`packages/opencode/src/session/system.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/session/system.ts) | W.6 Agent 注册表、系统提示、Skill 与 Reference | 文件 |
+| [`packages/opencode/src/session/tools.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/session/tools.ts) | W.7 V1 SessionPrompt：现行会话主循环；W.12 工具 Registry、本地工具、插件工具与 MCP 工具汇聚 | 文件 |
+| [`packages/opencode/src/skill/index.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/skill/index.ts) | W.6 Agent 注册表、系统提示、Skill 与 Reference | 文件 |
+| [`packages/opencode/src/snapshot/index.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/snapshot/index.ts) | W.13 文件读取、检索、编辑、Patch、Snapshot 与 Revert | 文件 |
+| [`packages/opencode/src/tool`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/tool) | W.25 安全模型、信任边界、Prompt Injection 与强隔离 | 目录/包入口 |
+| [`packages/opencode/src/tool/bash.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/tool/bash.ts) | W.14 Shell、PTY、后台任务、Task 与子 Agent | 文件 |
+| [`packages/opencode/src/tool/edit.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/tool/edit.ts) | W.13 文件读取、检索、编辑、Patch、Snapshot 与 Revert；W.13 文件读取、检索、编辑、Patch、Snapshot 与 Revert | 文件 |
+| [`packages/opencode/src/tool/glob.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/tool/glob.ts) | W.13 文件读取、检索、编辑、Patch、Snapshot 与 Revert | 文件 |
+| [`packages/opencode/src/tool/grep.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/tool/grep.ts) | W.13 文件读取、检索、编辑、Patch、Snapshot 与 Revert | 文件 |
+| [`packages/opencode/src/tool/lsp.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/tool/lsp.ts) | W.18 LSP Server 生命周期、诊断与符号能力 | 文件 |
+| [`packages/opencode/src/tool/patch.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/tool/patch.ts) | W.13 文件读取、检索、编辑、Patch、Snapshot 与 Revert | 文件 |
+| [`packages/opencode/src/tool/read.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/tool/read.ts) | W.13 文件读取、检索、编辑、Patch、Snapshot 与 Revert | 文件 |
+| [`packages/opencode/src/tool/registry.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/tool/registry.ts) | W.12 工具 Registry、本地工具、插件工具与 MCP 工具汇聚 | 文件 |
+| [`packages/opencode/src/tool/task.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/tool/task.ts) | W.14 Shell、PTY、后台任务、Task 与子 Agent | 文件 |
+| [`packages/opencode/src/tool/tool.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/tool/tool.ts) | W.12 工具 Registry、本地工具、插件工具与 MCP 工具汇聚 | 文件 |
+| [`packages/opencode/src/tool/truncate.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/tool/truncate.ts) | W.12 工具 Registry、本地工具、插件工具与 MCP 工具汇聚 | 文件 |
+| [`packages/opencode/src/util/log.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/util/log.ts) | W.24 日志、事件、错误、遥测与运行时可观测性 | 文件 |
+| [`packages/opencode/src/worktree/index.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/src/worktree/index.ts) | W.4 Project 身份、目录登记、Git Worktree 与 Sandbox | 文件 |
+| [`packages/opencode/test`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/opencode/test) | W.26 测试体系、CI 门禁、构建与发布矩阵 | 目录/包入口 |
+| [`packages/plugin/src/index.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/plugin/src/index.ts) | W.19 插件 Host、Hook 总线与扩展信任边界 | 文件 |
+| [`packages/plugin/src/tool.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/plugin/src/tool.ts) | W.12 工具 Registry、本地工具、插件工具与 MCP 工具汇聚；W.19 插件 Host、Hook 总线与扩展信任边界 | 文件 |
+| [`packages/protocol/package.json`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/protocol/package.json) | W.1 Monorepo、包边界与构建工具链 | 文件 |
+| [`packages/protocol/src/api.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/protocol/src/api.ts) | W.20 V1/V2 Server、Protocol、Client、SDK 与内嵌模式 | 文件 |
+| [`packages/protocol/src/groups`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/protocol/src/groups) | W.20 V1/V2 Server、Protocol、Client、SDK 与内嵌模式 | 目录/包入口 |
+| [`packages/schema`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/schema) | W.5 配置发现、优先级、Schema、迁移与策略；W.17 MCP Client、OAuth、资源、提示与动态能力 | 目录/包入口 |
+| [`packages/schema/src/agent.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/schema/src/agent.ts) | W.6 Agent 注册表、系统提示、Skill 与 Reference | 文件 |
+| [`packages/schema/src/file-diff.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/schema/src/file-diff.ts) | W.13 文件读取、检索、编辑、Patch、Snapshot 与 Revert | 文件 |
+| [`packages/schema/src/lsp.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/schema/src/lsp.ts) | W.18 LSP Server 生命周期、诊断与符号能力 | 文件 |
+| [`packages/schema/src/plugin.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/schema/src/plugin.ts) | W.19 插件 Host、Hook 总线与扩展信任边界 | 文件 |
+| [`packages/sdk-next/src/opencode.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/sdk-next/src/opencode.ts) | W.20 V1/V2 Server、Protocol、Client、SDK 与内嵌模式 | 文件 |
+| [`packages/sdk/js/src`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/sdk/js/src) | W.20 V1/V2 Server、Protocol、Client、SDK 与内嵌模式 | 目录/包入口 |
+| [`packages/server/package.json`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/server/package.json) | W.1 Monorepo、包边界与构建工具链 | 文件 |
+| [`packages/server/src`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/server/src) | W.24 日志、事件、错误、遥测与运行时可观测性 | 目录/包入口 |
+| [`packages/server/src/api.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/server/src/api.ts) | W.20 V1/V2 Server、Protocol、Client、SDK 与内嵌模式 | 文件 |
+| [`packages/server/src/auth.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/server/src/auth.ts) | W.20 V1/V2 Server、Protocol、Client、SDK 与内嵌模式；W.25 安全模型、信任边界、Prompt Injection 与强隔离 | 文件 |
+| [`packages/server/src/handlers`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/server/src/handlers) | W.20 V1/V2 Server、Protocol、Client、SDK 与内嵌模式 | 目录/包入口 |
+| [`packages/server/src/handlers/pty.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/server/src/handlers/pty.ts) | W.14 Shell、PTY、后台任务、Task 与子 Agent | 文件 |
+| [`packages/server/src/routes.ts`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/server/src/routes.ts) | W.20 V1/V2 Server、Protocol、Client、SDK 与内嵌模式 | 文件 |
+| [`packages/session-ui`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/session-ui) | W.22 共享 Web App、Session UI、协议兼容与多 Server 路由；W.24 日志、事件、错误、遥测与运行时可观测性 | 目录/包入口 |
+| [`packages/slack/package.json`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/slack/package.json) | W.27 Slack、Function、Console、Enterprise 与外围集成 | 文件 |
+| [`packages/slack/src`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/slack/src) | W.27 Slack、Function、Console、Enterprise 与外围集成 | 目录/包入口 |
+| [`packages/stats`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/stats) | W.27 Slack、Function、Console、Enterprise 与外围集成 | 目录/包入口 |
+| [`packages/tui/package.json`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/tui/package.json) | W.1 Monorepo、包边界与构建工具链 | 文件 |
+| [`packages/tui/src/app.tsx`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/tui/src/app.tsx) | W.21 TUI：OpenTUI、Solid、路由与终端交互状态树 | 文件 |
+| [`packages/tui/src/components`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/tui/src/components) | W.21 TUI：OpenTUI、Solid、路由与终端交互状态树 | 目录/包入口 |
+| [`packages/tui/src/context`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/tui/src/context) | W.21 TUI：OpenTUI、Solid、路由与终端交互状态树 | 目录/包入口 |
+| [`packages/tui/src/index.tsx`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/tui/src/index.tsx) | W.21 TUI：OpenTUI、Solid、路由与终端交互状态树 | 文件 |
+| [`packages/tui/src/routes`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/tui/src/routes) | W.21 TUI：OpenTUI、Solid、路由与终端交互状态树 | 目录/包入口 |
+| [`packages/tui/src/runtime.tsx`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/tui/src/runtime.tsx) | W.21 TUI：OpenTUI、Solid、路由与终端交互状态树 | 文件 |
+| [`packages/tui/src/ui`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/tui/src/ui) | W.21 TUI：OpenTUI、Solid、路由与终端交互状态树 | 目录/包入口 |
+| [`packages/ui`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/ui) | W.22 共享 Web App、Session UI、协议兼容与多 Server 路由 | 目录/包入口 |
+| [`packages/web`](https://github.com/anomalyco/opencode/tree/10765ff2a9da8c3b88e4de873aa383a49c318912/packages/web) | W.27 Slack、Function、Console、Enterprise 与外围集成 | 目录/包入口 |
+| [`turbo.json`](https://github.com/anomalyco/opencode/blob/10765ff2a9da8c3b88e4de873aa383a49c318912/turbo.json) | W.1 Monorepo、包边界与构建工具链；W.26 测试体系、CI 门禁、构建与发布矩阵 | 文件 |
 
-## V.39 逐章工程核验卡
+## W.39 逐章工程核验卡
 
 这些核验卡用于把文档结论转化为代码审查、设计评审和发布前门禁。每张卡都要求给出源码路径、自动化证据和失败注入结果，而不是只写“已处理”。
 
@@ -8997,7 +8997,7 @@ flowchart LR
 8. **上线证据**： 将“统一 IdempotencyService 和 TenantMapping 模型”转化为可观测验收项；若暂不实现，必须记录风险、Owner、触发回滚条件和后续里程碑。
 
 
-## V.40 建议迁移路线与发布门禁
+## W.40 建议迁移路线与发布门禁
 
 ```mermaid
 flowchart LR
@@ -9033,7 +9033,7 @@ flowchart LR
 - Permission 文案不承诺沙箱，官方提供强隔离部署方式。
 - 发布资产、SDK、协议能力、Hash、签名和 Commit 绑定到同一 Release Manifest。
 
-## V.41 跨模块接口与一致性审查
+## W.41 跨模块接口与一致性审查
 
 大型 Agent 系统的严重问题通常发生在两个模块的交界处，而不是单个类内部。下面按正文顺序给出相邻领域的接口审查卡；实际实施时还应根据依赖图补充非相邻关系，例如 Permission 与 Desktop IPC、Provider 与 Telemetry、Snapshot 与 Compaction。
 
@@ -9360,4 +9360,4 @@ OpenCode 当前最值得关注的不是单个模型或工具数量，而是它�
 
 ---
 
-> **使用提示**：与其他附录的分工——A 讲模型机制、B 讲方法论、C 记来源、D 列产品、E 辨异同、F 索引图版、G 详解 OTel、H 上手 DeepEval、I 评测观测平台选型、J 上手 Mem0、K 盘点 Coding Agent 赛道、L 盘点可观测赛道、M 盘点评估赛道、N 盘点 Memory 赛道、O 盘点自进化赛道、P 盘点多 Agent 赛道、Q 盘点 MCP 生态、R 盘点沙箱赛道、S 解析 Pi 源码、T 解析 Claude Code 源码、U 解析 Codex 源码、**V 解析 OpenCode 源码**。对照阅读：V1 会话主循环（V.7）对第 3 章、上下文压缩与 Overflow 恢复（V.16）对第 5 章、工具平台与 MCP（V.12/V.17）对第 7/8 章、Permission 与 Doom Loop（V.15）对第 13 章与第 23 章 2.6（"Permission 不是沙箱"正是附录 R 的隔离谱系论点）、LSP（V.18）对第 9/23 章、事件存储与投影（V.10）对第 12 章事件模型、快照与 Revert（V.13）对第 12 章 checkpoint；S/T/U/V 四册对读，双内核迁移是 OpenCode 独有的课题。分析锁定 dev@10765ff（[C-45]），二次开发前先核对上游变更。
+> **使用提示**：与其他附录的分工——A 讲模型机制、B 讲方法论、C 记来源、D 列产品、E 辨异同、F 索引图版、G 详解 OTel、H 上手 DeepEval、I 评测观测平台选型、J 上手 Mem0、K 盘点 Coding Agent 赛道、L 盘点可观测赛道、M 盘点评估赛道、N 盘点 Memory 赛道、O 盘点自进化赛道、P 盘点多 Agent 赛道、Q 盘点 MCP 生态、R 盘点沙箱赛道、S 盘点 RAG 赛道、T 解析 Pi 源码、U 解析 Claude Code 源码、V 解析 Codex 源码、**W 解析 OpenCode 源码**。对照阅读：V1 会话主循环（W.7）对第 3 章、上下文压缩与 Overflow 恢复（W.16）对第 5 章、工具平台与 MCP（W.12/V.17）对第 7/8 章、Permission 与 Doom Loop（W.15）对第 13 章与第 23 章 2.6（"Permission 不是沙箱"正是附录 R 的隔离谱系论点）、LSP（W.18）对第 9/23 章、事件存储与投影（W.10）对第 12 章事件模型、快照与 Revert（W.13）对第 12 章 checkpoint；T/U/V/W 四册对读，双内核迁移是 OpenCode 独有的课题。分析锁定 dev@10765ff（[C-45]），二次开发前先核对上游变更。
