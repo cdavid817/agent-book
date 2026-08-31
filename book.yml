@@ -331,21 +331,26 @@ appendices:
     status: draft
   - id: appendix-v
     letter: V
-    title: Pi 源码架构全景解析
-    path: 附录/附录V-Pi源码架构全景解析.md
+    title: 主流 Loop Engineering 系统全景
+    path: 附录/附录V-主流LoopEngineering系统全景.md
     status: draft
   - id: appendix-w
     letter: W
-    title: Claude Code 源码架构深度解析
-    path: 附录/附录W-ClaudeCode源码架构深度解析.md
+    title: Pi 源码架构全景解析
+    path: 附录/附录W-Pi源码架构全景解析.md
     status: draft
   - id: appendix-x
     letter: X
-    title: Codex 源码架构深度解析
-    path: 附录/附录X-Codex源码架构深度解析.md
+    title: Claude Code 源码架构深度解析
+    path: 附录/附录X-ClaudeCode源码架构深度解析.md
     status: draft
   - id: appendix-y
     letter: Y
+    title: Codex 源码架构深度解析
+    path: 附录/附录Y-Codex源码架构深度解析.md
+    status: draft
+  - id: appendix-z
+    letter: Z
     title: OpenCode 源码全景技术解析
-    path: 附录/附录Y-OpenCode源码全景技术解析.md
+    path: 附录/附录Z-OpenCode源码全景技术解析.md
     status: draft

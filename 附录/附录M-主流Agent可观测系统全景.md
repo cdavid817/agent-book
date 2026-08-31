@@ -2073,4 +2073,4 @@ Cost / Quality / Security / Business Outcome
 
 ---
 
-> **使用提示**：与其他附录的分工——A 讲模型机制、B 讲方法论、C 记来源、D 列产品、E 辨异同、F 索引图版、G 详解 OTel、H 上手 DeepEval、I 评测观测平台选型、J 上手 Mem0、K 详解记忆晋升机制、L 盘点 Coding Agent 赛道、**M 盘点 Agent 可观测赛道**、N 盘点评估赛道、O 盘点 Memory 赛道、P 盘点自进化赛道、Q 盘点多 Agent 赛道、R 盘点 MCP 生态、S 盘点沙箱赛道、T 盘点 RAG 赛道、U 盘点 LLM Wiki 赛道、V 解析 Pi 源码、W 解析 Claude Code 源码、X 解析 Codex 源码、Y 解析 OpenCode 源码。对照阅读：数据模型与对象边界（M.2）对第 14 章 2.1 四层 Span、标准生态（M.3）对附录 G.2.17 语义约定、平台盘点（M.4–M.8）中五家的深评见附录 I、指标体系（M.10）对第 14 章三类指标框架、参考架构（M.11）对附录 G.20 生产部署。信息基准 2026-08（[C-37]），发行前按附录 C 清单复核。
+> **使用提示**：与其他附录的分工——A 讲模型机制、B 讲方法论、C 记来源、D 列产品、E 辨异同、F 索引图版、G 详解 OTel、H 上手 DeepEval、I 评测观测平台选型、J 上手 Mem0、K 详解记忆晋升机制、L 盘点 Coding Agent 赛道、**M 盘点 Agent 可观测赛道**、N 盘点评估赛道、O 盘点 Memory 赛道、P 盘点自进化赛道、Q 盘点多 Agent 赛道、R 盘点 MCP 生态、S 盘点沙箱赛道、T 盘点 RAG 赛道、U 盘点 LLM Wiki 赛道、V 盘点 Loop Engineering 赛道、W 解析 Pi 源码、X 解析 Claude Code 源码、Y 解析 Codex 源码、Z 解析 OpenCode 源码。对照阅读：数据模型与对象边界（M.2）对第 14 章 2.1 四层 Span、标准生态（M.3）对附录 G.2.17 语义约定、平台盘点（M.4–M.8）中五家的深评见附录 I、指标体系（M.10）对第 14 章三类指标框架、参考架构（M.11）对附录 G.20 生产部署。信息基准 2026-08（[C-37]），发行前按附录 C 清单复核。

@@ -1813,4 +1813,4 @@ Provider-neutral Memory Port
 
 ---
 
-> **使用提示**：与其他附录的分工——A 讲模型机制、B 讲方法论、C 记来源、D 列产品、E 辨异同、F 索引图版、G 详解 OTel、H 上手 DeepEval、I 评测观测平台选型、J 上手 Mem0、K 详解记忆晋升机制、L 盘点 Coding Agent 赛道、M 盘点可观测赛道、N 盘点评估赛道、**O 盘点 Memory 赛道**、P 盘点自进化赛道、Q 盘点多 Agent 赛道、R 盘点 MCP 生态、S 盘点沙箱赛道、T 盘点 RAG 赛道、U 盘点 LLM Wiki 赛道、V 解析 Pi 源码、W 解析 Claude Code 源码、X 解析 Codex 源码、Y 解析 OpenCode 源码。对照阅读：定义与边界（O.2）对附录 E.1 四机制辨析、认知分类（O.3）对第 10 章 CoALA 四分类、MemGPT/Letta（O.6.4）对第 10 章 2.3 与 [C-24]、文件型记忆（O.9）对第 6 章 CLAUDE.md 与第 23 章项目知识文件、记忆评测（O.11）对第 15 章与附录 N、参考架构（O.12）对第 10 章远程记忆数据库一节。信息基准 2026-08（[C-39]），发行前按附录 C 清单复核。
+> **使用提示**：与其他附录的分工——A 讲模型机制、B 讲方法论、C 记来源、D 列产品、E 辨异同、F 索引图版、G 详解 OTel、H 上手 DeepEval、I 评测观测平台选型、J 上手 Mem0、K 详解记忆晋升机制、L 盘点 Coding Agent 赛道、M 盘点可观测赛道、N 盘点评估赛道、**O 盘点 Memory 赛道**、P 盘点自进化赛道、Q 盘点多 Agent 赛道、R 盘点 MCP 生态、S 盘点沙箱赛道、T 盘点 RAG 赛道、U 盘点 LLM Wiki 赛道、V 盘点 Loop Engineering 赛道、W 解析 Pi 源码、X 解析 Claude Code 源码、Y 解析 Codex 源码、Z 解析 OpenCode 源码。对照阅读：定义与边界（O.2）对附录 E.1 四机制辨析、认知分类（O.3）对第 10 章 CoALA 四分类、MemGPT/Letta（O.6.4）对第 10 章 2.3 与 [C-24]、文件型记忆（O.9）对第 6 章 CLAUDE.md 与第 23 章项目知识文件、记忆评测（O.11）对第 15 章与附录 N、参考架构（O.12）对第 10 章远程记忆数据库一节。信息基准 2026-08（[C-39]），发行前按附录 C 清单复核。

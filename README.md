@@ -2,7 +2,7 @@
 
 > 面向有后端/大数据经验、正在转型 Agent 方向的工程师。
 > 主线逻辑：**能力递进为主线、专题深潜为支线**——从 150 行的最小 ReAct 循环出发，27 章增量构建出一个具备生产四件套（安全/观测/评测/成本）的完整 Agent 系统。
-> 全书七篇 · 27 章 · 附录 A–Y 二十五本工具书 · 附贯穿实战项目 **示例助手**（Python 实现，全部代码经真实测试可运行）。
+> 全书七篇 · 27 章 · 附录 A–Z 二十六本工具书 · 附贯穿实战项目 **示例助手**（Python 实现，全部代码经真实测试可运行）。
 
 ## 本书回答的核心问题
 
@@ -103,10 +103,11 @@
 | [附录 S：主流 Agent 沙箱系统全景](附录/附录S-主流Agent沙箱系统全景.md) | Agent 沙箱赛道全景调研（全文收录，信息基准 2026-08-30）——"Computer as an API"形态、原生云沙箱/云厂商/Coding Agent/浏览器桌面/K8s 自建五路盘点、底层隔离技术比较、参考架构与状态模型、多 Agent 沙箱模式、安全威胁矩阵与凭证设计、评测与选型；第 9 章讲机制、第 23 章 2.6 讲特化、S 是赛道地图 |
 | [附录 T：主流 RAG 系统全景与工程实践](附录/附录T-主流RAG系统全景与工程实践.md) | RAG 赛道全景与逐环节工程手册（全文收录，信息基准 2026-08-31，18 部分 155 节）——生态六大阵营与五路产品盘点、导入状态机与删除传播、解析分块、Embedding 与向量存储、索引优化、检索前后处理、生成与引用、Agentic/GraphRAG、分层评测、观测治理、选型矩阵与失败归因；第 11 章讲机制、T 是手册 |
 | [附录 U：主流 LLM Wiki 系统全景](附录/附录U-主流LLMWiki系统全景.md) | LLM Wiki（知识编译系统）赛道全景调研（全文收录，信息基准 2026-08-31）——"检索时增强 vs 写入时编译"辨析、四路生态盘点（代码仓库型 DeepWiki 类/持久知识编译型/企业知识 Wiki 与搜索/开源知识平台）、企业参考架构、核心机制、面向 Agent 的接口、选型与失败模式；与附录 A"关于 LLM 的词条书"是两回事 |
-| [附录 V：Pi 源码架构全景解析](附录/附录V-Pi源码架构全景解析.md) | 开源 Coding Agent「Pi」整仓源码解析（全文收录，锁定 main@853a80d）——多 Provider 隔离、Agent Loop 双层循环、会话树与压缩、扩展与信任、TUI 差分渲染、远程协议与遥测旁路，附文件级导读卡片与二次开发蓝图；第六篇讲通用机制、本附录是真实实现的完整解剖 |
-| [附录 W：Claude Code 源码架构深度解析](附录/附录W-ClaudeCode源码架构深度解析.md) | Claude Code 还原源码整仓解析（全文收录，社区 source map 还原仓库、非官方，基线 b78dd22）——QueryEngine 与 Agent Loop、工具/权限/沙箱、压缩与记忆、MCP/Plugin/Skill、多 Agent 编排、50 Tool 与 87 命令参考手册；证据分级严格标注，与附录 V 互为对照 |
-| [附录 X：Codex 源码架构深度解析](附录/附录X-Codex源码架构深度解析.md) | OpenAI Codex（openai/codex，Rust）整仓源码解析（全文收录，快照 main@0ae94fd）——Thread/Turn/Item 会话内核、工具编排、审批与跨平台沙箱纵深、JSONL+SQLite 持久化恢复、MCP/Plugin/多 Agent、逐 crate 导读与 28 条故障推演；V/W/X 三套运行时互为对照 |
-| [附录 Y：OpenCode 源码全景技术解析](附录/附录Y-OpenCode源码全景技术解析.md) | OpenCode（anomalyco/opencode，TS/Bun Monorepo）整仓源码解析（全文收录，锁定 dev@10765ff，v1.18.25）——V1/V2 双内核迁移活标本：SessionPrompt 聚合运行时 vs Durable Input/Event Store/Projector 可恢复架构、Location 路由、工具平台与 MCP/LSP/插件、Permission 与 Doom Loop、Electron/TUI/Web 多产品表面、27 章 + 14 份工程附录；V/W/X/Y 四册源码互为对照 |
+| [附录 V：主流 Loop Engineering 系统全景](附录/附录V-主流LoopEngineering系统全景.md) | 四类 Engineering（Prompt/Context/Loop/Graph）系统全景（全文收录，信息基准 2026-09-01）——统一认知与分层、四件职责边界/反模式/指标、主流系统盘点、Loop 与 Graph 模式库、生产级 Loop Contract、状态恢复与收敛、成熟度 L0–L5、选型与实施路线；B 是词典、第 3/18 章讲机制、V 是赛道地图 |
+| [附录 W：Pi 源码架构全景解析](附录/附录W-Pi源码架构全景解析.md) | 开源 Coding Agent「Pi」整仓源码解析（全文收录，锁定 main@853a80d）——多 Provider 隔离、Agent Loop 双层循环、会话树与压缩、扩展与信任、TUI 差分渲染、远程协议与遥测旁路，附文件级导读卡片与二次开发蓝图；第六篇讲通用机制、本附录是真实实现的完整解剖 |
+| [附录 X：Claude Code 源码架构深度解析](附录/附录X-ClaudeCode源码架构深度解析.md) | Claude Code 还原源码整仓解析（全文收录，社区 source map 还原仓库、非官方，基线 b78dd22）——QueryEngine 与 Agent Loop、工具/权限/沙箱、压缩与记忆、MCP/Plugin/Skill、多 Agent 编排、50 Tool 与 87 命令参考手册；证据分级严格标注，与附录 W 互为对照 |
+| [附录 Y：Codex 源码架构深度解析](附录/附录Y-Codex源码架构深度解析.md) | OpenAI Codex（openai/codex，Rust）整仓源码解析（全文收录，快照 main@0ae94fd）——Thread/Turn/Item 会话内核、工具编排、审批与跨平台沙箱纵深、JSONL+SQLite 持久化恢复、MCP/Plugin/多 Agent、逐 crate 导读与 28 条故障推演；W/X/Y 三套运行时互为对照 |
+| [附录 Z：OpenCode 源码全景技术解析](附录/附录Z-OpenCode源码全景技术解析.md) | OpenCode（anomalyco/opencode，TS/Bun Monorepo）整仓源码解析（全文收录，锁定 dev@10765ff，v1.18.25）——V1/V2 双内核迁移活标本：SessionPrompt 聚合运行时 vs Durable Input/Event Store/Projector 可恢复架构、Location 路由、工具平台与 MCP/LSP/插件、Permission 与 Doom Loop、Electron/TUI/Web 多产品表面、27 章 + 14 份工程附录；W/X/Y/Z 四册源码互为对照 |
 
 ---
 
