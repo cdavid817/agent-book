@@ -47,7 +47,7 @@
 | **SWE-bench 评测流程** | issue→patch→测试判定流水线 | SWE-bench [C-05] | 第 15 章 2.3 / 第 24 章 2.3（叙述）、第 24 章图 1（修复环） |
 | **A2A 协议架构与 Task 生命周期** | Agent Card / Task 状态机示意 | A2A 规范 [C-21] | 第 18 章 2.7（三边界表 + 状态机 snippet） |
 | **OWASP Agentic 威胁分类** | 五面威胁模型图 | OWASP [C-16] | 第 13 章 2.6（风险×控制矩阵） |
-| **OTel 采集架构（Collector 两级部署）** | 官方 Collector/信号流架构图 | OpenTelemetry [C-28] | 附录 G 图 G-6（信号流，已重绘）+ G.5 配置骨架 |
+| **OTel 采集架构（Collector 两级部署）** | 官方 Collector/信号流架构图 | OpenTelemetry [C-28] | 附录 G G.20（Agent-to-Gateway 生产部署架构）+ G.2.14 Collector 详解 |
 
 ---
 

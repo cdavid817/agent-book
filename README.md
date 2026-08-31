@@ -88,7 +88,7 @@
 | [附录 D：常见 Agent 产品与框架速览](附录/附录D-常见Agent产品与框架速览.md) | 产品全景 + 本书坐标系定位法（六大件 × 拓扑 × 集成/部署）——Coding/通用/研究/低代码/编排框架/托管运行时，及开源社区生态（opencode/codex/Superpowers 等）、模型侧 Harness、Vibe Coding 实践、同赛道开源项目四分类速览（社区快照）；名单会过期、定位法不过期 |
 | [附录 E：易混概念辨析速查](附录/附录E-易混概念辨析速查.md) | 跨章近亲概念横向对比——信息进出上下文（压缩/记忆/RAG/截断）、输出把关（Verifier/反思/Reviewer/Eval/Guard）、定制三手段、有界性机制总表、检索路线；"X 和 Y 有什么区别"先查这里 |
 | [附录 F：关键知识点·经典图版索引](附录/附录F-关键知识点经典图版索引.md) | 为各关键机制索引经典论文原图（图号+出处+链接）并标注书中已有的自绘等价图；版权红线：查阅/授权/重绘，不直接复制原图 |
-| [附录 G：OpenTelemetry 详解](附录/附录G-OpenTelemetry详解.md) | OTel 机制兜底——三支柱数据模型、API/SDK 流水线、traceparent/baggage 传播、Collector 管线与配置、语义约定稳定级、全书用件对照表；第 14 章讲用法、本附录讲原理 |
+| [附录 G：OpenTelemetry 详解与 Agent 可观测性指南](附录/附录G-OpenTelemetry详解.md) | OTel 机制兜底 + Agent 观测接入原理（全文收录，信息基准 2026-08-31）——OTel 本体 24 节详解（数据模型/五信号/API·SDK/语义约定/OTLP/Collector/采样/排障）、四层 Agent 观测模型、Python 零侵入探针原理、LangChain/LangGraph/OpenAI/ChromaDB 接入机制、Span 所有权治理、自研 Runtime 观测设计、全书用件对照表；第 14 章讲用法、L 盘平台、G 讲机制 |
 | [附录 H：DeepEval 实战指南](附录/附录H-DeepEval实战指南.md) | DeepEval 完整实战教程（全文收录）——安装到 CI/CD 全流程：工作模型、数据模型、G-Eval/DAG、RAG/Agent/Tracing/多轮四条实战线、自定义 Judge 与 Metric、分层门禁与阈值校准、排查与落地清单；第 15 章讲方法论、本附录讲落地（API 快照 4.2.0） |
 | [附录 I：评测与观测平台详解与选型](附录/附录I-评测与观测平台详解与选型.md) | DeepEval/Ragas/Arize Phoenix/Langfuse/MLflow 完整调研（全文收录）——逐项定位、数据模型、能力、优劣与适用场景，横向对比、典型场景选型、推荐组合、统一评测模型与分阶段实施路线；第 15 章是地图、本附录是地形志 |
 | [附录 J：Mem0 实战指南](附录/附录J-Mem0实战指南.md) | Mem0 完整实战教程（全文收录，信息基线 2026-08-30）——新版算法（ADD-only 写入/混合检索）、Platform-OSS-自托管三形态、Python 与 Node SDK 上手、作用域与 CRUD、冲突治理、多租户架构、安全合规、评估测试与上线清单；第 10 章讲机制、N 是赛道地图、本附录讲落地（SDK 快照 v2.0.19/v3.1.7） |

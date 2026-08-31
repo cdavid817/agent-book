@@ -319,19 +319,18 @@
 
 ---
 
-## 附录 G：OpenTelemetry 详解
+## 附录 G：OpenTelemetry 详解与 Agent 可观测性指南
 
-> 定位：OTel 本身的机制兜底——第 14 章讲"Agent 怎么用"，本附录讲"OTel 是什么"。
+> 定位：OTel 机制兜底 + Agent 观测接入原理（全文收录，信息基准 2026-08-31）——第 14 章讲用法、附录 L 盘平台，本附录讲机制与接入原理。
 
-- G.1 是什么：观测标准化的收敛点（供应商中立、埋点写一次后端随便换）
-- G.2 数据模型：Resource/Scope/Record 三层、四信号职责边界、Span 字段面与 Attribute/Event/Link 选用、Metrics 六仪表与时间性、Exemplar 排障动线
-- G.3 API/SDK 分离与信号流水线：Provider/Sampler/Processor/Exporter、OTLP
-- G.4 上下文传播：traceparent 四段结构、tracestate、baggage、Propagator 与 Agent 场景的载体清单
-- G.5 Collector：receiver→processor→exporter 流水线（图 G-5）、五类组件、部署四档、Head/Tail 采样对比、含持久化队列的配置骨架、端到端信号流（图 G-6）
-- G.6 GenAI 与多 Agent 系统的落地方式：完整执行链（图 G-7）、Agent 平台 Span 设计表、核心指标十域、内容采集三级、Telemetry Adapter、桌面应用六条纪律
-- G.7 语义约定与稳定性：通用域 stable、GenAI 域 Development、Schema URL、OpenInference 并行生态
-- G.8 落地顺序七步与常见误区速查（遥测非事务系统、TraceId 非业务主键、适配层隔离语义漂移）
-- G.9 本书的 OTel 用件对照表（读完回正文的导航）
+- G.1 核心结论：OTel 不自动理解 Agent、"零侵入"实为零业务代码修改、四层观测、四件套之外必有 Instrumentation、OTLP 与 Trace Context 是两件事
+- G.2 OTel 本体详解（24 小节）：定位与分层、五信号模型、Resource/Scope 包络、Trace/Metrics/Logs 详解、Context 与 W3C 传播、Sampling、API/SDK、OTLP、Collector 与部署形态、Instrumentation 模式、语义约定与 Schema 治理、配置与环境变量、性能可靠性安全、自可观测性、调试排障、组件关系、埋点设计原则
+- G.3–G.5 Agent 总体关系：一次任务一条 Trace、体系六角色、Agent 对象到遥测的映射（父子关系/标准属性/易误用字段）
+- G.6–G.8 观测机制：四层 Agent 观测模型（框架语义/SDK 客户端/协议传输/应用领域）、Hook 与 Instrumentation 机制、Python 零侵入探针原理（sitecustomize/Entry Point/运行时注入/流式复杂性）
+- G.9–G.13 框架接入机制：LangChain 与 LangGraph、OpenAI Python SDK、OpenAI Agents SDK、ChromaDB、其他框架对照
+- G.14–G.18 协同与治理：四件套协同、一次完整 RAG Agent 调用链路、五类信号职责、跨线程/进程/服务传播、Span 所有权与重复埋点治理
+- G.19–G.23 生产化：敏感数据治理（默认不采正文/双层脱敏）、Collector 采样与部署、自研 Agent Runtime 原生观测设计、推荐落地路径、常见误区排查
+- G.24–G.26 收尾：术语表、参考资料、本书用件对照表（读完回正文的导航）
 
 ## 附录 H：DeepEval 实战指南
 
@@ -387,7 +386,7 @@
 - L.3 标准与埋点生态：OTel GenAI SemConv、OpenInference、OpenLLMetry、Agent Spec Tracing
 - L.4–L.8 五路平台盘点：开源自托管（Langfuse/Phoenix/MLflow/OpenLIT/AgentOps/Helicone/TruLens）、商业专用（LangSmith/Weave/Braintrust/Arize AX）、传统 APM（Datadog/New Relic/Dynatrace/Splunk/通用后端）、云厂商原生、框架原生
 - L.9–L.10 选型与指标体系（对第 14 章三类指标框架）
-- L.11–L.14 生产参考架构（对附录 G.5）、成熟度模型、未来方向、总结
+- L.11–L.14 生产参考架构（对附录 G.20）、成熟度模型、未来方向、总结
 
 ## 附录 M：主流 Agent 评估系统全景
 

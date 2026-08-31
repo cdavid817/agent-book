@@ -256,7 +256,7 @@ appendices:
     status: reviewed
   - id: appendix-g
     letter: G
-    title: OpenTelemetry 详解
+    title: OpenTelemetry 详解与 Agent 可观测性指南
     path: 附录/附录G-OpenTelemetry详解.md
     status: draft
   - id: appendix-h
