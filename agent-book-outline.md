@@ -1,7 +1,7 @@
 # 《企业级 Agent 从入门到专家（2026版）》章节大纲
 
 > 主线逻辑：能力递进为主线、专题深潜为支线
-> 全书七篇 · 27 章 · 附录 A–W 二十三本工具书 · 附贯穿实战项目
+> 全书七篇 · 27 章 · 附录 A–X 二十四本工具书 · 附贯穿实战项目
 
 ---
 
@@ -460,53 +460,62 @@
 - 第十三～十五部分：Agentic RAG/GraphRAG/多模态（对第 11 章 2.9）、分层评测（对 2.8 与附录 H/M）、可观测安全与治理（对第 14 章/附录 L）
 - 第十六～十八部分（至 S.155）：选型矩阵与参考架构、失败归因与优化方法、生产落地检查清单
 
-## 附录 T：Pi 源码架构全景解析
+## 附录 T：主流 LLM Wiki 系统全景
+
+> 定位：LLM Wiki（知识编译系统）赛道全景调研（全文收录，信息基准 2026-08-31）——RAG 是"检索时增强"，LLM Wiki 是"写入时编译"；名单会过期，这条辨析框架不过期。与附录 A（关于 LLM 的词条书）无关。
+
+- T.1–T.4 框架：核心结论、什么是真正的 LLM Wiki（广义/狭义/本质）、与 RAG 和知识图谱的区别（对第 11 章/附录 E）、生态全景分类
+- T.5–T.9 四路盘点：代码仓库型（DeepWiki/Code Wiki/AutoWiki/OpenWiki 等，对第 23 章）、持久知识编译型、企业知识 Wiki 与企业搜索（Notion AI/Rovo/Glean/M365 等，对第 21 章）、个人研究型（Gemini Notebook）、开源 RAG 与 Agent 知识平台
+- T.10–T.12 架构与机制：企业级参考架构、核心机制详解（对第 11 章 2.2/附录 S）、面向 Agent 的接口设计（对第 8 章 MCP）
+- T.13–T.16 判断：选型建议、常见失败模式（对附录 S 失败归因）、未来趋势、最终判断
+
+## 附录 U：Pi 源码架构全景解析
 
 > 定位：开源 Coding Agent「Pi」（earendil-works/pi）整仓源码解析（全文收录，锁定 main@853a80d）——第六篇讲通用机制，本附录是一个真实实现的完整解剖。
 
-- T.1–T.4 分析基线与全局：阅读方法与结论可信度、项目定位与设计哲学、Monorepo 分层与控制权分配、构建与可复现性
-- T.5–T.11 pi-ai 模型层：统一领域对象、无副作用入口、Provider 工厂与兼容矩阵、认证与凭据、协议适配、流式事件、错误分类与重试
-- T.12–T.18 pi-agent-core：Agent Loop 双层循环与单轮状态机、工具调用（校验/钩子/并行/终止）、Steering 与 Follow-up、Agent 类与宿主可替换点、Harness、通用会话与后端、搜索扫描
-- T.19–T.30 pi-coding-agent：启动与多模式路由、AgentSession 协调器、Runtime 与 Services、JSONL 会话树（分支/Fork/Clone）、上下文压缩与保留尾部、设置与迁移、项目信任与两阶段加载、上下文文件与 Skill、扩展系统、模型注册表、内置文件工具、Bash 与进程取消
-- T.31–T.36 界面与远程：TUI 差分渲染与布局输入、交互模式与命令体系、Print/JSON/RPC/SDK 模式、严格 CBOR 协议、Client/Server 与会话租约
-- T.37–T.44 基础设施与评估：Telemetry 旁路、SQLite 后端与 FTS、测试与质量门禁、安全模型与提示注入、性能与容量规划、部署与跨平台、可扩展方案（MCP/子 Agent/权限层）、架构权衡与演进路线
-- T.45–T.50 附带工具书：文件级源码导读卡片、端到端运行链路、数据模型与事件词典、二次开发蓝图、排障决策树、术语表
+- U.1–U.4 分析基线与全局：阅读方法与结论可信度、项目定位与设计哲学、Monorepo 分层与控制权分配、构建与可复现性
+- U.5–U.11 pi-ai 模型层：统一领域对象、无副作用入口、Provider 工厂与兼容矩阵、认证与凭据、协议适配、流式事件、错误分类与重试
+- U.12–U.18 pi-agent-core：Agent Loop 双层循环与单轮状态机、工具调用（校验/钩子/并行/终止）、Steering 与 Follow-up、Agent 类与宿主可替换点、Harness、通用会话与后端、搜索扫描
+- U.19–U.30 pi-coding-agent：启动与多模式路由、AgentSession 协调器、Runtime 与 Services、JSONL 会话树（分支/Fork/Clone）、上下文压缩与保留尾部、设置与迁移、项目信任与两阶段加载、上下文文件与 Skill、扩展系统、模型注册表、内置文件工具、Bash 与进程取消
+- U.31–U.36 界面与远程：TUI 差分渲染与布局输入、交互模式与命令体系、Print/JSON/RPC/SDK 模式、严格 CBOR 协议、Client/Server 与会话租约
+- U.37–U.44 基础设施与评估：Telemetry 旁路、SQLite 后端与 FTS、测试与质量门禁、安全模型与提示注入、性能与容量规划、部署与跨平台、可扩展方案（MCP/子 Agent/权限层）、架构权衡与演进路线
+- U.45–U.50 附带工具书：文件级源码导读卡片、端到端运行链路、数据模型与事件词典、二次开发蓝图、排障决策树、术语表
 
-## 附录 U：Claude Code 源码架构深度解析
+## 附录 V：Claude Code 源码架构深度解析
 
 > 定位：Claude Code 还原源码整仓解析（全文收录，社区 source map 还原仓库 pengchengneo/Claude-Code、非官方，审阅基线 b78dd22）——证据按 [源码确认]/[结构推断]/[设计解读]/[改进建议]/[还原风险] 五级标注。
 
 - 重要说明与阅读导航：还原仓库的可信边界、静态审阅方法、三条阅读路径
-- 篇一（U.1–U.9）基线与全景：证据方法、还原机制、技术栈、设计原则、分层架构、目录地图、Bootstrap、CLI 多模式、REPL 与 Ink
-- 篇二（U.10–U.24）会话内核：QueryEngine、query() 异步生成器与 Agent Loop、消息模型与事件流、工具系统契约、权限与沙箱、Provider 适配
-- 篇三（U.25–U.34）上下文与恢复：压缩、记忆、Transcript、会话恢复
-- 篇四（U.35–U.52）扩展编排：Task/Agent/Coordinator 多 Agent、MCP、Plugin、Skill、Bridge 远程、重构路线图
-- 篇五/篇六（U.53–U.55）参考手册：50 个 Tool 条目（含证据等级）、87 个命令子目录与注册体系
-- 篇七（U.56–U.63）源码导航与维护：模块地图、服务层地图、术语表、验收清单、架构决策与权衡、风险登记表、证据索引、总结
+- 篇一（V.1–V.9）基线与全景：证据方法、还原机制、技术栈、设计原则、分层架构、目录地图、Bootstrap、CLI 多模式、REPL 与 Ink
+- 篇二（V.10–V.24）会话内核：QueryEngine、query() 异步生成器与 Agent Loop、消息模型与事件流、工具系统契约、权限与沙箱、Provider 适配
+- 篇三（V.25–V.34）上下文与恢复：压缩、记忆、Transcript、会话恢复
+- 篇四（V.35–V.52）扩展编排：Task/Agent/Coordinator 多 Agent、MCP、Plugin、Skill、Bridge 远程、重构路线图
+- 篇五/篇六（V.53–V.55）参考手册：50 个 Tool 条目（含证据等级）、87 个命令子目录与注册体系
+- 篇七（V.56–V.63）源码导航与维护：模块地图、服务层地图、术语表、验收清单、架构决策与权衡、风险登记表、证据索引、总结
 
-## 附录 V：Codex 源码架构深度解析
+## 附录 W：Codex 源码架构深度解析
 
-> 定位：OpenAI Codex（openai/codex，Rust Workspace）整仓源码解析（全文收录，快照锁定 main@0ae94fd）——源码事实/设计解释/演进推断三级证据；与附录 T/K 三套 Coding Agent 运行时互为对照。
+> 定位：OpenAI Codex（openai/codex，Rust Workspace）整仓源码解析（全文收录，快照锁定 main@0ae94fd）——源码事实/设计解释/演进推断三级证据；与附录 U/K 三套 Coding Agent 运行时互为对照。
 
-- 篇一（V.1–V.4）全局认识：项目定位（本地 Agent 运行时）、Thread/Turn/Item 三名词、共享内核与宿主适配器、Rust 迁移动因、工作区全景与总体数据流
-- 篇二（V.5–V.12）入口与会话控制：MultitoolCli、TUI、Exec、App Server、Protocol、ThreadManager、Session、Agent Loop
-- 篇三（V.13–V.22）模型与工具执行：ModelClient、Prompt 与压缩、ToolRouter/Registry/Orchestrator、Shell、Patch、Code Mode
-- 篇四（V.23–V.28）安全纵深：PermissionProfile、审批策略、Guardian、跨平台 Sandbox、Network Proxy、威胁模型
-- 篇五（V.29–V.35）扩展与多 Agent：MCP、Skill、Plugin、Hook、Extension API、AgentControl 与角色协作
-- 篇六（V.36–V.41）持久化与一致性：ThreadStore、JSONL rollout、SQLite 派生索引、恢复/分叉/归档与故障矩阵
-- 篇七（V.42–V.49）配置认证与观测：Config、Profile、Auth、Model Provider、Realtime、OTEL、Analytics
-- 篇八（V.50–V.58）测试与工程治理：测试金字塔、CI、静态检查、资源生命周期、发布与贡献模式
-- 篇九（V.59）逐 crate 源码导读：覆盖固定提交全部 workspace member
-- 篇十（V.60）端到端场景与故障推演：29 条控制流/安全流/数据流联合场景
-- 篇十一（V.61–V.66）收尾：结论、阅读路线、二次开发原则、关键源码链接、术语表、质量门禁
+- 篇一（W.1–W.4）全局认识：项目定位（本地 Agent 运行时）、Thread/Turn/Item 三名词、共享内核与宿主适配器、Rust 迁移动因、工作区全景与总体数据流
+- 篇二（W.5–W.12）入口与会话控制：MultitoolCli、TUI、Exec、App Server、Protocol、ThreadManager、Session、Agent Loop
+- 篇三（W.13–W.22）模型与工具执行：ModelClient、Prompt 与压缩、ToolRouter/Registry/Orchestrator、Shell、Patch、Code Mode
+- 篇四（W.23–W.28）安全纵深：PermissionProfile、审批策略、Guardian、跨平台 Sandbox、Network Proxy、威胁模型
+- 篇五（W.29–W.35）扩展与多 Agent：MCP、Skill、Plugin、Hook、Extension API、AgentControl 与角色协作
+- 篇六（W.36–W.41）持久化与一致性：ThreadStore、JSONL rollout、SQLite 派生索引、恢复/分叉/归档与故障矩阵
+- 篇七（W.42–W.49）配置认证与观测：Config、Profile、Auth、Model Provider、Realtime、OTEL、Analytics
+- 篇八（W.50–W.58）测试与工程治理：测试金字塔、CI、静态检查、资源生命周期、发布与贡献模式
+- 篇九（W.59）逐 crate 源码导读：覆盖固定提交全部 workspace member
+- 篇十（W.60）端到端场景与故障推演：29 条控制流/安全流/数据流联合场景
+- 篇十一（W.61–W.66）收尾：结论、阅读路线、二次开发原则、关键源码链接、术语表、质量门禁
 
-## 附录 W：OpenCode 源码全景技术解析
+## 附录 X：OpenCode 源码全景技术解析
 
-> 定位：OpenCode（anomalyco/opencode）整仓源码解析（全文收录，锁定 dev@10765ff，v1.18.25，基线 2026-08-30）——源码事实/架构推断/工程建议三级证据；T/U/V/W 四册源码解剖的第四册，独有课题是 V1/V2 双内核迁移。
+> 定位：OpenCode（anomalyco/opencode）整仓源码解析（全文收录，锁定 dev@10765ff，v1.18.25，基线 2026-08-30）——源码事实/架构推断/工程建议三级证据；U/V/W/X 四册源码解剖的第四册，独有课题是 V1/V2 双内核迁移。
 
-- W.1–W.6 基线与骨架：Monorepo 包边界、CLI 入口、Effect AppNode 与 Location 依赖图、Project 身份与 Worktree、配置体系、Agent 注册表与 Skill
-- W.7–W.10 双内核：V1 SessionPrompt 现行主循环、LLM 流式适配、V2 SessionRunner 与 Durable Input、Event Store 与 Projector（SQLite 投影）
-- W.11–W.19 能力平台：Provider 与模型目录、工具 Registry 汇聚、文件编辑与 Snapshot/Revert、Shell 与子 Agent、Permission 与 Doom Loop、压缩与 Overflow 恢复、MCP Client、LSP、插件 Host 与信任边界
-- W.20–W.23 产品表面：V1/V2 Server 与协议 SDK、TUI、共享 Web、Electron Desktop 与 Sidecar
-- W.24–W.27 工程治理：可观测、性能与资源、安全模型与强隔离、测试与发布矩阵
-- W.28–W.41 附带工程附录：工具目录与风险分类、事件目录、配置优先级、威胁矩阵、测试矩阵、故障演练、术语表、源码路径索引、逐章核验卡、迁移路线与发布门禁、接口一致性审查
+- X.1–X.6 基线与骨架：Monorepo 包边界、CLI 入口、Effect AppNode 与 Location 依赖图、Project 身份与 Worktree、配置体系、Agent 注册表与 Skill
+- X.7–X.10 双内核：V1 SessionPrompt 现行主循环、LLM 流式适配、V2 SessionRunner 与 Durable Input、Event Store 与 Projector（SQLite 投影）
+- X.11–X.19 能力平台：Provider 与模型目录、工具 Registry 汇聚、文件编辑与 Snapshot/Revert、Shell 与子 Agent、Permission 与 Doom Loop、压缩与 Overflow 恢复、MCP Client、LSP、插件 Host 与信任边界
+- X.20–X.23 产品表面：V1/V2 Server 与协议 SDK、TUI、共享 Web、Electron Desktop 与 Sidecar
+- X.24–X.27 工程治理：可观测、性能与资源、安全模型与强隔离、测试与发布矩阵
+- X.28–X.41 附带工程附录：工具目录与风险分类、事件目录、配置优先级、威胁矩阵、测试矩阵、故障演练、术语表、源码路径索引、逐章核验卡、迁移路线与发布门禁、接口一致性审查
