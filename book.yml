@@ -369,4 +369,9 @@ appendices:
     title: SDD 规范驱动开发实战教程与框架选型
     path: 附录/附录29-SDD规范驱动开发实战教程.md
     status: draft
+  - id: appendix-30
+    number: 30
+    title: LangGraph 实战教程
+    path: 附录/附录30-LangGraph实战教程.md
+    status: draft
 

@@ -500,6 +500,17 @@ sources:
     status: verified
     url: "https://github.com/Fission-AI/OpenSpec"
 
+  - id: C-53
+    title: "LangGraph 官方文档与 API（附录 30 教程，实验基线 LangGraph 1.1.2 / Python 3.13，信息基准 2026-09）"
+    publisher: "LangChain"
+    source_type: vendor-doc
+    version: "1.1.2（部分能力标注需 1.2+）"
+    claim_scope: [appendix-30]
+    verified_at: "2026-09-01"
+    expires_at: "2026-12-01"
+    status: verified
+    url: "https://langchain-ai.github.io/langgraph/"
+
 # 协议版本一致性锚点：check_sources 校验 C-03.version 与第 8 章 PROTOCOL_VERSION 常量相等。
 version_anchors:
   - source_id: C-03
