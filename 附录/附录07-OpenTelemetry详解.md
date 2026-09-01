@@ -220,15 +220,15 @@ OpenTelemetry 以信号组织客户端架构。当前概念体系包含 Trace、
 
 ```mermaid
 flowchart TD
-    R["Resource<br/>service.name=agent-service"]
-    R --> T["Trace<br/>一次请求的因果链"]
-    R --> M["Metric<br/>延迟、错误率、吞吐"]
-    R --> L["Log<br/>异常、审计、业务明细"]
-    R --> P["Profile<br/>CPU、内存、调用栈"]
+    RES["Resource<br/>service.name=agent-service"]
+    RES --> TRC["Trace<br/>一次请求的因果链"]
+    RES --> MET["Metric<br/>延迟、错误率、吞吐"]
+    RES --> LOG["Log<br/>异常、审计、业务明细"]
+    RES --> PROF["Profile<br/>CPU、内存、调用栈"]
 
-    T -->|"TraceId / SpanId"| L
-    M -->|"Exemplar"| T
-    P -->|"时间、服务、线程等维度"| T
+    TRC -->|"TraceId / SpanId"| LOG
+    MET -->|"Exemplar"| TRC
+    PROF -->|"时间、服务、线程等维度"| TRC
 ```
 
 一个理想的可观测后端应支持：
