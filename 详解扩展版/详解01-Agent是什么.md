@@ -3978,7 +3978,3 @@ flowchart LR
 **[20]** NIST, *AI Risk Management Framework* 与 *Generative Artificial Intelligence Profile (NIST AI 600-1)*。  
 <https://www.nist.gov/itl/ai-risk-management-framework>  
 <https://doi.org/10.6028/NIST.AI.600-1>
-
-<a id="ref-21"></a>
-**[21]** 本章扩展所依据的原文：`第01章-Agent是什么.md`。扩展版保留原文“场景—原理—实现—生产考量—常见坑—面试题”的六段主结构，并补充更完整的系统工程内容。  
-<https://github.com/cdavid817/awesome-agent-tutorial/blob/main/%E7%AC%AC%E4%B8%80%E7%AF%87-%E8%AE%A4%E7%9F%A5%E4%B8%8E%E5%9F%BA%E7%A1%80/%E7%AC%AC01%E7%AB%A0-Agent%E6%98%AF%E4%BB%80%E4%B9%88.md>
