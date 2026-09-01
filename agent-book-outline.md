@@ -343,7 +343,7 @@
 - 8.16–8.19 数据与扩展：数据集与 Golden 管理（六层分层）、Synthesizer 合成数据、自定义 Judge（DeepEvalBaseLLM）、自定义 Metric（BaseMetric）
 - 8.20–8.25 工程化：并发/缓存/错误处理、CLI 参数、CI/CD 质量门禁（GitHub Actions+分层门禁）、阈值校准与 A/B 实验、成本/性能/数据安全、推荐项目结构
 - 8.26–8.27 收尾：常见问题排查、落地检查清单
-- 8.28–8.30 扩展：DeepEval 内置评估器全景、与 SWE-bench 等 Benchmark 的关系、参考资料
+- 8.28–8.31 扩展：DeepEval 内置评估器全景、与 SWE-bench 等 Benchmark 的关系、安全评估（DeepTeam 红队 + Guardrails 护栏，对第 13/15 章）、参考资料
 
 ## 附录 9：评测与观测平台详解与选型
 

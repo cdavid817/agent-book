@@ -3758,7 +3758,58 @@ flowchart TB
 
 ---
 
-## 8.30 参考资料
+## 8.30 安全评估：红队（DeepTeam）与 Guardrails
+
+前面各节评的是"功能正确不正确、质量好不好"，属于**能力评估**。生产系统还有一条正交的评估线——**安全评估**：系统在**对抗性输入**下会不会越界、泄露、被操纵。DeepEval 生态把它拆成离线与在线两件产品。
+
+### 8.30.1 DeepTeam：LLM 红队（离线）
+
+**DeepTeam** 是 DeepEval 同门的红队框架（`pip install deepteam`），把"人肉想攻击提示词"变成可自动化、可回归的对抗测试。核心三件：
+
+- **漏洞（Vulnerability）**：要测的风险类别——偏见、毒性、PII 泄露、错误信息、越权/权限提升、Prompt 泄露、非法内容、过度依赖等；
+- **攻击（Attack）**：把普通输入改造成对抗输入的手法——**Prompt 注入、越狱（Jailbreaking）、角色扮演绕过、编码混淆、多轮渐进诱导、Leetspeak/Base64 变形**等，且支持单轮与多轮攻击增强；
+- **红队器（`red_team()`）**：给定目标系统的回调，自动组合漏洞 × 攻击生成对抗用例、跑一遍、给出每类漏洞的通过率报告。
+
+```python
+from deepteam import red_team
+from deepteam.vulnerabilities import Bias, PIILeakage
+from deepteam.attacks.single_turn import PromptInjection, Roleplay
+
+def model_callback(prompt: str) -> str:
+    return your_agent.run(prompt)      # 被测系统
+
+risk = red_team(
+    model_callback=model_callback,
+    vulnerabilities=[Bias(), PIILeakage()],
+    attacks=[PromptInjection(), Roleplay()],
+)
+```
+
+它与 8.16 节"对抗集（adversarial）"数据分层的关系：对抗集是**你手工整理的已知攻击用例**（进 CI 回归），DeepTeam 是**自动生成新攻击**的探针（定期扫，把突破的用例回流进对抗集）——两者互补，不是替代。红队结论对应第 13 章的威胁面：DeepTeam 覆盖的正是 OWASP LLM Top 10 里 Prompt 注入、敏感信息泄露、过度代理等条目的自动化测试。
+
+### 8.30.2 Guardrails：生产护栏（在线）
+
+红队是**上线前**的离线体检，**Guardrails 是运行时的实时闸门**——在请求进入模型前（输入护栏）与响应返回用户前（输出护栏）做低延迟检查，命中即拦截。DeepEval 的 `deepeval.guardrails` 提供一组开箱护栏：输入侧如 `PromptInjectionGuard`、`JailbreakingGuard`、`TopicalGuard`（越界话题）、`CybersecurityGuard`；输出侧如 `ToxicityGuard`、`PrivacyGuard`（PII）、`HallucinationGuard`、`SyntaxGuard`。
+
+```python
+from deepeval.guardrails import Guardrails, PromptInjectionGuard, ToxicityGuard
+
+guardrails = Guardrails(guards=[PromptInjectionGuard(), ToxicityGuard()])
+
+if guardrails.guard_input(user_input).breached:     # 输入闸门
+    return "请求被安全策略拦截"
+answer = your_agent.run(user_input)
+if guardrails.guard_output(user_input, answer).breached:  # 输出闸门
+    answer = "（内容已被安全策略过滤）"
+```
+
+**Metric 与 Guard 的分工**（本书第 15 章"Guard 管下限、Eval 管上限"的 DeepEval 落地）：Metric 是离线的质量尺子（可以慢、可以贵、追求准），Guard 是在线的安全闸门（必须快、必须稳、追求零漏过高风险项）——同一个风险维度（如毒性）离线用 `ToxicityMetric` 打分做回归、在线用 `ToxicityGuard` 实时拦截，两者共用口径但服务于不同环节。
+
+三条使用纪律：**红队进 Nightly/Release**（对抗生成成本高，不进 PR 快门禁，8.22 分层门禁）；**Guard 延迟要单独 SLO**（护栏在请求路径上，太慢会拖垮体验——高风险项用确定性规则或小模型 Guard，别全上 LLM Judge）；**突破即回流**（DeepTeam 扫出的成功攻击写进对抗集与 Guard 规则，形成"红队→护栏→回归"的安全闭环，对应 8.29 之前反复强调的线上失败回流机制）。
+
+---
+
+## 8.31 参考资料
 
 以下内容以 DeepEval 官方文档和官方 GitHub 仓库为主要依据：
 
@@ -3799,6 +3850,8 @@ flowchart TB
 35. [SWE-bench Official Leaderboards and Dataset Variants](https://www.swebench.com/)
 36. [SWE-bench Evaluation Harness Reference](https://www.swebench.com/SWE-bench/reference/harness/)
 37. [SWE-bench Evaluation Guide](https://www.swebench.com/SWE-bench/guides/evaluation/)
+38. [DeepTeam（LLM 红队框架）](https://www.trydeepteam.com/)
+39. [DeepEval Guardrails](https://deepeval.com/docs/guardrails-introduction)
 
 ---
 
