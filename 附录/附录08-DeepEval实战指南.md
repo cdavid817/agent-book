@@ -724,6 +724,30 @@ Referenceless
 - 业务规则遵循；
 - 输出是否适合目标用户。
 
+构造参数速查：
+
+| 参数 | 说明 |
+| --- | --- |
+| `name` | 指标名称，报表展示使用 |
+| `criteria` | **自然语言评判标准**，越清晰打分越稳定 |
+| `evaluation_steps` | 显式列出评分步骤（与 `criteria` 二选一），比一句话标准更可控、波动更小 |
+| `evaluation_params` | 告诉 G-Eval 需要哪些字段做评判：`INPUT` 用户输入、`ACTUAL_OUTPUT` 模型输出、`EXPECTED_OUTPUT` 标准答案、`RETRIEVAL_CONTEXT` 检索上下文 |
+| `threshold` | 0–1，pytest 断言 pass/fail 阈值 |
+| `strict_mode` | 严格模式，低于阈值直接置 0 |
+
+**核心原理**（三步）：
+
+1. **自动生成评估步骤**：把你输入的自然语言评估标准，拆解成结构化的分步评判清单（Auto-CoT）；
+2. **表单式打分**：Judge LLM 严格按照生成的步骤逐条评判输出；
+3. **概率加权**：利用模型输出 log-prob 对分数加权，输出 0–1 归一化分数，附带完整可解释 reason 理由。
+
+> 与普通直接 Prompt 打分的区别：普通 LLM-as-Judge 直接输出分数，波动大；G-Eval 强制分步推理，显著提升与人工标注的相关性。
+
+**两种实现**：
+
+- `GEval`：单轮对话评估；
+- `ConversationalGEval`：多轮会话 Agent 评估，对完整对话轨迹打分（多轮用例见 8.15 节）。
+
 ### 8.10.1 使用 `criteria`
 
 ```python
