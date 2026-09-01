@@ -301,7 +301,7 @@ appendices:
     status: draft
   - id: appendix-16
     number: 16
-    title: 主流 Agent 自进化系统全景
+    title: 主流 Agent 自进化/自优化系统全景
     path: 附录/附录16-主流Agent自进化系统全景.md
     status: draft
   - id: appendix-17
