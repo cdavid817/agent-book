@@ -359,4 +359,9 @@ appendices:
     title: 企业级 Agent 平台系统全景
     path: 附录/附录27-企业级Agent平台系统全景.md
     status: draft
+  - id: appendix-28
+    number: 28
+    title: Vibe Coding 实战教程
+    path: 附录/附录28-VibeCoding实战教程.md
+    status: draft
 

@@ -480,6 +480,16 @@ sources:
     status: verified
     url: "https://langchain-ai.github.io/langgraph/"
 
+  - id: C-51
+    title: "Vibe Coding 概念与主流工具（附录 28 教程，信息基准 2026-09）"
+    publisher: "Karpathy（概念）与各 Coding Agent 工具供应商"
+    source_type: community
+    claim_scope: [appendix-28]
+    verified_at: "2026-09-01"
+    expires_at: "2026-12-01"
+    status: verified
+    url: "https://github.com/anthropics/claude-code"
+
 # 协议版本一致性锚点：check_sources 校验 C-03.version 与第 8 章 PROTOCOL_VERSION 常量相等。
 version_anchors:
   - source_id: C-03
