@@ -2117,7 +2117,7 @@ sequenceDiagram
     participant SB as Sandbox
     participant Obs as Observability
     participant Eval as Evaluation
-    participant Opt as Optimizer
+    participant OPTM as Optimizer
 
     User->>GW: 提交请求
     GW->>GW: 身份、租户、限流、策略检查
@@ -2149,8 +2149,8 @@ sequenceDiagram
     SB->>Obs: 写入沙箱遥测
 
     Obs->>Eval: 回流 Trace 和样本
-    Eval->>Opt: 输出失败模式与评估报告
-    Opt->>Opt: 生成 Prompt / Skill / Workflow 候选版本
+    Eval->>OPTM: 输出失败模式与评估报告
+    OPTM->>OPTM: 生成 Prompt / Skill / Workflow 候选版本
 ```
 
 ### 27.6.1 构建链路
