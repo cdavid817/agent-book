@@ -1,11 +1,5 @@
 # 第 5 章 Context Window 管理：从“窗口即预算”到生产级上下文操作系统
 
-> **扩展版 · 2026-08-31**  
-> 面向构建单 Agent、Coding Agent、研究 Agent、企业助手与长任务 Agent 的工程人员。  
-> 原始章节：[awesome-agent-tutorial / 第05章-ContextWindow管理](https://github.com/cdavid817/awesome-agent-tutorial/blob/main/%E7%AC%AC%E4%BA%8C%E7%AF%87-%E5%8D%95Agent%E6%A0%B8%E5%BF%83%E6%9C%BA%E5%88%B6/%E7%AC%AC05%E7%AB%A0-ContextWindow%E7%AE%A1%E7%90%86.md)
-
----
-
 ## 本章定位
 
 上下文窗口不是一个可以无限追加消息的聊天记录容器，而是 Agent 在一次模型推理中可使用的**临时工作集**。它同时承担五种角色：
