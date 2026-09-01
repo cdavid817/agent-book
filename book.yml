@@ -354,4 +354,9 @@ appendices:
     title: OpenCode 源码全景技术解析
     path: 附录/附录26-OpenCode源码全景技术解析.md
     status: draft
+  - id: appendix-27
+    number: 27
+    title: 企业级 Agent 平台系统全景
+    path: 附录/附录27-企业级Agent平台系统全景.md
+    status: draft
 

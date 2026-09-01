@@ -470,6 +470,16 @@ sources:
     status: verified
     url: "https://langchain-ai.github.io/langgraph/"
 
+  - id: C-50
+    title: "企业级 Agent 平台各子系统官方页面（附录 27 全景架构，信息基准 2026-09）"
+    publisher: "各平台供应商与开源社区"
+    source_type: vendor-page
+    claim_scope: [appendix-27]
+    verified_at: "2026-09-01"
+    expires_at: "2026-12-01"
+    status: verified
+    url: "https://langchain-ai.github.io/langgraph/"
+
 # 协议版本一致性锚点：check_sources 校验 C-03.version 与第 8 章 PROTOCOL_VERSION 常量相等。
 version_anchors:
   - source_id: C-03
