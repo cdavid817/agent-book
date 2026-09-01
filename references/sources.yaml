@@ -490,6 +490,16 @@ sources:
     status: verified
     url: "https://github.com/anthropics/claude-code"
 
+  - id: C-52
+    title: "主流 SDD 框架与规范驱动开发工具（附录 29 教程，信息基准 2026-09）"
+    publisher: "各 SDD 框架社区（OpenSpec / Spec Kit 等）"
+    source_type: community
+    claim_scope: [appendix-29]
+    verified_at: "2026-09-01"
+    expires_at: "2026-12-01"
+    status: verified
+    url: "https://github.com/Fission-AI/OpenSpec"
+
 # 协议版本一致性锚点：check_sources 校验 C-03.version 与第 8 章 PROTOCOL_VERSION 常量相等。
 version_anchors:
   - source_id: C-03

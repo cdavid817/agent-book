@@ -364,4 +364,9 @@ appendices:
     title: Vibe Coding 实战教程
     path: 附录/附录28-VibeCoding实战教程.md
     status: draft
+  - id: appendix-29
+    number: 29
+    title: SDD 规范驱动开发实战教程与框架选型
+    path: 附录/附录29-SDD规范驱动开发实战教程.md
+    status: draft
 
