@@ -380,7 +380,7 @@ sources:
     url: "https://arxiv.org/abs/2303.11366"
 
   - id: C-41
-    title: "主流多 Agent 框架与平台官方页面（附录 17 全景盘点，信息基准 2026-08-30）"
+    title: "主流多 Agent 框架与平台官方页面（附录 17 全景盘点，信息基准 2026-09）"
     publisher: "各框架供应商、云厂商与开源社区"
     source_type: vendor-page
     claim_scope: [appendix-17]

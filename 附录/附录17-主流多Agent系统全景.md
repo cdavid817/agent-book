@@ -1,6 +1,6 @@
 # 附录 17：主流多 Agent 系统全景
 
-> 定位：**多 Agent 赛道的全景调研报告**（全文收录，信息基准 2026-08-30，各框架与平台官方入口见 [C-41]）。与相邻内容的分工：第四篇（第 17–19 章）讲多 Agent 的机制原理与克制判断（八拓扑代价模型、簿记下沉、可行性劝退），本附录是整个赛道的地图——"什么才算真正的多 Agent"的定义辨析、生态全景、通用框架逐家盘点（Agent Framework/LangGraph/OpenAI Agents SDK/ADK/CrewAI 等）、研究型与云厂商平台、编排模式、协议栈（MCP/A2A/AG-UI）、状态与记忆设计、沙箱权限、可观测与评估、该用与不该用的判据、选型与生产参考架构。名单会过期，"什么时候不该用多 Agent"的判据不过期。
+> 定位：**多 Agent 赛道的全景调研报告**（全文收录，信息基准 2026-09，各框架与平台官方入口见 [C-41]）。与相邻内容的分工：第四篇（第 17–19 章）讲多 Agent 的机制原理与克制判断（八拓扑代价模型、簿记下沉、可行性劝退），本附录是整个赛道的地图——"什么才算真正的多 Agent"的定义辨析、生态全景、通用框架逐家盘点（Agent Framework/LangGraph/OpenAI Agents SDK/ADK/CrewAI 等）、研究型与云厂商平台、编排模式、协议栈（MCP/A2A/AG-UI）、状态与记忆设计、沙箱权限、可观测与评估、该用与不该用的判据、选型与生产参考架构。名单会过期，"什么时候不该用多 Agent"的判据不过期。
 
 ---
 
@@ -1222,26 +1222,1521 @@ MCP 的重点不是多 Agent 编排，而是 **Agent 与能力之间的标准接
 
 ---
 
-### 17.7.2 A2A
+### 17.7.2 A2A（Agent-to-Agent）协议详解
 
-A2A 的目标是让不同厂商、框架和运行时中的 Agent 安全通信。
+> **版本说明（截至 2026 年 9 月 2 日）**：A2A 的稳定协议兼容主线为 **1.0**。官方规范页面发布版本为 `1.0.0`，协议仓库后续发布了 `1.0.1` 补丁；但在线路协商、请求头和 Agent Card 中只使用 `Major.Minor`，即 `1.0`，不能写成 `1.0.1`。A2A SDK 自身的版本号与协议版本号相互独立。
+>
+> A2A 已于 **2026 年 8 月 27 日**被 Agentic AI Foundation（AAIF）接纳为 Growth Stage 项目。协议最初由 Google 贡献，目前按开放治理模式持续演进。
 
-其关注：
+A2A 的目标不是让两个模型简单互发文本，而是为**相互独立、内部实现不透明、可能属于不同厂商或组织的 Agent 系统**提供统一的发现、委派、任务状态、结果交付和安全交互模型。
 
-- Agent Card；
-- 能力发现；
-- Task 生命周期；
-- Message；
-- Artifact；
-- 流式结果；
-- 异步任务；
-- 任务取消；
-- 身份认证；
-- 跨组织委派。
+A2A 的核心抽象可以概括为：
 
-A2A 不替代 MCP：一个 Agent 可以通过 MCP 使用工具，再通过 A2A 向另一个 Agent 提供服务。
+```text
+A2A
+=
+Agent Card 能力发现
++ Message 交互消息
++ Task 有状态工作单元
++ Artifact 结果载体
++ Polling / Streaming / Push 更新机制
++ 标准认证声明与协议版本协商
+```
 
-参考：[Linux Foundation A2A Protocol](https://www.linuxfoundation.org/press/linux-foundation-launches-the-agent2agent-protocol-project-to-enable-secure-intelligent-communication-between-ai-agents)
+本节基于 A2A 1.0 数据模型和三种标准绑定展开。官方规范的权威数据定义以 `a2a.proto` 为准，JSON Schema、语言 SDK 和文档均属于派生表示。
+
+#### 7.2.1 A2A 解决什么问题
+
+A2A 主要解决以下问题：
+
+| 问题 | A2A 提供的机制 |
+|---|---|
+| 如何知道远端 Agent 能做什么 | `AgentCard`、`AgentSkill`、输入输出 Media Type |
+| 如何选择远端地址与协议 | `supportedInterfaces`、`protocolBinding`、`protocolVersion` |
+| 如何向远端 Agent 委派工作 | `SendMessage`、`SendStreamingMessage` |
+| 如何表示长运行工作 | `Task`、`TaskStatus`、`TaskState` |
+| 如何进行多轮补充输入 | `contextId`、`taskId`、`referenceTaskIds` |
+| 如何交付正式结果 | `Artifact` 及其 `Part` |
+| 如何获取增量进度 | Polling、SSE/gRPC Streaming、Webhook Push |
+| 如何取消任务 | `CancelTask` |
+| 如何声明认证方式 | `securitySchemes`、`securityRequirements` |
+| 如何扩展领域语义 | URI 标识的 A2A Extension |
+| 如何适配不同技术栈 | JSON-RPC、gRPC、HTTP+JSON 三种标准绑定 |
+
+A2A **不直接解决**以下问题：
+
+| 非目标 | 应由谁负责 |
+|---|---|
+| Agent 内部使用哪个模型、Prompt、Memory 或工具 | Agent 自身实现 |
+| Agent 内部的 Supervisor、Graph、Group Chat 如何调度 | 多 Agent 框架或 Workflow Engine |
+| Agent 如何调用数据库、文件、浏览器和 SaaS | MCP、原生 Tool API 或内部工具层 |
+| Agent 前端如何展示流式状态和生成式 UI | AG-UI 或应用自定义 UI 协议 |
+| 全局统一的 Agent Marketplace/Registry API | 企业 Registry 或第三方目录；A2A 只标准化 Agent Card |
+| Credential 的签发、轮换和托管 | OAuth/OIDC/IAM/Secrets Manager/PKI |
+| Exactly-once 任务执行 | 业务幂等、事务、Outbox、去重和补偿机制 |
+| 跨 Agent 的共享长期记忆 | 独立 Memory Service 或业务数据层 |
+
+最重要的原则是 **Opaque Execution**：A2A Server 只需要公开能力、输入输出契约和任务结果，不需要暴露内部思维、模型调用、Memory、工具清单或内部编排实现。
+
+---
+
+#### 7.2.2 参与方与参考架构
+
+A2A 交互通常包含以下角色：
+
+| 角色 | 职责 |
+|---|---|
+| **A2A Client** | 代表用户、业务系统或上游 Agent 发起请求，选择接口、附带凭据并消费结果 |
+| **A2A Server / Remote Agent** | 暴露 A2A Endpoint，接收 Message，创建或继续 Task，产出 Artifact |
+| **Agent Card Endpoint** | 发布公开 Agent Card，通常位于 `/.well-known/agent-card.json` |
+| **Agent Registry** | 企业内部或公共目录，按 Skill、Tag、组织、合规等级等检索 Agent Card |
+| **Authorization Server** | 为 Client 获取 OAuth/OIDC Token，或提供其他身份凭据 |
+| **A2A Gateway** | 认证、授权、限流、租户路由、审计、协议转换和流量治理 |
+| **Task Store** | 持久化 Task、Status、History、Artifact 引用与幂等记录 |
+| **Event Store / Stream Hub** | 保存或分发状态事件与 Artifact 增量事件 |
+| **Push Receiver** | 接收 A2A Server 主动发送的 Webhook 通知 |
+
+```mermaid
+flowchart LR
+    Client[A2A Client<br/>上游 Agent / Orchestrator]
+    Registry[Agent Registry]
+    Card[Agent Card Endpoint]
+    Auth[OAuth / OIDC / IAM]
+
+    subgraph Boundary[远端 Agent 信任边界]
+        Gateway[A2A Gateway<br/>认证 / 授权 / 限流 / 租户路由]
+        Endpoint[A2A Endpoint<br/>JSON-RPC / gRPC / HTTP+JSON]
+        Runtime[Agent Runtime / Executor]
+        TaskStore[(Task Store)]
+        EventStore[(Event / Stream Store)]
+        ArtifactStore[(Artifact Store)]
+        MCP[MCP / Tool Gateway]
+    end
+
+    Push[Client Push Receiver]
+
+    Client -->|查询| Registry
+    Registry -->|返回 Agent Card| Client
+    Client -->|GET well-known card| Card
+    Client -->|获取动态凭据| Auth
+    Client -->|A2A-Version + Credential| Gateway
+    Gateway --> Endpoint
+    Endpoint --> Runtime
+    Runtime <--> TaskStore
+    Runtime --> EventStore
+    Runtime --> ArtifactStore
+    Runtime --> MCP
+    EventStore -->|SSE / gRPC Stream| Client
+    EventStore -->|Webhook Push| Push
+```
+
+在生产架构中，**A2A Endpoint 不应直接等于 LLM 推理进程**。更稳健的实现是由协议层完成解析、鉴权、验证、幂等和持久化，再把规范化命令交给 Agent Runtime。
+
+---
+
+#### 7.2.3 一次完整 A2A 调用的生命周期
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant C as A2A Client
+    participant R as Registry / Agent Card
+    participant I as Identity Provider
+    participant G as A2A Gateway
+    participant A as Remote Agent
+    participant S as Task / Artifact Store
+
+    C->>R: 获取 Agent Card
+    R-->>C: Skills、Interfaces、Capabilities、Security
+    C->>C: 校验 Card、选择协议与版本
+    C->>I: 获取 OAuth/OIDC/mTLS 凭据
+    I-->>C: 短期 Credential
+
+    C->>G: SendMessage / SendStreamingMessage
+    Note over C,G: A2A-Version: 1.0
+    G->>G: 认证、授权、限流、租户路由
+    G->>A: 规范化请求
+    A->>S: 创建 Task、contextId、taskId
+    A-->>C: Task(SUBMITTED/WORKING)
+
+    loop 任务执行
+        A->>S: 更新 Status / Artifact
+        A-->>C: StatusUpdate / ArtifactUpdate
+    end
+
+    alt 需要补充输入
+        A-->>C: TASK_STATE_INPUT_REQUIRED
+        C->>A: 同一 taskId/contextId 的新 Message
+        A-->>C: TASK_STATE_WORKING
+    else 需要下游授权
+        A-->>C: TASK_STATE_AUTH_REQUIRED
+        C->>I: 完成用户授权或凭据升级
+        C->>A: 同一 Task 的后续 Message
+    end
+
+    A->>S: 保存最终 Artifact
+    A-->>C: TASK_STATE_COMPLETED + Artifact
+```
+
+从工程角度看，这个生命周期包含四个边界：
+
+1. **发现边界**：是否信任 Agent Card，是否支持所需 Skill、Media Type 和协议版本；
+2. **安全边界**：调用者是谁，允许调用哪个 Skill、访问哪些 Task 和数据；
+3. **任务边界**：请求是直接 Message，还是创建有生命周期的 Task；
+4. **交付边界**：正式结果必须沉淀为 Artifact，不能只依赖瞬时状态消息。
+
+---
+
+#### 7.2.4 Agent 发现与 Agent Card
+
+##### 1. 三种发现方式
+
+| 方式 | 机制 | 适用场景 | 注意事项 |
+|---|---|---|---|
+| **Well-Known URI** | `GET https://{domain}/.well-known/agent-card.json` | 公共 Agent、域内自动发现 | Card 不应包含 Secret；使用 HTTPS、缓存与签名 |
+| **Curated Registry** | 从企业目录或 Marketplace 查询 Agent Card | 企业内部、跨部门、受治理 Agent | A2A 未规定统一 Registry 查询 API |
+| **Direct Configuration** | 配置文件、环境变量、服务发现或私有下发 | 私有 Agent、固定上下游 | 需要独立处理版本、轮换和撤销 |
+
+Agent Card 不是一个“Prompt 描述文件”，而是远端 Agent 的**机器可读服务契约**。
+
+##### 2. Agent Card 关键字段
+
+| 字段 | 作用 | 工程注意点 |
+|---|---|---|
+| `name`、`description` | Agent 身份与用途 | 不要将营销描述当作能力保证 |
+| `supportedInterfaces[]` | 地址、协议绑定、协议版本、可选 Tenant | 有序列表，第一个接口为偏好接口 |
+| `provider` | 服务提供组织 | 可用于供应商信任策略 |
+| `version` | **Agent 实现版本** | 不是 A2A 协议版本 |
+| `capabilities` | Streaming、Push、Extension、Extended Card | Client 使用功能前必须验证能力声明 |
+| `securitySchemes` | API Key、HTTP Auth、OAuth2、OIDC、mTLS | 只描述获取/传递方式，不放真实凭据 |
+| `securityRequirements` | 调用 Agent 所需认证组合与 Scope | 可在 Skill 级覆盖 |
+| `defaultInputModes` | 默认可接受 Media Type | 如 `text/plain`、`application/json` |
+| `defaultOutputModes` | 默认可输出 Media Type | Client 还可在请求中声明可接受输出 |
+| `skills[]` | 更细粒度的能力、Tag、示例与 I/O Mode | Skill 是描述性能力，不等价于 RPC Method |
+| `signatures[]` | Agent Card 的 JWS 签名 | 用于完整性和来源校验 |
+| `documentationUrl` | 详细文档 | 可承载 Schema、SLA、计费和合规说明 |
+
+##### 3. Agent Card 示例
+
+```json
+{
+  "name": "Enterprise Research Agent",
+  "description": "执行企业研究、证据整理和报告生成任务",
+  "supportedInterfaces": [
+    {
+      "url": "https://agents.example.com/research/a2a",
+      "protocolBinding": "HTTP+JSON",
+      "protocolVersion": "1.0",
+      "tenant": "research-prod"
+    },
+    {
+      "url": "agents.example.com:443",
+      "protocolBinding": "GRPC",
+      "protocolVersion": "1.0",
+      "tenant": "research-prod"
+    }
+  ],
+  "provider": {
+    "organization": "Example Corp",
+    "url": "https://www.example.com"
+  },
+  "version": "2.3.0",
+  "documentationUrl": "https://docs.example.com/agents/research",
+  "capabilities": {
+    "streaming": true,
+    "pushNotifications": true,
+    "extendedAgentCard": true,
+    "extensions": [
+      {
+        "uri": "https://example.com/a2a/extensions/citations/v1",
+        "description": "为研究结果附带结构化引用",
+        "required": false
+      }
+    ]
+  },
+  "securitySchemes": {
+    "corpOidc": {
+      "openIdConnectSecurityScheme": {
+        "description": "企业 OIDC 身份",
+        "openIdConnectUrl": "https://id.example.com/.well-known/openid-configuration"
+      }
+    }
+  },
+  "securityRequirements": [
+    {
+      "schemes": {
+        "corpOidc": {
+          "list": ["openid", "profile", "a2a.invoke"]
+        }
+      }
+    }
+  ],
+  "defaultInputModes": ["text/plain", "application/json"],
+  "defaultOutputModes": ["text/markdown", "application/json"],
+  "skills": [
+    {
+      "id": "enterprise-research",
+      "name": "Enterprise Research",
+      "description": "根据研究问题检索、交叉验证并生成结构化报告",
+      "tags": ["research", "citations", "report"],
+      "examples": ["分析某行业最近三年的技术趋势并附来源"],
+      "inputModes": ["text/plain", "application/json"],
+      "outputModes": ["text/markdown", "application/json"]
+    }
+  ]
+}
+```
+
+需要特别区分：
+
+```text
+AgentCard.version                  = Agent 产品/实现版本，例如 2.3.0
+supportedInterfaces.protocolVersion = A2A 协议版本，例如 1.0
+SDK package version               = SDK 发布版本，例如 1.1.x
+```
+
+三者不能混用。
+
+##### 4. Extended Agent Card
+
+公开 Agent Card 应坚持最小披露。如果某些 Skill、Endpoint、合规信息或高权限能力只对认证客户开放，可以：
+
+1. 在公开 Card 中声明 `capabilities.extendedAgentCard: true`；
+2. Client 完成认证；
+3. 调用 `GetExtendedAgentCard`；
+4. Server 根据身份、租户、合同和 Scope 返回差异化 Card；
+5. Client 在当前认证会话中用 Extended Card 替换公开 Card 缓存。
+
+Extended Card 不能绕过授权。即使某个 Skill 被展示出来，实际调用时仍应再次校验权限。
+
+##### 5. Agent Card 缓存和变更
+
+生产环境应使用标准 HTTP 缓存语义：
+
+- `Cache-Control: max-age=...`；
+- `ETag`；
+- `Last-Modified`；
+- `If-None-Match` / `If-Modified-Since` 条件请求；
+- Card 版本变化时重新做接口、协议、能力与安全校验；
+- 对高风险 Agent 设置较短 TTL 和主动撤销机制。
+
+Agent Card 被缓存后，Client 仍不能假设远端能力永久不变。发生 `UnsupportedOperationError` 或版本错误时，应刷新 Card，而不是无限重试旧接口。
+
+---
+
+#### 7.2.5 协议绑定、接口选择与版本协商
+
+A2A 1.0 提供三种标准协议绑定：
+
+| 绑定 | 传输与序列化 | 流式方式 | 适用场景 |
+|---|---|---|---|
+| **JSON-RPC** | JSON-RPC 2.0 over HTTP(S)，请求通常为 `application/json` | HTTP SSE | 兼容已有 RPC 网关、实现简单 |
+| **gRPC** | Protocol Buffers over HTTP/2 + TLS | gRPC Server Streaming | 内部高吞吐、强类型、跨语言服务 |
+| **HTTP+JSON** | REST 风格 Endpoint，推荐 `application/a2a+json` | HTTP SSE | API Gateway、企业开放平台、易调试集成 |
+
+所有绑定必须提供**语义等价**的核心功能：
+
+- 相同的核心操作；
+- 语义等价的数据模型；
+- 一致的错误含义；
+- 等价的认证要求；
+- 一致的任务状态与 Artifact 语义。
+
+##### 1. 标准操作映射
+
+| 功能 | JSON-RPC Method | gRPC Method | HTTP+JSON Endpoint |
+|---|---|---|---|
+| 发送消息 | `SendMessage` | `SendMessage` | `POST /message:send` |
+| 发送并流式订阅 | `SendStreamingMessage` | `SendStreamingMessage` | `POST /message:stream` |
+| 查询任务 | `GetTask` | `GetTask` | `GET /tasks/{id}` |
+| 列出任务 | `ListTasks` | `ListTasks` | `GET /tasks` |
+| 取消任务 | `CancelTask` | `CancelTask` | `POST /tasks/{id}:cancel` |
+| 订阅已有任务 | `SubscribeToTask` | `SubscribeToTask` | `POST /tasks/{id}:subscribe` |
+| 创建 Push 配置 | `CreateTaskPushNotificationConfig` | 同名 | `POST /tasks/{id}/pushNotificationConfigs` |
+| 获取 Push 配置 | `GetTaskPushNotificationConfig` | 同名 | `GET /tasks/{id}/pushNotificationConfigs/{configId}` |
+| 列出 Push 配置 | `ListTaskPushNotificationConfigs` | 同名 | `GET /tasks/{id}/pushNotificationConfigs` |
+| 删除 Push 配置 | `DeleteTaskPushNotificationConfig` | 同名 | `DELETE /tasks/{id}/pushNotificationConfigs/{configId}` |
+| 获取 Extended Card | `GetExtendedAgentCard` | 同名 | `GET /extendedAgentCard` |
+
+##### 2. 标准服务参数
+
+| 参数 | 作用 | HTTP 表示 |
+|---|---|---|
+| `A2A-Version` | 指定 Client 使用的协议版本 | `A2A-Version: 1.0` |
+| `A2A-Extensions` | 声明本次请求激活的 Extension URI | 逗号分隔的 Header |
+
+版本规则：
+
+- Client 应在每个请求中发送 `A2A-Version`；
+- 版本格式必须是 `Major.Minor`，如 `1.0`；
+- Patch 版本不参与线路兼容协商；
+- 未发送版本时，A2A 1.0 Server 按兼容规则解释为 `0.3`；
+- 不支持请求版本时返回 `VersionNotSupportedError`；
+- 不应静默降级到旧版本并丢失能力；需要降级时应显式记录并受策略控制。
+
+##### 3. Client 接口选择算法
+
+一个较稳健的接口选择过程如下：
+
+```text
+1. 拉取并校验 Agent Card
+2. 过滤不支持目标 Skill / Input Mode / Output Mode 的 Agent
+3. 过滤不支持本地 A2A Major.Minor 的 Interface
+4. 过滤本地未实现的 protocolBinding
+5. 校验 Endpoint、TLS、域名和网络策略
+6. 校验 Security Scheme 是否可满足
+7. 按 Card 中的顺序、组织策略、延迟和成本选择接口
+8. 把选择的 protocolVersion 写入 A2A-Version
+9. 若 Interface 声明 tenant，则每个请求原样回传 tenant
+10. 失败后只在等价接口间受控回退，并保留同一业务幂等键
+```
+
+---
+
+#### 7.2.6 核心数据模型
+
+```mermaid
+classDiagram
+    class AgentCard {
+      name
+      version
+      capabilities
+      securitySchemes
+      skills
+    }
+    class AgentInterface {
+      url
+      protocolBinding
+      protocolVersion
+      tenant
+    }
+    class AgentSkill {
+      id
+      inputModes
+      outputModes
+    }
+    class Task {
+      id
+      contextId
+      status
+      history
+      artifacts
+    }
+    class Message {
+      messageId
+      contextId
+      taskId
+      role
+      parts
+    }
+    class Part {
+      text OR raw OR url OR data
+      mediaType
+      filename
+    }
+    class Artifact {
+      artifactId
+      name
+      parts
+    }
+    class TaskStatusUpdateEvent
+    class TaskArtifactUpdateEvent
+
+    AgentCard "1" o-- "1..*" AgentInterface
+    AgentCard "1" o-- "1..*" AgentSkill
+    Task "1" o-- "0..*" Message : history
+    Task "1" o-- "0..*" Artifact
+    Message "1" o-- "1..*" Part
+    Artifact "1" o-- "1..*" Part
+    TaskStatusUpdateEvent --> Task
+    TaskArtifactUpdateEvent --> Artifact
+```
+
+##### 1. Task
+
+`Task` 是 A2A 的核心工作单元：
+
+| 字段 | 含义 |
+|---|---|
+| `id` | Server 生成的 Task 唯一标识 |
+| `contextId` | 将多个相关 Task 和 Message 归入同一上下文 |
+| `status` | 当前 `TaskStatus`，包含 State、可选 Message 和 Timestamp |
+| `artifacts` | 已产出的正式结果 |
+| `history` | Server 选择持久化的交互 Message，不保证包含所有瞬时消息 |
+| `metadata` | 自定义元数据，建议命名空间化 |
+
+##### 2. Message
+
+`Message` 是 Client 与 Server 间的一次通信：
+
+| 字段 | 含义 |
+|---|---|
+| `messageId` | 消息创建方生成的唯一 ID，也是请求去重的重要依据 |
+| `contextId` | 可选，对话上下文 ID |
+| `taskId` | 可选，表示该消息继续某个未终止 Task |
+| `role` | `ROLE_USER` 或 `ROLE_AGENT` |
+| `parts` | 一个或多个内容片段 |
+| `referenceTaskIds` | 引用其他 Task 作为补充上下文 |
+| `extensions` | 本 Message 使用的 Extension URI |
+| `metadata` | 扩展数据、业务关联 ID 等 |
+
+##### 3. Part
+
+`Part` 是 Message 和 Artifact 的最小内容单元，并且必须**恰好包含一种**内容字段：
+
+```text
+text | raw | url | data
+```
+
+| 类型 | 用途 | 风险控制 |
+|---|---|---|
+| `text` | 普通文本、Markdown、代码 | 长度限制、Prompt Injection 标记 |
+| `raw` | 内联二进制，JSON 中使用 Base64 | 大小限制、恶意文件扫描、避免大对象内联 |
+| `url` | 指向文件或外部内容 | SSRF、域名白名单、签名 URL、过期时间 |
+| `data` | 任意 JSON 结构 | JSON Schema 校验、深度和字段数量限制 |
+
+`mediaType` 应使用 MIME Type，例如 `text/plain`、`application/json`、`image/png`。`filename` 只是显示和处理提示，不能作为可信文件路径使用。
+
+##### 4. Artifact
+
+`Artifact` 是 Task 的正式输出：
+
+| 字段 | 含义 |
+|---|---|
+| `artifactId` | Task 内唯一 ID |
+| `name`、`description` | 人类可读说明 |
+| `parts` | 一个或多个结果 Part |
+| `metadata` | 校验状态、内容 Hash、Schema Version、来源等 |
+| `extensions` | 与 Artifact 相关的 Extension URI |
+
+##### 5. Message 与 Artifact 的边界
+
+| Message | Artifact |
+|---|---|
+| 用于发起任务、补充输入、澄清和状态说明 | 用于交付任务结果 |
+| 可能是瞬时的，不保证全部进入 History | 应作为 Task 可查询结果保存 |
+| 不应承载唯一的关键业务结果 | 应承载文档、结构化数据、文件或正式输出 |
+| 适合“我正在处理”“请补充日期” | 适合“最终报告”“代码补丁”“审批单” |
+
+**关键原则：关键结果必须进入 Artifact 或持久化 Task 状态。** Client 不能把 Streaming 中收到的一条临时 Message 当作可靠的最终交付。
+
+---
+
+#### 7.2.7 Task 状态机
+
+A2A 1.0 定义了以下状态：
+
+| Wire Value | 分类 | 含义 |
+|---|---|---|
+| `TASK_STATE_UNSPECIFIED` | 未定义 | 未知或不可判定，不应作为正常业务状态 |
+| `TASK_STATE_SUBMITTED` | 活跃 | 已提交并被接收 |
+| `TASK_STATE_WORKING` | 活跃 | 正在执行 |
+| `TASK_STATE_INPUT_REQUIRED` | 中断 | 需要 Client 或用户补充输入 |
+| `TASK_STATE_AUTH_REQUIRED` | 中断 | 任务继续执行需要额外认证/授权 |
+| `TASK_STATE_COMPLETED` | 终止 | 成功完成 |
+| `TASK_STATE_FAILED` | 终止 | 执行失败 |
+| `TASK_STATE_CANCELED` | 终止 | 已取消 |
+| `TASK_STATE_REJECTED` | 终止 | Agent 决定不接收或不继续任务 |
+
+以下是典型状态转换，而不是替代规范的强制转换表：
+
+```mermaid
+stateDiagram-v2
+    [*] --> SUBMITTED
+    SUBMITTED --> WORKING
+    SUBMITTED --> REJECTED
+    SUBMITTED --> CANCELED
+
+    WORKING --> INPUT_REQUIRED
+    INPUT_REQUIRED --> WORKING : 补充 Message
+
+    WORKING --> AUTH_REQUIRED
+    AUTH_REQUIRED --> WORKING : 完成授权后继续
+
+    WORKING --> COMPLETED
+    WORKING --> FAILED
+    WORKING --> CANCELED
+    WORKING --> REJECTED
+
+    COMPLETED --> [*]
+    FAILED --> [*]
+    CANCELED --> [*]
+    REJECTED --> [*]
+```
+
+状态机的工程约束：
+
+1. **终止状态不可继续发送 Message**：`COMPLETED`、`FAILED`、`CANCELED`、`REJECTED` 均不能重新启动；
+2. 对已完成结果做修订时，应创建新 Task，并使用相同 `contextId` 和 `referenceTaskIds` 指向旧 Task；
+3. `INPUT_REQUIRED` 和 `AUTH_REQUIRED` 是可恢复的中断状态；
+4. Cancel 是“请求取消”，Server 可能因任务已结束或阶段不可取消而返回 `TaskNotCancelableError`；
+5. Task 状态与内部 Workflow 状态应分离，例如内部可有 `QUEUED`、`RUNNING_TOOL`、`WAITING_REVIEW`，对外再映射为标准 A2A 状态；
+6. 每次状态变更应持久化 Timestamp、操作者、原因、Trace ID 和前后状态。
+
+---
+
+#### 7.2.8 `contextId`、`taskId` 与多轮交互
+
+三类 ID 的职责不同：
+
+| ID | 谁生成 | 作用域 | 用途 |
+|---|---|---|---|
+| `messageId` | Message 创建方 | 单条消息 | 去重、审计、问题定位 |
+| `taskId` | A2A Server | 单个工作单元 | 查询、订阅、取消、继续未终止任务 |
+| `contextId` | 通常由 Server | 一组相关 Task/Message | 对话连续性和跨 Task 上下文 |
+
+##### 1. 创建新上下文
+
+Client 首次请求可不传 `contextId`。Server 若创建上下文，必须在返回的 Task 或 Message 中返回 `contextId`。Client 应把 Server 生成的 `contextId` 当作不透明字符串。
+
+##### 2. 继续 `INPUT_REQUIRED` 任务
+
+```json
+{
+  "message": {
+    "messageId": "msg-002",
+    "contextId": "ctx-1001",
+    "taskId": "task-2001",
+    "role": "ROLE_USER",
+    "parts": [
+      {
+        "data": {
+          "departureDate": "2026-10-01",
+          "returnDate": "2026-10-05"
+        },
+        "mediaType": "application/json"
+      }
+    ]
+  }
+}
+```
+
+如果同时携带 `taskId` 和 `contextId`，二者必须匹配；不匹配时 Server 必须拒绝，不能静默改写。
+
+##### 3. 在同一 Context 中创建新 Task
+
+已完成 Task 不可重新启动。对旧结果进行修订时，应创建新 Task：
+
+```json
+{
+  "message": {
+    "messageId": "msg-003",
+    "contextId": "ctx-1001",
+    "role": "ROLE_USER",
+    "referenceTaskIds": ["task-2001"],
+    "parts": [
+      {"text": "基于上一份报告增加成本测算章节"}
+    ]
+  }
+}
+```
+
+这里不携带已终止的 `taskId`，Server 会在同一 `contextId` 下创建新的 Task。
+
+##### 4. 上下文治理
+
+A2A 只定义 ID 语义，不定义上下文保留时长。生产实现应明确：
+
+- Context TTL；
+- Task 与 Artifact 保留策略；
+- 多租户隔离；
+- 跨 Context 引用规则；
+- Context 压缩或摘要方式；
+- 数据删除和合规要求；
+- Server 是否接受 Client 自建 `contextId`。
+
+---
+
+#### 7.2.9 `SendMessage` 请求与返回语义
+
+HTTP+JSON 示例：
+
+```http
+POST /message:send HTTP/1.1
+Host: agents.example.com
+Authorization: Bearer <access-token>
+A2A-Version: 1.0
+Content-Type: application/a2a+json
+Accept: application/a2a+json
+```
+
+```json
+{
+  "tenant": "research-prod",
+  "message": {
+    "messageId": "4a198286-7fa1-493f-991b-d782cc20911d",
+    "role": "ROLE_USER",
+    "parts": [
+      {
+        "text": "分析 2024—2026 年企业 Agent Gateway 的发展趋势",
+        "mediaType": "text/plain"
+      }
+    ],
+    "metadata": {
+      "correlationId": "biz-req-9001"
+    }
+  },
+  "configuration": {
+    "acceptedOutputModes": ["text/markdown", "application/json"],
+    "historyLength": 10,
+    "returnImmediately": true
+  }
+}
+```
+
+`tenant` 只应在选中的 `AgentInterface` 声明该字段时发送，并且必须原样回传。
+
+##### 1. 返回 Task
+
+复杂或长运行任务通常返回 Task：
+
+```json
+{
+  "task": {
+    "id": "task-2001",
+    "contextId": "ctx-1001",
+    "status": {
+      "state": "TASK_STATE_SUBMITTED",
+      "timestamp": "2026-09-02T09:30:00.000Z"
+    },
+    "metadata": {
+      "correlationId": "biz-req-9001"
+    }
+  }
+}
+```
+
+##### 2. 直接返回 Message
+
+简单交互可以不创建 Task，直接返回 Message：
+
+```json
+{
+  "message": {
+    "messageId": "msg-server-001",
+    "contextId": "ctx-1001",
+    "role": "ROLE_AGENT",
+    "parts": [
+      {"text": "该 Agent 支持生成 Markdown 和 JSON 两种结果。"}
+    ]
+  }
+}
+```
+
+直接 Message 适合轻量答复；需要进度跟踪、取消、恢复、Artifact 或多轮中断的工作应创建 Task。
+
+##### 3. `SendMessageConfiguration`
+
+| 字段 | 含义 |
+|---|---|
+| `acceptedOutputModes` | Client 可接收的输出 Media Type |
+| `taskPushNotificationConfig` | 在首次请求中一并注册 Push 配置 |
+| `historyLength` | 返回 Task 时最多携带多少条最近历史消息 |
+| `returnImmediately` | `true`：创建 Task 后尽快返回；`false`：默认等待到终止或中断状态 |
+
+如果需要持续增量结果，优先使用 `SendStreamingMessage`，而不是通过一个长时间阻塞的 `SendMessage` 模拟流式输出。
+
+---
+
+#### 7.2.10 Polling、Streaming 与任务订阅
+
+A2A 为 Task 更新提供三种互补机制：
+
+| 机制 | 调用方式 | 优点 | 缺点 | 典型场景 |
+|---|---|---|---|---|
+| **Polling** | 周期调用 `GetTask` | 最简单、所有绑定可用 | 延迟高、空轮询多 | 后台任务、受限网络 |
+| **Streaming** | `SendStreamingMessage` 或 `SubscribeToTask` | 低延迟、可传 Artifact Chunk | 需维护长连接 | 交互 UI、实时进度 |
+| **Push** | 注册 Webhook | Client 可离线、适合超长任务 | Webhook 安全和可靠性复杂 | Server-to-Server、小时级任务 |
+
+##### 1. Streaming 事件类型
+
+流式响应的每个事件是 `StreamResponse`，且只包含以下一种成员：
+
+- `task`；
+- `message`；
+- `statusUpdate`；
+- `artifactUpdate`。
+
+对于 Task 流：
+
+1. 首个事件应为当前 Task；
+2. 后续为零个或多个 `TaskStatusUpdateEvent` / `TaskArtifactUpdateEvent`；
+3. 事件必须按生成顺序传递；
+4. 多个订阅者订阅同一 Task 时，应收到相同顺序的事件；
+5. 单个 Stream 断开不能影响 Task 生命周期和其他 Stream；
+6. Task 到达终止状态后关闭流；交互中断状态应由 Client 处理并在补充输入后继续。
+
+##### 2. HTTP+JSON SSE 示例
+
+```http
+POST /message:stream HTTP/1.1
+Host: agents.example.com
+Authorization: Bearer <access-token>
+A2A-Version: 1.0
+Content-Type: application/a2a+json
+Accept: text/event-stream
+```
+
+```text
+data: {"task":{"id":"task-2001","contextId":"ctx-1001","status":{"state":"TASK_STATE_WORKING"}}}
+
+data: {"statusUpdate":{"taskId":"task-2001","contextId":"ctx-1001","status":{"state":"TASK_STATE_WORKING","message":{"messageId":"msg-progress-1","contextId":"ctx-1001","taskId":"task-2001","role":"ROLE_AGENT","parts":[{"text":"已完成资料检索，正在生成报告"}]}}}}
+
+data: {"artifactUpdate":{"taskId":"task-2001","contextId":"ctx-1001","artifact":{"artifactId":"report-001","name":"Agent Gateway 趋势报告","parts":[{"text":"# Agent Gateway 趋势报告
+
+"}]},"append":false,"lastChunk":false}}
+
+data: {"artifactUpdate":{"taskId":"task-2001","contextId":"ctx-1001","artifact":{"artifactId":"report-001","parts":[{"text":"## 核心结论
+..."}]},"append":true,"lastChunk":true}}
+
+data: {"statusUpdate":{"taskId":"task-2001","contextId":"ctx-1001","status":{"state":"TASK_STATE_COMPLETED","timestamp":"2026-09-02T09:35:12.123Z"}}}
+```
+
+##### 3. Artifact Chunk 重组规则
+
+Client 应按 `(taskId, artifactId)` 聚合 Chunk：
+
+```text
+append = false  → 新建或替换当前 Artifact 内容
+append = true   → 追加到同 artifactId 的已有内容
+lastChunk = true → 该 Artifact 增量传输完成
+```
+
+还应增加以下保护：
+
+- 每个 Artifact 的最大字节数；
+- Chunk 序列号或自定义事件版本；
+- 重复 Chunk 去重；
+- 内容 Hash 校验；
+- 超时未收到 `lastChunk` 时的恢复策略；
+- 不允许不同 Media Type 被无约束地拼接。
+
+A2A 核心字段没有提供完整的可重放事件游标。需要严格断点续传时，可以通过 Extension 或业务 Metadata 增加事件序号，并以 `GetTask` 返回的持久化状态作为最终事实源。
+
+##### 4. 断线重连
+
+- 连接中断而 Task 仍在运行时，调用 `SubscribeToTask`；
+- `SubscribeToTask` 的首个事件为当前 Task，避免 `GetTask` 与订阅之间的状态窗口；
+- 已终止 Task 不能再订阅，直接使用 `GetTask` 获取最终状态；
+- 瞬时进度 Message 可能在断线期间丢失，关键内容必须写入 Artifact 或可查询状态；
+- Client 应使用指数退避、抖动和最大重连次数，避免形成重连风暴。
+
+---
+
+#### 7.2.11 Push Notification 与断线异步任务
+
+Push 适合分钟、小时甚至天级任务，以及无法长期维护连接的 Serverless、移动端或跨组织 Client。
+
+##### 1. Push 配置示例
+
+```http
+POST /tasks/task-2001/pushNotificationConfigs HTTP/1.1
+Host: agents.example.com
+Authorization: Bearer <access-token>
+A2A-Version: 1.0
+Content-Type: application/a2a+json
+```
+
+```json
+{
+  "tenant": "research-prod",
+  "taskId": "task-2001",
+  "url": "https://client.example.com/hooks/a2a/task-update",
+  "token": "opaque-task-validation-token",
+  "authentication": {
+    "scheme": "Bearer",
+    "credentials": "<short-lived-webhook-credential>"
+  }
+}
+```
+
+Server 会返回带 `id` 的 `TaskPushNotificationConfig`。该配置持续到 Task 完成或被显式删除。
+
+##### 2. Push Payload
+
+Webhook Body 与 Streaming 使用相同的 `StreamResponse`：
+
+```json
+{
+  "statusUpdate": {
+    "taskId": "task-2001",
+    "contextId": "ctx-1001",
+    "status": {
+      "state": "TASK_STATE_COMPLETED",
+      "timestamp": "2026-09-02T10:00:00.000Z"
+    }
+  }
+}
+```
+
+收到通知后，Client 通常再次调用 `GetTask` 获取完整、权威的 Task 与 Artifact。
+
+##### 3. 可靠性语义
+
+- Server 至少尝试投递一次；
+- 重复通知可能发生；
+- Client 必须幂等处理；
+- Server 可指数退避重试；
+- Webhook 返回 HTTP 2xx 表示成功接收；
+- 删除 Push 配置后不得继续投递；
+- Webhook 通知不应被当作完整数据仓库，Task Store 才是事实源。
+
+##### 4. Push 安全
+
+Push 是 A2A 中风险最高的部分之一：
+
+| 风险 | 防护 |
+|---|---|
+| Client 提供内网地址造成 SSRF | 禁止 localhost、私网、链路本地和云元数据地址；域名白名单；DNS Rebinding 防护 |
+| Server 被利用为 DDoS 放大器 | Endpoint 所有权验证、速率限制、单任务配置上限 |
+| 伪造通知 | JWT/JWS、HMAC、mTLS、短期 Bearer Token |
+| 重放攻击 | Timestamp、Nonce、`jti`、事件 ID 和去重表 |
+| 凭据泄漏 | Secret Manager、日志脱敏、短期 Credential、轮换 |
+| 越权获取 Task | 校验 Task 所有者、Tenant、Audience、Scope |
+| 重复副作用 | Inbox 去重、幂等业务键、事务处理 |
+
+不应允许任意 Client 把 Webhook 指向任意 URL，也不应把长期高权限 Credential 原样保存在 Task 表或普通日志中。
+
+---
+
+#### 7.2.12 认证、授权与 `AUTH_REQUIRED`
+
+A2A 不发明新的身份系统，而是复用标准 Web 安全机制。认证发生在协议传输层或网关层，**凭据不应作为普通 Message/Part 内容发送**。
+
+##### 1. 支持的安全方案
+
+| Scheme | 适用场景 | 建议 |
+|---|---|---|
+| API Key | 简单服务集成 | 仅用于低风险场景；限制来源、权限和寿命 |
+| HTTP Basic/Bearer | 传统 HTTP 或 JWT | 生产优先 Bearer + 短期 Token |
+| OAuth 2.0 Authorization Code + PKCE | 代表终端用户调用 | 公共 Client 必须使用 PKCE |
+| OAuth 2.0 Client Credentials | 服务到服务 | 使用最小 Scope、独立 Client Identity |
+| OAuth 2.0 Device Code | CLI、无浏览器设备 | 适合 Coding Agent CLI 等交互 |
+| OpenID Connect | 统一用户/服务身份 | 结合 Audience、Issuer 和 Claim 校验 |
+| mTLS | 高信任 B2B、内部服务网格 | 结合证书轮换和 SPIFFE/SPIRE |
+
+凭据应通过 OAuth/OIDC、IAM、PKI 或其他带外机制取得。Agent Card 只描述 Scheme、Endpoint 和 Scope，不能嵌入静态 Secret。
+
+##### 2. 认证与授权的区别
+
+```text
+Authentication：调用者是谁？
+Authorization：该调用者能否调用这个 Agent / Skill / Task / Artifact？
+```
+
+Server 应在每个操作上重新做授权，尤其是：
+
+- `GetTask`；
+- `ListTasks`；
+- `CancelTask`；
+- `SubscribeToTask`；
+- Push 配置的增删查；
+- `GetExtendedAgentCard`；
+- 高权限 Skill。
+
+不得因为 Client 知道 `taskId` 就允许访问 Task。查询数据库前就应加入 Owner/Tenant/Scope 条件，避免通过 403/404 差异泄漏资源存在性。
+
+##### 3. `401/403` 与 `TASK_STATE_AUTH_REQUIRED` 的区别
+
+| 情况 | 表示方式 |
+|---|---|
+| 当前 A2A 请求没有有效身份 | HTTP `401` / gRPC `UNAUTHENTICATED` / 对应 JSON-RPC Error |
+| 当前身份存在，但无权执行操作 | HTTP `403` / gRPC `PERMISSION_DENIED` |
+| A2A 调用本身已通过，但 Task 执行到某一步需要额外用户授权 | `TASK_STATE_AUTH_REQUIRED` |
+
+例如，Client 已通过企业 OAuth 调用旅行 Agent，但 Agent 在预订支付环节需要用户授权银行卡。此时不是整个 A2A 请求认证失败，而是 Task 进入 `AUTH_REQUIRED` 中断状态。
+
+---
+
+#### 7.2.13 Agent Card 签名与信任链
+
+Agent Card 可以携带一个或多个 JWS 签名，用于确认 Card 未被篡改并验证发布方。
+
+规范化签名流程：
+
+```text
+1. 去除 Agent Card 的 signatures 字段
+2. 按 Proto 字段存在性规则处理默认值
+3. 使用 RFC 8785 JSON Canonicalization Scheme 规范化
+4. 构造 JWS Protected Header：alg、typ、kid，可选 jku
+5. 对 canonical payload 计算签名
+6. 把 protected、signature、可选 header 写入 signatures[]
+```
+
+验证端应：
+
+- 至少验证一个可信签名；
+- 校验 `alg`，拒绝弱算法和算法降级；
+- 通过受信任 Key Store 或受控 `jku` 获取公钥；
+- 对 `jku` 做 HTTPS、域名白名单和 SSRF 防护；
+- 校验 `kid`、证书/密钥有效期和撤销状态；
+- 支持多签名完成密钥轮换；
+- 先验证签名，再信任 Endpoint、Skill 和 Security Scheme；
+- 将 Card Hash、签名主体、验证时间写入审计日志。
+
+签名只证明 Card 的来源和完整性，不证明 Agent 输出一定正确、安全或合规。仍需供应商准入、运行时评估和行为监控。
+
+---
+
+#### 7.2.14 Extension 扩展机制
+
+A2A Extension 用于在不修改核心协议的前提下增加领域能力。每个 Extension 使用 URI 唯一标识，并应把版本放入 URI，例如：
+
+```text
+https://example.com/a2a/extensions/citations/v1
+```
+
+##### 1. 声明与激活
+
+Server 在 Agent Card 中声明：
+
+```json
+{
+  "capabilities": {
+    "extensions": [
+      {
+        "uri": "https://example.com/a2a/extensions/citations/v1",
+        "description": "结构化引用",
+        "required": false,
+        "params": {
+          "maxSources": 100
+        }
+      }
+    ]
+  }
+}
+```
+
+Client 在请求中激活：
+
+```http
+A2A-Extensions: https://example.com/a2a/extensions/citations/v1
+```
+
+并在 Message 或 Artifact 中显式标记：
+
+```json
+{
+  "extensions": [
+    "https://example.com/a2a/extensions/citations/v1"
+  ],
+  "metadata": {
+    "https://example.com/a2a/extensions/citations/v1": {
+      "citationStyle": "inline",
+      "requirePrimarySources": true
+    }
+  }
+}
+```
+
+##### 2. Extension 类型
+
+- **Data-only Extension**：补充 Agent Card 或 Payload 的结构化数据；
+- **Profile Extension**：收紧核心协议的使用方式或增加子状态；
+- **Method Extension**：增加新的 RPC Method；
+- **State-machine Extension**：在标准 Task State 之上定义领域子状态；
+- **Custom Binding**：把 A2A 操作映射到 WebSocket 等新传输协议。
+
+##### 3. 兼容性规则
+
+- Breaking Change 必须使用新的 Extension URI；
+- Client 不支持可选 Extension 时，Server 可忽略并继续；
+- Agent Card 标记 `required: true` 而 Client 未激活时，返回 `ExtensionSupportRequiredError`；
+- 不得通过 Extension 修改核心字段结构或直接增加核心 Enum 值；应在 Metadata 中表达子状态；
+- 不得自动回退到旧 Extension 版本；
+- Metadata Key 应以 Extension URI 命名，避免厂商字段冲突；
+- 企业环境应建立 Extension Registry、Owner、Schema、版本和弃用策略。
+
+---
+
+#### 7.2.15 多租户与多 Agent 路由
+
+A2A 1.0 支持多种路由方式：
+
+| 方式 | 示例 | 特点 |
+|---|---|---|
+| URL 路径 | `/agents/research/a2a`、`/agents/coding/a2a` | 最直观，每个 Agent 有独立 Card 和 Endpoint |
+| 身份/Token 路由 | 同一 URL，根据 Client、Audience、Claim 路由 | 适合 Gateway 和 SaaS |
+| `tenant` 字段 | `AgentInterface.tenant = research-prod` | 单 Endpoint 承载多个 Agent/Tenant |
+
+如果选中的 `AgentInterface` 设置了 `tenant`：
+
+- Client 必须在每个请求中原样发送；
+- 如果未设置，Client 必须省略；
+- `tenant` 是不透明路由值，A2A 不规定其格式；
+- Server 可以把它解释为 Agent ID、Workspace、Organization 或其他路由键。
+
+但必须强调：
+
+```text
+tenant 是路由提示，不是授权证明。
+```
+
+Server 仍必须根据已认证主体做 Tenant、Task、Artifact 和 Skill 级授权，不能只相信请求 Body 中的 `tenant`。
+
+推荐模式是：
+
+```text
+每个可发现 Agent 一张 Agent Card
++ 每个请求一个认证主体
++ tenant 只做路由
++ Gateway 和数据层共同执行强隔离
+```
+
+---
+
+#### 7.2.16 错误模型、重试与幂等
+
+##### 1. A2A 标准错误映射
+
+| A2A Error | JSON-RPC Code | gRPC Status | HTTP Status |
+|---|---:|---|---:|
+| `TaskNotFoundError` | `-32001` | `NOT_FOUND` | 404 |
+| `TaskNotCancelableError` | `-32002` | `FAILED_PRECONDITION` | 400 |
+| `PushNotificationNotSupportedError` | `-32003` | `FAILED_PRECONDITION` | 400 |
+| `UnsupportedOperationError` | `-32004` | `FAILED_PRECONDITION` | 400 |
+| `ContentTypeNotSupportedError` | `-32005` | `INVALID_ARGUMENT` | 400 |
+| `InvalidAgentResponseError` | `-32006` | `INTERNAL` | 500 |
+| `ExtendedAgentCardNotConfiguredError` | `-32007` | `FAILED_PRECONDITION` | 400 |
+| `ExtensionSupportRequiredError` | `-32008` | `FAILED_PRECONDITION` | 400 |
+| `VersionNotSupportedError` | `-32009` | `FAILED_PRECONDITION` | 400 |
+
+HTTP+JSON 错误使用 `google.rpc.Status` 的 JSON 表示，并通过 `google.rpc.ErrorInfo` 的 `reason` 区分具体 A2A 错误：
+
+```json
+{
+  "error": {
+    "code": 404,
+    "status": "NOT_FOUND",
+    "message": "The task does not exist or is not accessible",
+    "details": [
+      {
+        "@type": "type.googleapis.com/google.rpc.ErrorInfo",
+        "reason": "TASK_NOT_FOUND",
+        "domain": "a2a-protocol.org"
+      }
+    ]
+  }
+}
+```
+
+##### 2. 幂等语义
+
+| 操作 | 协议语义 | 实现建议 |
+|---|---|---|
+| `GetTask`、`ListTasks`、`GetExtendedAgentCard` | 天然幂等 | 可安全重试，但仍需限流 |
+| `CancelTask` | 幂等 | 重复取消结果相同；Task 清理后可能返回 Not Found |
+| 删除 Push 配置 | 必须幂等 | 重复删除不产生副作用 |
+| `SendMessage` | **可能幂等** | 使用 `messageId` 去重；相同 ID 不得创建多个业务任务 |
+| Push Webhook | 至少一次 | Receiver 必须按事件 ID/Task 状态幂等处理 |
+
+##### 3. 重试矩阵
+
+| 情况 | 是否重试 | 做法 |
+|---|---|---|
+| 网络超时，未拿到 `SendMessage` 响应 | 谨慎重试 | 使用完全相同 `messageId` 和业务幂等键 |
+| HTTP 429 / 临时 503 | 可以 | 遵循 Retry-After，指数退避加抖动 |
+| 401 | 获取新 Credential 后最多有限重试 | 不要循环刷新失败 Token |
+| 403 | 不自动重试 | 需要权限变更或人工处理 |
+| 400 参数/Media Type 错误 | 不原样重试 | 修复请求后使用新 `messageId` 或明确业务语义 |
+| `VersionNotSupportedError` | 刷新 Agent Card | 显式协商其他版本，不静默降级 |
+| SSE 断线 | 可以重连 | `SubscribeToTask`，并以 `GetTask` 校准状态 |
+| Push 重复 | 不触发重复副作用 | Inbox 去重、版本比较、事务提交 |
+
+生产实现应把幂等键至少绑定到：
+
+```text
+Authenticated Principal
++ Agent / Tenant
++ messageId
+```
+
+仅按全局 `messageId` 去重可能造成跨租户冲突，仅按 Body Hash 去重则可能误合并语义相同但应独立执行的请求。
+
+---
+
+#### 7.2.17 A2A 0.3 向 1.0 的迁移重点
+
+A2A 1.0 对 0.3 存在多项破坏性变化：
+
+| 0.3 | 1.0 | 迁移影响 |
+|---|---|---|
+| `message/send` | `SendMessage` | JSON-RPC Method 改为 PascalCase |
+| `message/stream` | `SendStreamingMessage` | 同时调整 Stream Event 结构 |
+| `tasks/get` | `GetTask` | 查询参数和授权语义更严格 |
+| 无 `ListTasks` | 新增 `ListTasks` | 支持过滤、游标分页和调用者可见范围 |
+| `tasks/cancel` | `CancelTask` | 取消语义和错误更明确 |
+| `tasks/resubscribe` | `SubscribeToTask` | 规范订阅生命周期 |
+| Event 中使用 `kind` | 根据 `task`/`message`/`statusUpdate`/`artifactUpdate` 成员判别 | Decoder 必须重写 |
+| `TaskStatusUpdateEvent.final` | 删除 | 使用状态和流关闭判断完成 |
+| `role: "user"` | `role: "ROLE_USER"` | Enum 改为 ProtoJSON 名称 |
+| `state: "completed"` | `TASK_STATE_COMPLETED` | Enum 改为大写前缀形式 |
+| 分离的 Text/File/Data Part | 统一 `Part`，通过 `text/raw/url/data` OneOf 判别 | 数据模型变化较大 |
+| `mimeType` | `mediaType` | 字段改名 |
+| AgentCard 顶层 `url`、`protocolVersion` | `supportedInterfaces[]` | 多绑定和按接口版本协商 |
+| `supportsAuthenticatedExtendedCard` | `capabilities.extendedAgentCard` | 字段移动 |
+| HTTP 路径带 `/v1` 前缀 | 标准路径不强制 `/v1` | 版本由接口与 Header 管理 |
+| 缺少原生 Tenant | 请求与 AgentInterface 增加 `tenant` | Gateway 和 SDK 需升级 |
+
+建议迁移步骤：
+
+1. 在 Client/Server 中引入 0.3 与 1.0 双 Decoder；
+2. 所有新调用显式发送 `A2A-Version: 1.0`；
+3. Agent Card 同时发布可用接口和协议版本；
+4. 重写 Part、Enum 和 Stream Event 解析；
+5. 补充 `messageId` 去重和 `ListTasks` 授权；
+6. 完成跨 JSON-RPC、gRPC、HTTP+JSON 的一致性测试；
+7. 观察 0.3 流量占比，达到退出阈值后再移除兼容层。
+
+---
+
+#### 7.2.18 A2A、MCP、AG-UI 与内部 Workflow 的边界
+
+| 维度 | A2A | MCP | AG-UI | Workflow / Graph |
+|---|---|---|---|---|
+| 核心关系 | Agent ↔ Agent | Agent ↔ Tool/Data | Agent ↔ Frontend/User | Agent 内部节点 ↔ 节点 |
+| 主要对象 | Agent Card、Task、Message、Artifact | Tool、Resource、Prompt | Event、State、UI Message | State、Node、Edge、Checkpoint |
+| 是否处理长任务 | 是 | 通常由 Host 管理 | 负责展示，不是任务事实源 | 是 |
+| 是否负责能力发现 | 发现远端 Agent Skill | 发现 Tool/Resource | 发现前端可交互能力 | 框架内部注册 |
+| 是否暴露内部工具 | 否 | 是 | 否 | 视实现而定 |
+| 是否跨组织 | 重点场景 | 可以 | 通常面向当前应用 | 通常为内部 |
+| 是否定义 UI | 否 | 否 | 是 | 否 |
+
+典型组合：
+
+```mermaid
+flowchart LR
+    UI[Web / Desktop UI]
+    Orchestrator[企业 Orchestrator Agent]
+    Remote[外部专业 Agent]
+    Tool[数据库 / 搜索 / SaaS / Sandbox]
+
+    UI <-->|AG-UI| Orchestrator
+    Orchestrator <-->|A2A| Remote
+    Orchestrator <-->|MCP| Tool
+    Remote <-->|MCP| Tool
+```
+
+A2A Server 对上游表现为“远端 Agent”，但其内部仍可包含多个子 Agent、MCP Server、Workflow 和 Memory。A2A 不要求双方使用相同框架。
+
+---
+
+#### 7.2.19 生产级 A2A 平台架构
+
+```mermaid
+flowchart TB
+    Client[Client Agent / Business System]
+    Registry[Agent Registry & Card Catalog]
+
+    subgraph Control[控制面]
+        Trust[Trust & Signature Service]
+        Policy[Policy / IAM / Quota]
+        Version[Protocol & Extension Registry]
+        Admin[Agent Onboarding / Lifecycle]
+    end
+
+    subgraph DataPlane[数据面]
+        Gateway[A2A Gateway]
+        Adapter[JSON-RPC / gRPC / REST Adapter]
+        Dispatcher[Task Dispatcher]
+        Runtime[Agent Runtime]
+        Queue[(Task Queue)]
+        TaskDB[(Task / Context DB)]
+        Events[(Event Log)]
+        Artifacts[(Artifact Store)]
+        Push[Push Delivery Service]
+    end
+
+    subgraph Ops[运营治理]
+        OTel[OpenTelemetry]
+        Eval[Evaluation]
+        Audit[Audit Log]
+        Cost[Cost / Billing]
+    end
+
+    Client --> Registry
+    Registry --> Trust
+    Client --> Gateway
+    Gateway --> Policy
+    Gateway --> Version
+    Gateway --> Adapter
+    Adapter --> Dispatcher
+    Dispatcher --> Queue
+    Queue --> Runtime
+    Runtime --> TaskDB
+    Runtime --> Events
+    Runtime --> Artifacts
+    Events --> Push
+    Push --> Client
+
+    Gateway --> OTel
+    Runtime --> OTel
+    Push --> OTel
+    OTel --> Eval
+    OTel --> Audit
+    OTel --> Cost
+    Admin --> Registry
+```
+
+关键组件职责：
+
+| 组件 | 核心职责 |
+|---|---|
+| Agent Registry | Agent Card 存储、搜索、版本、状态、Owner、准入和下线 |
+| Trust Service | Card 签名验证、证书和 Key 管理、供应商信任链 |
+| A2A Gateway | TLS、认证、授权、Tenant 路由、限流、WAF、协议版本和审计 |
+| Binding Adapter | 三种绑定与内部统一 Command/Event 模型转换 |
+| Task Dispatcher | 创建 Task、幂等、排队、Worker 选择和执行预算 |
+| Task Store | 状态机、Context、History、Owner、TTL 和乐观锁 |
+| Event Log | 有序事件、订阅、断线恢复、Outbox |
+| Artifact Store | 大对象、Hash、病毒扫描、生命周期和访问控制 |
+| Push Service | Webhook 验证、投递、重试、Dead Letter Queue |
+| Evaluation | 路由正确性、结果质量、协议合规和跨 Agent 失败分析 |
+
+不要把所有状态只保存在 Agent 进程内存中。否则进程重启后，`GetTask`、`SubscribeToTask`、取消、Push 和多轮继续都无法可靠实现。
+
+---
+
+#### 7.2.20 可观测性与审计
+
+A2A Trace 应覆盖“发现—鉴权—委派—执行—结果—通知”的完整链路。
+
+建议 Span 层级：
+
+```text
+A2A Client Run
+├── AgentCard.Resolve
+├── AgentCard.VerifySignature
+├── Credential.Acquire
+├── A2A.SendMessage
+│   ├── Gateway.Authenticate
+│   ├── Gateway.Authorize
+│   ├── Task.Create
+│   ├── Agent.Execute
+│   │   ├── LLM.Call
+│   │   ├── MCP.ToolCall
+│   │   └── Artifact.Write
+│   └── Task.StatusTransition
+├── A2A.SubscribeToTask
+└── PushNotification.Deliver
+```
+
+建议指标：
+
+##### 发现与兼容性
+
+- Agent Card 获取成功率、延迟、缓存命中率；
+- Card 签名验证失败率；
+- Agent Interface 选择分布；
+- `A2A-Version` 使用分布；
+- `VersionNotSupportedError`；
+- Extension 激活率和不兼容率。
+
+##### 调用与任务
+
+- `SendMessage` / `SendStreamingMessage` QPS；
+- Direct Message 与 Task 返回比例；
+- Task 创建成功率；
+- 各 Task State 数量与转换率；
+- Task 完成率、失败率、拒绝率、取消率；
+- `INPUT_REQUIRED` / `AUTH_REQUIRED` 占比；
+- Task 排队时间、执行时间、端到端完成时间；
+- 每个 Agent、Skill、Tenant 的并发 Task 数。
+
+##### Streaming 与 Artifact
+
+- Time to First Task；
+- Time to First Status Event；
+- Time to First Artifact；
+- SSE/gRPC Stream 活跃数、断线率、重连率；
+- Artifact 数量、字节数、Chunk 数；
+- Artifact 重组失败率和 Hash 校验失败率；
+- 瞬时 Message 丢失或回放缺口。
+
+##### Push
+
+- Push 投递成功率；
+- 首次投递延迟；
+- 平均重试次数；
+- Dead Letter 数；
+- Receiver 401/403/429/5xx 分布；
+- 重复通知率；
+- SSRF 拦截数和非法 Endpoint 数。
+
+##### 安全与治理
+
+- 认证失败、授权拒绝和 Scope 缺失；
+- 跨 Tenant 访问尝试；
+- Task 枚举攻击迹象；
+- 超大 Part、恶意文件和不安全 URL 拦截；
+- 单 Client/Agent 成本、Token 和工具调用；
+- 高风险 Skill 审批与执行审计。
+
+Trace 关联字段至少包括：
+
+```text
+trace_id
+span_id
+client_agent_id
+server_agent_id
+agent_card_version
+a2a_protocol_version
+protocol_binding
+tenant
+message_id
+task_id
+context_id
+artifact_id
+skill_id
+principal_id
+```
+
+敏感 Token、API Key、原始 Secret 和隐私数据不得进入 Trace 属性。
+
+---
+
+#### 7.2.21 一致性测试与评估
+
+A2A Server 通过“能接收请求”并不代表具备互操作性。至少要验证：
+
+##### 1. 协议一致性
+
+- Agent Card 必填字段、Media Type 和 Interface 合法性；
+- `A2A-Version` 协商；
+- JSON camelCase；
+- ProtoJSON Enum 字符串；
+- Part OneOf 约束；
+- Task 状态合法性；
+- 三种绑定的结果和错误语义等价；
+- SSE Event 顺序；
+- Push Payload 与 StreamResponse 一致；
+- HTTP Error 的 `google.rpc.Status` / `ErrorInfo`；
+- Agent Card JWS 规范化与验签。
+
+##### 2. 可靠性测试
+
+- 重复 `messageId`；
+- Client 在响应前超时并重试；
+- Server 重启后的 Task 恢复；
+- SSE 断线重连；
+- 多订阅者同时订阅；
+- Artifact Chunk 重复、乱序和丢失；
+- Cancel 与 Complete 并发竞争；
+- Push 重试与 Dead Letter；
+- Task/Context TTL 到期。
+
+##### 3. 安全测试
+
+- 未认证、过期 Token、错误 Audience；
+- 越权读取其他用户 Task；
+- Tenant 篡改；
+- Agent Card `jku` SSRF；
+- Part URL SSRF；
+- Webhook URL SSRF；
+- 超大 Base64 `raw`；
+- 恶意文件；
+- Prompt Injection 跨 Agent 传播；
+- Extension Metadata 注入；
+- Task ID 枚举和资源存在性泄漏。
+
+##### 4. Agent 质量评估
+
+协议合规不能替代 Agent 质量评估。还应评估：
+
+- Skill 路由是否正确；
+- Agent Card 描述与实际能力是否一致；
+- 任务成功率；
+- Artifact 完整性和 Schema 正确率；
+- 引用、测试或业务验证通过率；
+- `INPUT_REQUIRED` 是否必要；
+- 是否过度创建 Task；
+- 跨 Agent 委派的 Token、成本和延迟；
+- 失败时是否给出可恢复信息。
+
+---
+
+#### 7.2.22 Client 与 Server 实现清单
+
+##### A2A Client
+
+- [ ] 支持 Well-Known、Registry 或私有 Card 解析；
+- [ ] 校验 Card Schema、签名、Endpoint、TLS 和缓存；
+- [ ] 区分 Agent 版本、协议版本和 SDK 版本；
+- [ ] 显式发送 `A2A-Version: 1.0`；
+- [ ] 根据 Skill、Media Type、Binding、Security 选择接口；
+- [ ] 正确回传 Interface 中的 `tenant`；
+- [ ] 每个 Message 生成稳定唯一的 `messageId`；
+- [ ] 同时支持 Direct Message 与 Task 返回；
+- [ ] 支持 Polling、Streaming、Push 中至少一种可靠路径；
+- [ ] 正确重组 Artifact Chunk；
+- [ ] 遇到 `INPUT_REQUIRED`/`AUTH_REQUIRED` 可恢复；
+- [ ] 终止 Task 的修订创建新 Task；
+- [ ] 对超时重试保持相同幂等键；
+- [ ] 不把瞬时 Message 当成唯一业务结果；
+- [ ] 记录协议、版本、Task 和 Trace 关联信息。
+
+##### A2A Server
+
+- [ ] 发布最小公开 Agent Card；
+- [ ] 必要时提供受认证 Extended Agent Card；
+- [ ] 支持并校验 `A2A-Version`；
+- [ ] 统一三种 Binding 的内部语义；
+- [ ] 对所有操作做认证和资源级授权；
+- [ ] `messageId` 去重和 Task 创建原子化；
+- [ ] Task、Context、Status、Artifact 持久化；
+- [ ] 状态转换有乐观锁或事务保护；
+- [ ] Streaming 事件有序；
+- [ ] 支持断线重连后的状态校准；
+- [ ] Push 至少一次投递、幂等和 DLQ；
+- [ ] 限制 Part、Artifact、History 和并发规模；
+- [ ] 对 URL、文件和 Extension 数据做安全校验；
+- [ ] 实现 Tenant 强隔离，而非只做路由；
+- [ ] 暴露 Metrics、Trace 和 Audit；
+- [ ] 完成协议一致性、故障和安全测试。
+
+---
+
+#### 7.2.23 什么时候应该使用 A2A
+
+适合 A2A：
+
+- 上下游 Agent 属于不同框架、语言、进程或组织；
+- 需要动态发现 Agent 能力；
+- 任务可能长运行、异步、可取消或需要人工输入；
+- 结果包含文件、结构化数据或多个 Artifact；
+- 需要跨厂商、跨云、跨部门的 Agent 委派；
+- 需要标准化认证、版本和错误语义；
+- 希望远端 Agent 保持内部实现不透明。
+
+不必使用 A2A：
+
+- 同一进程内两个固定节点的函数调用；
+- 单 Agent 调用一个数据库或搜索工具，此时优先 MCP/Tool API；
+- 只需要前端展示事件，此时优先 AG-UI；
+- 任务没有独立生命周期，只是一个普通同步 RPC；
+- 双方完全由同一 Workflow Engine 控制且不存在互操作需求。
+
+A2A 的合理定位是：
+
+```text
+内部 Agent 编排的边界协议
++ 跨运行时 Agent 的互操作协议
++ 跨组织 Agent 服务的开放契约
+```
+
+它不是所有内部函数调用的替代品，也不是把每个 Tool 都包装成 Agent 的理由。
+
+##### A2A 官方资料
+
+- [A2A 1.0 Protocol Specification](https://a2a-protocol.org/latest/specification/)
+- [Core Concepts](https://a2a-protocol.org/latest/topics/key-concepts/)
+- [Agent Discovery](https://a2a-protocol.org/latest/topics/agent-discovery/)
+- [Streaming and Asynchronous Operations](https://a2a-protocol.org/latest/topics/streaming-and-async/)
+- [Enterprise Features](https://a2a-protocol.org/latest/topics/enterprise-ready/)
+- [Multi-Tenancy](https://a2a-protocol.org/latest/topics/multi-tenancy/)
+- [Extensions](https://a2a-protocol.org/latest/topics/extensions/)
+- [What’s New in A2A v1.0](https://a2a-protocol.org/latest/whats-new-v1/)
+- [A2A GitHub Releases](https://github.com/a2aproject/A2A/releases)
 
 ---
 
@@ -2671,7 +4166,17 @@ Agent 专业化
 28. [MultiAgentBench](https://arxiv.org/abs/2503.01935)
 29. [MAST: Multi-Agent System Failure Taxonomy](https://arxiv.org/abs/2503.13657)
 
+30. [A2A 1.0 Protocol Specification](https://a2a-protocol.org/latest/specification/)
+31. [A2A Core Concepts](https://a2a-protocol.org/latest/topics/key-concepts/)
+32. [A2A Agent Discovery](https://a2a-protocol.org/latest/topics/agent-discovery/)
+33. [A2A Streaming and Asynchronous Operations](https://a2a-protocol.org/latest/topics/streaming-and-async/)
+34. [A2A Enterprise Features](https://a2a-protocol.org/latest/topics/enterprise-ready/)
+35. [A2A Multi-Tenancy](https://a2a-protocol.org/latest/topics/multi-tenancy/)
+36. [A2A Extensions](https://a2a-protocol.org/latest/topics/extensions/)
+37. [What’s New in A2A v1.0](https://a2a-protocol.org/latest/whats-new-v1/)
+38. [A2A Protocol Releases](https://github.com/a2aproject/A2A/releases)
+39. [A2A Joins the Agentic AI Foundation](https://a2a-protocol.org/latest/blog/archive/2026/)
 
 ---
 
-> **使用提示**：与其他附录的分工——1 讲模型机制、2 讲方法论、3 记来源、4 列产品、5 辨异同、6 索引图版、7 详解 OTel、8 上手 DeepEval、9 评测观测平台选型、10 上手 Mem0、11 详解记忆晋升机制、12 盘点 Coding Agent 赛道、13 盘点可观测赛道、14 盘点评估赛道、15 盘点 Memory 赛道、16 盘点自进化赛道、**17 盘点多 Agent 赛道**、18 盘点 MCP 生态、19 盘点沙箱赛道、20 盘点 RAG 赛道、21 盘点 LLM Wiki 赛道、22 盘点 Loop Engineering 赛道、23 解析 Pi 源码、24 解析 Claude Code 源码、25 解析 Codex 源码、26 解析 OpenCode 源码。对照阅读：多 Agent 定义与编排模式（17.1/P.6）对第 17 章八拓扑与代价模型、框架盘点（17.3）对附录 4.5、协议栈（17.7）对第 8/18 章（MCP/A2A）、状态与记忆（17.8）对第 18 章交接包与附录 15、沙箱权限（17.9）对第 13 章与第 23 章 2.6、可观测（17.10）对第 14/19 章与附录 13、评估（17.11）对第 15 章与附录 14、该用不该用（17.12–17.13）对第 17/19 章三维选型与劝退判定。信息基准 2026-08-30（[C-41]），发行前按附录 3 清单复核。
+> **使用提示**：与其他附录的分工——1 讲模型机制、2 讲方法论、3 记来源、4 列产品、5 辨异同、6 索引图版、7 详解 OTel、8 上手 DeepEval、9 评测观测平台选型、10 上手 Mem0、11 详解记忆晋升机制、12 盘点 Coding Agent 赛道、13 盘点可观测赛道、14 盘点评估赛道、15 盘点 Memory 赛道、16 盘点自进化赛道、**17 盘点多 Agent 赛道**、18 盘点 MCP 生态、19 盘点沙箱赛道、20 盘点 RAG 赛道、21 盘点 LLM Wiki 赛道、22 盘点 Loop Engineering 赛道、23 解析 Pi 源码、24 解析 Claude Code 源码、25 解析 Codex 源码、26 解析 OpenCode 源码。对照阅读：多 Agent 定义与编排模式（17.1/17.6）对第 17 章八拓扑与代价模型、框架盘点（17.3）对附录 4.5、协议栈（17.7）对第 8/18 章（MCP/A2A）、状态与记忆（17.8）对第 18 章交接包与附录 15、沙箱权限（17.9）对第 13 章与第 23 章 2.6、可观测（17.10）对第 14/19 章与附录 13、评估（17.11）对第 15 章与附录 14、该用不该用（17.12–17.13）对第 17/19 章三维选型与劝退判定。信息基准 2026-09（[C-41]），发行前按附录 3 清单复核。
