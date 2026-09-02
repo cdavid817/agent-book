@@ -185,7 +185,7 @@ Microsoft Agent Framework 将 AutoGen 的 Agent 抽象与 Semantic Kernel 的类
 
 它支持 Python、.NET 和 Go，并覆盖长运行任务、检查点、恢复、Telemetry、Middleware、A2A、MCP 等企业能力。
 
-**适用场景：**
+**适用场景**：
 
 - Azure 和 Microsoft Foundry 技术栈；
 - .NET 企业应用；
@@ -194,7 +194,7 @@ Microsoft Agent Framework 将 AutoGen 的 Agent 抽象与 Semantic Kernel 的类
 - 多 Agent 长任务；
 - 需要审计、治理、恢复和人工审批。
 
-**优势：**
+**优势**：
 
 - 企业能力完整；
 - Agent 与 Workflow 抽象统一；
@@ -202,7 +202,7 @@ Microsoft Agent Framework 将 AutoGen 的 Agent 抽象与 Semantic Kernel 的类
 - 与 Azure 生态集成紧密；
 - 支持多种编排模式。
 
-**注意事项：**
+**注意事项**：
 
 - Microsoft AutoGen 已进入维护模式，新项目应重点评估 Microsoft Agent Framework；
 - 从 AutoGen 或 Semantic Kernel 迁移时，需要重新验证 Group Chat、状态、Handoff 和终止行为；
@@ -239,7 +239,7 @@ LangChain 还提供 Deep Agents 作为更高层的 Agent Harness，内置：
 
 Deep Agents 强调 **Context Quarantine**：把独立任务委派给拥有独立上下文的子 Agent，避免主 Agent 的上下文被大量搜索结果、中间日志和工具输出污染。
 
-**适用场景：**
+**适用场景**：
 
 - 复杂状态机；
 - 长运行任务；
@@ -248,7 +248,7 @@ Deep Agents 强调 **Context Quarantine**：把独立任务委派给拥有独立
 - 需要中断、恢复和人工干预；
 - 高度定制的多 Agent 拓扑。
 
-**优势：**
+**优势**：
 
 - 图结构表达能力强；
 - 对状态和生命周期控制精细；
@@ -256,7 +256,7 @@ Deep Agents 强调 **Context Quarantine**：把独立任务委派给拥有独立
 - 适合 Durable Execution；
 - 生态成熟。
 
-**注意事项：**
+**注意事项**：
 
 - LangGraph 更像运行时和状态机，不是开箱即用的“虚拟团队”；
 - Agent 协议、角色模型和共享状态结构通常需要自行设计；
@@ -299,7 +299,7 @@ SDK 还可以通过普通代码实现：
 - 结构化路由；
 - 自定义重试和预算控制。
 
-**适用场景：**
+**适用场景**：
 
 - OpenAI 模型和 Responses API；
 - Python、Node.js、TypeScript 服务；
@@ -308,7 +308,7 @@ SDK 还可以通过普通代码实现：
 - 轻量级 Supervisor/Worker；
 - 不希望引入重量级图框架的系统。
 
-**优势：**
+**优势**：
 
 - 核心抽象简单；
 - Handoff 和 Agent as Tool 语义清晰；
@@ -316,7 +316,7 @@ SDK 还可以通过普通代码实现：
 - Python 与 TypeScript 生态兼顾；
 - 易于嵌入现有服务。
 
-**注意事项：**
+**注意事项**：
 
 - 复杂持久化工作流仍需要数据库、消息队列或 Durable Execution 基础设施；
 - Handoff 不等于子任务调用，两者在上下文所有权和最终回答责任上不同；
@@ -344,7 +344,7 @@ ADK 支持把多个 Agent 和可执行节点组合为工作流。Agent 可以包
 
 ADK 支持 Python、TypeScript、Go、Java 和 Kotlin；ADK 2.0 在部分语言中进一步引入图工作流能力。
 
-**适用场景：**
+**适用场景**：
 
 - Gemini 和 Google Cloud；
 - 多语言团队；
@@ -352,7 +352,7 @@ ADK 支持 Python、TypeScript、Go、Java 和 Kotlin；ADK 2.0 在部分语言�
 - Google Search、Maps、Workspace 和 Cloud 数据服务；
 - 从本地开发平滑部署到托管 Agent Runtime。
 
-**优势：**
+**优势**：
 
 - 多语言覆盖较完整；
 - A2A 原生支持；
@@ -360,7 +360,7 @@ ADK 支持 Python、TypeScript、Go、Java 和 Kotlin；ADK 2.0 在部分语言�
 - 适合跨组织 Agent 服务；
 - 工具与云服务生态丰富。
 
-**注意事项：**
+**注意事项**：
 
 - ADK 与 Google Cloud 结合最完整；
 - 在其他基础设施上运行时，部分托管能力需要自行替代；
@@ -389,7 +389,7 @@ Crew 提供自主协作，Flow 提供显式流程控制。一个 Flow 节点可�
 - 一个 Agent；
 - 一个完整 Crew。
 
-**适用场景：**
+**适用场景**：
 
 - 市场分析；
 - 内容生产；
@@ -398,7 +398,7 @@ Crew 提供自主协作，Flow 提供显式流程控制。一个 Flow 节点可�
 - “研究员—作者—审核员”式团队；
 - 快速原型。
 
-**优势：**
+**优势**：
 
 - 角色和任务描述直观；
 - 上手成本较低；
@@ -406,7 +406,7 @@ Crew 提供自主协作，Flow 提供显式流程控制。一个 Flow 节点可�
 - 适合业务团队建模；
 - 文档和示例较丰富。
 
-**注意事项：**
+**注意事项**：
 
 - 单纯依赖 Agent 自主对话容易产生冗余讨论；
 - 复杂生产系统应更多使用 Flow 控制关键路径；
@@ -432,7 +432,7 @@ PydanticAI 强调：
 
 它适合将 Agent 作为后端应用中的一个类型安全组件，而不是单独搭建一个庞大的 Agent 平台。
 
-**适用场景：**
+**适用场景**：
 
 - FastAPI/Python 后端；
 - 强结构化输入输出；
@@ -440,7 +440,7 @@ PydanticAI 强调：
 - 希望避免 Agent 之间传递自由文本；
 - 需要较强测试和类型检查能力的项目。
 
-**优势：**
+**优势**：
 
 - 类型系统友好；
 - 与 Python 后端工程实践契合；
@@ -464,7 +464,7 @@ LlamaIndex 支持三类常见多 Agent 模式：
 
 `AgentWorkflow` 可以管理一个或多个 Agent 的交互，适合研究、检索、报告生成和企业数据访问。
 
-**适用场景：**
+**适用场景**：
 
 - RAG；
 - 企业知识库；
@@ -472,7 +472,7 @@ LlamaIndex 支持三类常见多 Agent 模式：
 - Research Agent；
 - 不同数据源由不同 Agent 管理的系统。
 
-**优势：**
+**优势**：
 
 - 数据连接器和检索生态丰富；
 - 文档、索引、知识库能力成熟；
@@ -496,14 +496,14 @@ Agno 的 Team 可以协调 Agent 或嵌套 Team，主要模式包括：
 
 Team Leader 可以根据成员角色委派任务并汇总结果。Agno 还提供 AgentOS 和 Control Plane，用于部署、监控和管理 Agent 平台。
 
-**适用场景：**
+**适用场景**：
 
 - 快速搭建完整 Agent 服务平台；
 - 需要嵌套团队；
 - 需要统一 Memory、Knowledge、Guardrail 和管理 UI；
 - 中小团队快速产品化。
 
-**优势：**
+**优势**：
 
 - Agent 平台能力较完整；
 - Team 抽象直观；
@@ -520,7 +520,7 @@ Team Leader 可以根据成员角色委派任务并汇总结果。Agno 还提供
 
 AG2 是从早期 AutoGen 社区路线发展而来的独立项目。AG2 1.0 使用新的协议驱动核心，以 Network、Hub 和 Channel 组织多个 Agent；原有 `autogen.*` 风格的经典实现被迁移到 AG2 Classic。
 
-**适用场景：**
+**适用场景**：
 
 - 多 Agent 网络研究；
 - 异步事件系统；
@@ -528,14 +528,14 @@ AG2 是从早期 AutoGen 社区路线发展而来的独立项目。AG2 1.0 使�
 - Human-in-the-loop；
 - 去中心化或网络化 Agent 模型。
 
-**优势：**
+**优势**：
 
 - 异步优先；
 - 通信模型灵活；
 - 适合复杂 Agent Network；
 - 社区延续了 AutoGen 风格的部分思想。
 
-**必须区分：**
+**必须区分**：
 
 | 名称 | 含义 |
 |---|---|
@@ -564,14 +564,14 @@ Mastra 支持：
 
 其早期的 `Agent.network()` 已被标记为弃用，当前更推荐使用 Supervisor Agent，通过普通 `generate()` 或 `stream()` 完成 Agent、Workflow 和 Tool 路由。
 
-**适用场景：**
+**适用场景**：
 
 - TypeScript/Node.js 全栈；
 - Web 产品；
 - Agent 与业务 Workflow 混合；
 - 希望前后端统一 TypeScript 技术栈。
 
-**优势：**
+**优势**：
 
 - TypeScript 原生；
 - 与 Web 和 Node.js 工程结合自然；
@@ -614,7 +614,7 @@ CAMEL 更偏向：
 
 其能力覆盖 Agent Society、Memory、RAG、代码执行、工具和大规模数据生成。
 
-**适用场景：**
+**适用场景**：
 
 - 多 Agent 社会模拟；
 - Synthetic Data；
@@ -640,7 +640,7 @@ MetaGPT 使用“软件公司”思想，将产品经理、架构师、工程师
 → 多阶段软件交付
 ```
 
-**适用场景：**
+**适用场景**：
 
 - 软件研发流程研究；
 - SOP 驱动的角色协作；
@@ -657,7 +657,7 @@ MetaGPT 更像领域化多 Agent 方法论，不一定适合直接作为通用�
 
 ChatDev 1.0 以“虚拟软件公司”闻名；ChatDev 2.0 转向零代码通用多 Agent 编排平台，可以通过配置定义 Agent、任务和工作流。
 
-**适用场景：**
+**适用场景**：
 
 - 多 Agent 教学与演示；
 - 零代码多 Agent 原型；
@@ -780,7 +780,7 @@ AgentCore 是 AWS 面向 Agent 系统的托管基础设施，覆盖：
 
 AgentCore 支持不同模型和框架，不要求必须使用特定 Agent SDK。
 
-**适用场景：**
+**适用场景**：
 
 - AWS 企业应用；
 - 需要托管浏览器、代码解释器和 Memory；
@@ -805,7 +805,7 @@ Agentforce 面向 CRM、客服、销售和企业流程。
 - MCP Tool 暴露；
 - 企业权限与审计。
 
-**适用场景：**
+**适用场景**：
 
 - CRM 数据；
 - 客户服务；
@@ -838,14 +838,14 @@ Researcher → Writer → Reviewer → Publisher
 
 每个 Agent 处理前一个 Agent 的输出。
 
-**优点：**
+**优点**：
 
 - 确定性较强；
 - 容易观测；
 - 容易设置质量门禁；
 - 适合文档、数据处理和审批流程。
 
-**问题：**
+**问题**：
 
 - 前序错误会传播；
 - 延迟累加；
@@ -881,7 +881,7 @@ Supervisor/Planner├→ Research Agent B ─┼→ Aggregator
 - 多安全扫描器；
 - 多模型投票。
 
-**关键设计点：**
+**关键设计点**：
 
 - 子任务必须尽量独立；
 - 聚合器需要处理重复、冲突和缺失；
@@ -918,7 +918,7 @@ flowchart LR
 
 这是当前最常见的生产架构。
 
-**优点：**
+**优点**：
 
 - 用户会话所有权明确；
 - 易于统一安全策略；
@@ -926,7 +926,7 @@ flowchart LR
 - 子 Agent 可以保持独立上下文；
 - 容易实施中心化审计。
 
-**问题：**
+**问题**：
 
 - Supervisor 可能成为性能与质量瓶颈；
 - Supervisor 错误会影响整个系统；
@@ -956,30 +956,1601 @@ sequenceDiagram
 
 ---
 
-### 17.6.4 Router / Handoff
+### 17.6.4 Handoff（Agent 控制权转移）详解
 
-Router 根据用户意图把控制权转给某个专家 Agent：
+Handoff 是多 Agent 系统中的一种**控制权转移（transfer of control）** 机制：当前 Agent 判断另一个 Agent 更适合继续处理当前会话或任务，于是把后续决策权、用户交互权和相应上下文交给目标 Agent。
+
+它与“调用另一个 Agent 完成一个子任务”并不相同。Handoff 发生后，目标 Agent 通常成为新的 **Active Agent**，直接决定下一步动作、调用工具、向用户提问，并对当前阶段的结果负责；源 Agent 则停止主导当前会话，直到目标 Agent 显式交还控制权、任务结束或系统触发恢复策略。
+
+可以把 Handoff 抽象为：
 
 ```text
-User → Triage Agent → Billing Agent
-                    → Technical Agent
-                    → Refund Agent
+Handoff
+=
+Active Agent 变更
++ 会话或任务所有权迁移
++ 上下文与状态传递
++ 权限重新计算
++ 责任链与审计链延续
 ```
 
-Handoff 与 Agent as Tool 的区别：
+> **关键结论**：Handoff 是一种编排语义，不是一个统一的网络协议。它既可以发生在同一进程内，也可以跨进程、跨服务甚至跨组织实现；跨系统通信可由 A2A 承载，但 A2A 本身不等同于 Handoff。
 
-| 模式 | 谁保持会话控制权 | 谁生成最终回答 | 适用场景 |
+---
+
+#### 6.4.1 Handoff 的三个核心所有权
+
+生产系统不能只记录“当前 Agent 是谁”，还需要区分三类所有权：
+
+| 所有权 | 含义 | Handoff 后的典型变化 |
+|---|---|---|
+| **Conversation Ownership** | 谁直接与用户继续对话、解释状态和收集信息 | 转移给目标 Agent |
+| **Task Ownership** | 谁对当前业务目标、任务状态和完成条件负责 | 通常转移，也可以只转移某个任务阶段 |
+| **Response Ownership** | 谁负责生成下一次或最终用户可见回复 | 通常由目标 Agent 承担 |
+
+三者并不一定总是同时转移。例如：
+
+- 客服分流通常同时转移三种所有权；
+- Supervisor 调用专家 Agent 时，任务和最终回复所有权仍由 Supervisor 保留，这属于 **Agent as Tool**，不是完整 Handoff；
+- 人工接管时，Conversation Ownership 转移给人工，但后台 Agent 仍可能保留辅助分析任务；
+- 远程 Agent 通过 A2A 执行任务时，本地 Gateway 可能继续拥有用户会话，只把 Task Ownership 委派给远端，这更接近远程 Delegation。
+
+因此，应显式建模：
+
+```yaml
+ownership:
+  conversation_owner: billing-agent
+  task_owner: billing-agent
+  response_owner: billing-agent
+```
+
+而不是只保存一个容易产生歧义的 `current_agent` 字段。
+
+---
+
+#### 6.4.2 Handoff 与其他编排模式的区别
+
+| 模式 | 控制权 | 上下文所有者 | 结果返回路径 | 适用场景 |
+|---|---|---|---|---|
+| **Router** | Router 只做一次或多次路由决策 | 通常由下游 Agent 或工作流持有 | 下游直接返回或统一聚合 | 意图分类、入口分流 |
+| **Handoff** | 从源 Agent 转移给目标 Agent | 目标 Agent 接管会话上下文 | 目标 Agent 继续对话，可再转交 | 客服、专家接管、连续多轮交互 |
+| **Agent as Tool** | 主 Agent 始终保留控制权 | 主 Agent 管理主上下文 | 子 Agent 结果返回主 Agent | 后台专家调用、统一汇总 |
+| **Delegation** | 可转移某个子任务，但不一定转移会话 | 由委派方或共享任务状态管理 | Worker 返回委派方 | Supervisor/Worker |
+| **Sequential Workflow** | 按预定义顺序推进 | 工作流状态机持有 | 下一节点或最终节点 | 稳定流程、审批链 |
+| **Group Chat** | 发言权轮换，但不一定转移任务所有权 | 共享会话或群聊状态 | Moderator 或终止 Agent | 讨论、评审、辩论 |
+| **Escalation** | 转给更高权限 Agent 或人工 | 由升级目标接管 | 目标处理或回退 | 高风险、低置信度、投诉 |
+| **A2A Task** | 由协议承载远程任务，不天然规定 UI 控制权 | 各系统分别管理 | Task、Message、Artifact | 跨框架、跨服务、跨组织协作 |
+
+最容易混淆的是 **Handoff 与 Agent as Tool**：
+
+```text
+Agent as Tool:
+用户 → Manager → Specialist → Manager → 用户
+
+Handoff:
+用户 → Triage ──控制权转移──> Specialist → 用户
+```
+
+判断标准不是“是否调用了另一个 Agent”，而是：
+
+1. 当前会话由谁继续驱动；
+2. 下一轮用户输入发给谁；
+3. 谁决定是否调用更多工具或再次转交；
+4. 谁对最终结果承担责任。
+
+---
+
+#### 6.4.3 Handoff 的主要类型
+
+##### 1. 永久会话接管
+
+目标 Agent 接管后持续服务，直到会话结束或再次 Handoff。
+
+```text
+Triage → Billing Agent → 会话结束
+```
+
+适合客服、售后、账户、安全等垂直领域。
+
+##### 2. 临时任务接管与自动回切
+
+目标 Agent 只处理一个限定任务，完成后自动回到源 Agent。
+
+```text
+Coordinator → Booking Agent → finish_task → Coordinator
+```
+
+这种模式在语义上介于 Handoff 与 Delegation 之间，必须明确是否允许目标 Agent 直接与用户多轮交互。
+
+##### 3. Peer-to-Peer Handoff
+
+同级专家之间直接转交：
+
+```text
+Sales Agent ⇄ Support Agent ⇄ Billing Agent
+```
+
+灵活但容易形成循环，必须配置允许边、最大深度和回切规则。
+
+##### 4. 层级 Handoff
+
+在父子 Agent 之间转移：
+
+```text
+Coordinator
+├── Booking Agent
+├── Information Agent
+└── Escalation Agent
+```
+
+通常只允许 Parent → Child、Child → Parent 或同一 Parent 下的 Sibling 转移。
+
+##### 5. Human Handoff
+
+Agent 将会话交给人工坐席、审批人或专家。它不仅是 Agent ID 的切换，还涉及队列、SLA、人员可用性、通知、人工工作台和接管后的回流。
+
+##### 6. Remote Handoff
+
+目标 Agent 位于另一进程、运行时或组织中。此时需要：
+
+- 服务发现；
+- 身份认证；
+- 任务接受确认；
+- 上下文脱敏；
+- 网络错误恢复；
+- 本地与远端任务 ID 映射；
+- 远端失败后的本地回退。
+
+##### 7. Fallback Handoff
+
+当目标 Agent 不可用、超时、权限不足或置信度过低时，系统自动转给备用 Agent 或人工：
+
+```text
+Primary Specialist
+        │ unavailable
+        ▼
+Fallback Specialist
+        │ unavailable
+        ▼
+Human Queue
+```
+
+---
+
+#### 6.4.4 Handoff 拓扑与允许边
+
+Handoff 关系应被建模为一张有向图，而不是允许所有 Agent 任意互转。
+
+```mermaid
+flowchart LR
+    T[Triage Agent]
+    B[Billing Agent]
+    S[Support Agent]
+    R[Refund Agent]
+    H[Human Agent]
+
+    T -->|账单问题| B
+    T -->|技术问题| S
+    B -->|退款请求| R
+    S -->|账户扣费| B
+    B -->|高风险或投诉| H
+    R -->|需要人工审批| H
+    B -->|处理完成| T
+    S -->|处理完成| T
+```
+
+推荐为每个 Agent 声明明确的目标集合：
+
+```yaml
+agent_id: billing-agent
+handoff_policy:
+  allowed_targets:
+    - refund-agent
+    - technical-agent
+    - human-support
+  denied_targets:
+    - release-agent
+    - finance-admin-agent
+  max_outbound_handoffs: 3
+  max_chain_depth: 5
+  allow_return_to_previous: true
+```
+
+设计原则：
+
+- 默认拒绝未声明的转移边；
+- 高权限目标只允许从可信 Agent 或策略引擎进入；
+- 不允许模型自由拼接 Agent 名称调用任意目标；
+- Agent Registry 中不存在、已禁用或版本不兼容的目标不得被选中；
+- 对环路边设置更严格的次数限制；
+- 外部 Agent 必须经过单独的信任域检查。
+
+常见拓扑：
+
+| 拓扑 | 特征 | 优点 | 风险 |
 |---|---|---|---|
-| Agent as Tool | Manager | Manager | 统一汇总、隐藏子 Agent、复杂后台任务 |
-| Handoff | 被选中的专家 | 专家 Agent | 客服分流、专家接管、持续对话 |
+| Star | 所有转移经过 Triage | 易治理、易审计 | Triage 成为瓶颈 |
+| Mesh | 专家之间直接互转 | 路径短、灵活 | 循环、越权、行为难预测 |
+| Hierarchy | Parent/Child/Sibling 受控转移 | 结构清晰 | 跨层问题处理不灵活 |
+| Guarded Mesh | 允许点对点，但经过 Policy/Gateway | 灵活且可治理 | 平台实现复杂 |
+| DAG | 只允许单向阶段推进 | 容易终止 | 不适合反复澄清和回切 |
 
-**关键风险：**
+生产系统通常优先使用 **Guarded Mesh** 或 **Hierarchy**，而不是无约束 Mesh。
 
-- 错误路由；
-- Handoff 后上下文丢失；
-- 权限随着 Handoff 非预期扩大；
-- 用户不知道当前由哪个 Agent 负责；
-- 多次 Handoff 导致循环。
+---
+
+#### 6.4.5 Handoff 触发与路由策略
+
+Handoff 可以由规则、分类器、LLM 或人工触发。
+
+##### 1. 规则路由
+
+```text
+if intent == "refund" and amount <= 500:
+    target = refund-agent
+elif risk_score > 0.8:
+    target = human-risk-review
+```
+
+**优点**：确定性高、可审计、成本低。  
+**缺点**：规则维护成本高，对开放语言适应性有限。
+
+##### 2. 专用分类器
+
+使用意图分类模型或 Embedding Router 输出目标和置信度：
+
+```json
+{
+  "target_agent": "billing-agent",
+  "intent": "duplicate_charge",
+  "confidence": 0.94
+}
+```
+
+适合高频、标签相对稳定的入口分流。
+
+##### 3. LLM 语义路由
+
+当前 Agent 根据目标 Agent 的名称、描述、能力和转移规则选择 Handoff Tool。
+
+优点是灵活，缺点是容易受到：
+
+- Agent 描述重叠；
+- Prompt Injection；
+- 长上下文噪声；
+- 新增 Agent 后的选择漂移；
+- 模型版本变化；
+- 低置信度但仍强制选路。
+
+##### 4. 混合路由
+
+推荐生产实现：
+
+```text
+规则门禁
+  ↓
+候选 Agent 过滤
+  ↓
+分类器或 LLM 排序
+  ↓
+Policy Engine 校验
+  ↓
+目标可用性检查
+  ↓
+Handoff
+```
+
+可使用如下决策结构：
+
+```yaml
+handoff_decision:
+  source_agent: triage-agent
+  candidate_targets:
+    - billing-agent
+    - support-agent
+  selected_target: billing-agent
+  reason_code: duplicate_charge
+  confidence: 0.92
+  evidence:
+    - "用户明确提到同一订单被扣款两次"
+  policy_result: allow
+  fallback_target: human-support
+```
+
+##### 5. Handoff 前置条件
+
+只有以下条件全部满足时才应提交 Handoff：
+
+- 目标 Agent 存在且处于可用状态；
+- 当前任务属于目标 Agent 的能力域；
+- 当前用户和租户允许访问该 Agent；
+- 目标 Agent 的模型、工具和数据区域满足合规要求；
+- 必要上下文可以合法传递；
+- 当前未超过最大转移次数、最大深度和预算；
+- 没有未处理的不可迁移副作用；
+- 高风险转移已获得人工批准。
+
+---
+
+#### 6.4.6 推荐的 Handoff 生命周期
+
+不同框架对 Handoff 的运行时状态定义不同。生产平台可以在框架之上增加统一的应用级状态机：
+
+```mermaid
+stateDiagram-v2
+    [*] --> Proposed: Agent 产生转移意图
+    Proposed --> Validating: 校验目标、权限、预算和上下文
+    Validating --> Rejected: 策略拒绝或目标不可用
+    Validating --> Prepared: 构建 Handoff Package
+    Prepared --> Accepted: 目标确认可接管
+    Prepared --> Failed: 构建或传输失败
+    Accepted --> Committed: 原子更新 Active Agent
+    Committed --> Active: 目标开始处理
+    Active --> ReturnRequested: 请求交还控制权
+    Active --> Completed: 会话或任务结束
+    Active --> Failed: 目标执行失败
+    ReturnRequested --> Committed: 转移给前序或指定 Agent
+    Failed --> Recovering: 回滚、重试或转人工
+    Recovering --> Active: 备用 Agent 接管
+    Recovering --> Completed: 人工或系统终止
+    Rejected --> Active: 原 Agent 继续处理
+    Completed --> [*]
+```
+
+核心状态含义：
+
+| 状态 | 含义 |
+|---|---|
+| `PROPOSED` | Agent 或路由器提出 Handoff |
+| `VALIDATING` | 校验目标、权限、可用性、合规、预算 |
+| `PREPARED` | 上下文包和状态快照已经生成 |
+| `ACCEPTED` | 目标 Agent 或远端服务确认可以接管 |
+| `COMMITTED` | 所有权记录已完成原子切换 |
+| `ACTIVE` | 目标 Agent 已开始驱动会话 |
+| `REJECTED` | 策略或目标拒绝接管 |
+| `FAILED` | 传输、恢复或目标执行失败 |
+| `RETURN_REQUESTED` | 目标 Agent 请求交还控制权 |
+| `COMPLETED` | 当前 Handoff 链路结束 |
+
+##### 单阶段与两阶段 Handoff
+
+**单阶段 Handoff**：
+
+```text
+Source → transfer_to_target() → Target Active
+```
+
+适合同进程、低风险、目标确定可用的场景。
+
+**两阶段 Handoff**：
+
+```text
+1. Prepare：验证目标并生成上下文包
+2. Accept：目标确认可以接管
+3. Commit：原子更新 Active Owner
+4. Execute：目标开始处理
+```
+
+适合：
+
+- 跨服务和 A2A 远程 Agent；
+- 高风险业务；
+- 人工队列接管；
+- 需要强审计或恢复能力的长任务；
+- 目标可能拒绝、限流或不兼容的场景。
+
+两阶段设计可防止“源 Agent 已停止，但目标 Agent 实际没有接管”的悬空状态。
+
+---
+
+#### 6.4.7 Handoff Contract 与数据包
+
+推荐使用结构化 Handoff Contract，而不是只发送一句“请你继续处理”。
+
+```yaml
+handoff:
+  handoff_id: ho_01K4A9R3W6
+  idempotency_key: session-102:turn-38:billing-agent
+  created_at: 2026-09-03T07:30:00Z
+
+  source:
+    agent_id: triage-agent
+    agent_version: 2.4.1
+    runtime_id: runtime-a
+
+  target:
+    agent_id: billing-agent
+    required_skill: duplicate-charge-resolution
+    min_version: 3.1.0
+    runtime_hint: runtime-b
+
+  ownership:
+    conversation: transfer
+    task: transfer
+    response: transfer
+
+  reason:
+    code: duplicate_charge
+    description: 用户报告同一订单被重复扣款
+    confidence: 0.96
+
+  task:
+    task_id: task-8842
+    goal: 核验重复扣款并给出处理方案
+    status: input_collected
+    acceptance_criteria:
+      - 确认两笔交易是否属于同一订单
+      - 给出退款或申诉路径
+
+  context:
+    strategy: summary_plus_references
+    summary: 用户在 9 月 2 日购买服务，银行卡显示两笔相同金额扣款
+    transcript_ref: transcript://session-102?from=1&to=38
+    state_snapshot_ref: state://task-8842/version/7
+    memory_refs:
+      - memory://user/preferences/language
+    artifact_refs:
+      - artifact://payment-screenshot-551
+
+  unresolved:
+    questions:
+      - 第二笔扣款是否已经入账
+    pending_actions: []
+
+  security:
+    user_delegation_id: delegation-221
+    allowed_scopes:
+      - payment.read
+      - refund.create:limit=500
+    redactions:
+      - card_number
+      - cvv
+    trust_boundary_crossed: false
+
+  budget:
+    remaining_tokens: 32000
+    remaining_cost_usd: 2.40
+    deadline: 2026-09-03T07:40:00Z
+    max_additional_handoffs: 2
+
+  return_policy:
+    mode: return_to_source_on_completion
+    target_agent: triage-agent
+    on_failure: human-support
+
+  trace:
+    trace_id: trace-1001
+    parent_span_id: span-501
+    baggage:
+      tenant_id: tenant-a
+      session_id: session-102
+```
+
+关键字段说明：
+
+- `handoff_id`：一次转移实例的唯一 ID；
+- `idempotency_key`：防止重复提交造成多次接管；
+- `source/target`：明确双方 Agent、版本和运行时；
+- `ownership`：定义实际转移哪些责任；
+- `reason`：供审计、路由评估和后续学习；
+- `task`：目标、当前状态和验收标准；
+- `context`：上下文传递策略和引用；
+- `unresolved`：尚未回答的问题和待处理动作；
+- `security`：授权范围、脱敏和信任边界；
+- `budget`：剩余 Token、成本、时间和转移次数；
+- `return_policy`：完成、失败或用户要求时转给谁；
+- `trace`：延续全链路 Trace，而不是生成一个无法关联的新链路。
+
+---
+
+#### 6.4.8 上下文传递策略
+
+Handoff 最常见的失败不是路由错误，而是**目标 Agent 没有获得足够、正确且安全的上下文**。
+
+常见策略：
+
+| 策略 | 传递内容 | 优点 | 风险 | 适用场景 |
+|---|---|---|---|---|
+| Full Transcript | 完整会话历史 | 信息完整、实现简单 | Token 高、泄露风险、噪声大 | 短会话、同一信任域 |
+| Filtered Transcript | 删除工具日志、敏感字段和无关轮次 | 成本和安全较好 | 过滤不当会丢信息 | 通用生产系统 |
+| Summary Only | 只传递摘要 | Token 低 | 摘要失真、证据缺失 | 低风险、长会话 |
+| Structured State | 只传任务状态、约束和槽位 | 稳定、可验证 | 需要预先设计 Schema | 稳定业务流程 |
+| Artifact References | 传 Artifact ID 和内容哈希 | 适合大型文件、可追踪 | 目标需要访问权限 | 代码、报告、图片、数据 |
+| Hybrid | 摘要 + 关键原文 + 状态 + Artifact | 信息与成本平衡 | 实现复杂 | 推荐的生产默认方案 |
+
+推荐 Handoff Context Package 至少包含：
+
+```text
+1. 用户当前目标
+2. 已确认事实及其来源
+3. 业务约束和用户偏好
+4. 已做出的决策及理由
+5. 已执行工具及关键结果
+6. 尚未解决的问题
+7. 已产生的 Artifact
+8. 当前安全等级和授权范围
+9. 下一步建议，但不强制目标 Agent 接受
+10. 完成条件和回切规则
+```
+
+不应传递：
+
+- 与目标任务无关的完整租户数据；
+- 源 Agent 的全部私有记忆；
+- 未脱敏的密钥、Token、银行卡号等敏感信息；
+- 无法验证来源的“事实”；
+- 只对源 Agent 有效的内部 Tool Handle；
+- 未完成且不能迁移的 Tool Call；
+- 模型隐藏推理过程。应传递可审计的事实、证据、决策结果和简要理由，而不是内部思维链。
+
+##### 建议的分层上下文
+
+```yaml
+context_layers:
+  required:
+    - goal
+    - constraints
+    - confirmed_facts
+    - unresolved_questions
+  conditional:
+    - selected_message_ranges
+    - tool_results
+    - user_preferences
+  references:
+    - transcript_ref
+    - artifact_refs
+    - state_snapshot_ref
+  prohibited:
+    - raw_credentials
+    - unrelated_private_memory
+    - hidden_reasoning
+```
+
+---
+
+#### 6.4.9 消息历史完整性
+
+当 Handoff 通过 Tool Call 触发时，消息历史必须保持协议结构完整。
+
+典型调用链：
+
+```text
+Assistant: 调用 transfer_to_billing_agent
+Tool:      handoff accepted
+Assistant: 由 Billing Agent 继续处理
+```
+
+如果只保留 Tool Call 而删除对应 Tool Result，某些模型 API 会认为历史无效；反之，只留下 Tool Result 也会破坏调用关联。因此，过滤上下文时需要：
+
+- 保留 Tool Call 与 Tool Result 的配对关系；
+- 保留 `tool_call_id` 或等价关联 ID；
+- 维持原始时序；
+- 不重复追加同一消息；
+- 对被压缩的消息保留来源范围和哈希；
+- 区分用户消息、Agent 回复、系统事件和内部编排事件；
+- 决定 Handoff Tool 的内部调用是否需要暴露给目标模型。
+
+LangChain/LangGraph 的 Handoff 示例会在状态更新中写入匹配 `tool_call_id` 的 `ToolMessage`，用于闭合工具请求—响应周期；Microsoft Agent Framework 的 Handoff Executor 会过滤内部 Handoff Tool 调用和结果，避免把编排细节继续暴露给下一个模型。
+
+推荐维护 Transcript Lineage：
+
+```yaml
+transcript_lineage:
+  session_id: session-102
+  branch_id: branch-billing-01
+  parent_branch_id: branch-triage-01
+  source_range:
+    from_message: msg-001
+    to_message: msg-038
+  filtered_items:
+    - msg-011
+    - tool-009
+  summary_artifact: artifact://handoff-summary-77
+  content_hash: sha256:...
+```
+
+---
+
+#### 6.4.10 状态、记忆与 Artifact 的迁移
+
+Handoff 不应被实现为“复制所有内存对象”。应根据 Scope 决定目标 Agent 可以读取什么。
+
+| 数据类型 | 是否默认共享 | 推荐策略 |
+|---|---|---|
+| Session 公共消息 | 条件共享 | 过滤或摘要后传递 |
+| Task State | 共享 | 使用版本化快照或共享状态存储 |
+| Agent 私有工作记忆 | 不共享 | 只提取必要事实和 Artifact |
+| 用户长期记忆 | 按权限共享 | 根据 user/project/agent scope 检索 |
+| Tool 临时句柄 | 不共享 | 重新创建或通过稳定资源 ID 引用 |
+| Artifact | 共享引用 | 使用 Artifact ID、版本、哈希和 ACL |
+| Secret/Credential | 不直接共享 | 目标 Agent 重新获取最小权限凭据 |
+| Checkpoint | 不直接复制 | 通过运行时恢复接口加载 |
+
+共享状态建议采用乐观并发控制：
+
+```yaml
+state_update:
+  task_id: task-8842
+  expected_version: 7
+  new_version: 8
+  patch:
+    active_agent: billing-agent
+    handoff_id: ho_01K4A9R3W6
+```
+
+如果版本不匹配，说明有其他 Agent 或人工同时修改了任务，必须重新读取并合并，而不是覆盖。
+
+Artifact 应携带：
+
+```text
+artifact_id
+artifact_type
+schema_version
+producer_agent
+content_hash
+classification
+access_policy
+validation_status
+created_at
+```
+
+目标 Agent 只有在 ACL 允许且内容哈希验证通过后才能消费 Artifact。
+
+---
+
+#### 6.4.11 未完成工具调用与副作用处理
+
+Handoff 前必须处理当前 Agent 的未完成工作，尤其是具有副作用的 Tool Call。
+
+可能状态：
+
+| Tool Call 状态 | Handoff 策略 |
+|---|---|
+| `not_started` | 可以取消或由目标 Agent 重新发起 |
+| `running_read_only` | 可等待完成，或记录句柄后由运行时继续追踪 |
+| `running_side_effecting` | 不应直接转移，先确认执行结果或进入补偿流程 |
+| `completed` | 传递结构化结果和证据 |
+| `failed_retryable` | 说明失败原因、重试次数和幂等键 |
+| `failed_terminal` | 标记不可重试，交由目标决定替代方案 |
+| `approval_pending` | 保留审批上下文，不能静默绕过审批 |
+
+Handoff 前置屏障：
+
+```text
+停止生成新的 Tool Call
+        ↓
+等待或取消可中断调用
+        ↓
+确认副作用结果
+        ↓
+写入状态和 Artifact
+        ↓
+创建 Checkpoint
+        ↓
+提交 Handoff
+```
+
+对于支付、退款、发布、数据库写入等操作，必须使用业务幂等键：
+
+```yaml
+side_effect:
+  operation: refund.create
+  idempotency_key: refund:order-993:charge-02
+  status: pending_approval
+  owner_agent: billing-agent
+```
+
+即使 Handoff 请求被网络重试，也不能重复退款或重复发布。
+
+---
+
+#### 6.4.12 权限、身份与安全边界
+
+Handoff 不是权限继承。目标 Agent 的有效权限应重新计算：
+
+```text
+Effective Permissions
+=
+Target Agent Base Permissions
+∩ User Delegation Scope
+∩ Task Scope
+∩ Tenant Policy
+∩ Runtime/Sandbox Policy
+∩ Current Approval State
+```
+
+而不是：
+
+```text
+Target Permissions = Source Agent Permissions
+```
+
+推荐流程：
+
+```mermaid
+sequenceDiagram
+    participant S as Source Agent
+    participant P as Policy Engine
+    participant I as Identity Service
+    participant T as Target Agent
+
+    S->>P: 请求 Handoff(target, task, requested_scopes)
+    P->>P: 校验允许边、风险、数据区域和预算
+    P->>I: 请求目标 Agent 的最小权限委派
+    I-->>P: 短期、限域 Credential 或 Delegation ID
+    P-->>S: Allow + Redaction Policy + Effective Scopes
+    S->>T: Handoff Package，不包含源 Agent 原始凭据
+    T->>I: 使用自身身份兑换必要的短期访问权限
+    I-->>T: Scoped Credential
+```
+
+安全要求：
+
+- 每个 Agent 使用独立身份；
+- Credential 不通过自然语言消息传递；
+- 跨信任域时重新认证和授权；
+- 目标 Agent 不得自动获得源 Agent 的高权限工具；
+- 传输前执行敏感数据分类和脱敏；
+- 高风险 Handoff 需要人工批准；
+- 对目标 Agent 的 System Prompt、工具和模型供应商做合规检查；
+- Agent 描述和 Handoff Tool Description 也视为潜在 Prompt Injection 面；
+- 外部 Agent 返回内容按不可信输入处理；
+- Handoff 链中的每一跳都记录授权决策和 Policy Version。
+
+##### Prompt Injection 跨 Agent 传播
+
+风险链路：
+
+```text
+外部文档中的恶意指令
+→ Research Agent 未隔离
+→ 摘要中保留恶意指令
+→ Handoff 给高权限 Agent
+→ 高权限工具被诱导调用
+```
+
+防护：
+
+- 把外部内容标记为 `untrusted_data`；
+- 上下文摘要区分“用户指令、系统指令、外部数据”；
+- 目标 Agent 不接受来源不明的权限要求；
+- 高风险 Tool Call 再次执行 Policy 和 Guardrail；
+- 低信任 Agent 不能直接 Handoff 到高权限 Agent；
+- 使用结构化字段传递事实，不把外部文本拼接进系统指令。
+
+---
+
+#### 6.4.13 Human Handoff 设计
+
+Human Handoff 比 Agent 间转移多出排队、人员可用性、SLA 和人工工作台。
+
+```mermaid
+sequenceDiagram
+    participant U as 用户
+    participant A as AI Agent
+    participant Q as Human Queue
+    participant H as 人工坐席
+    participant S as Session Store
+
+    U->>A: 提出高风险退款请求
+    A->>A: 风险判断与信息收集
+    A->>S: 保存结构化摘要、证据和任务状态
+    A->>Q: 创建接管请求(priority, skill, SLA)
+    Q-->>A: 返回 ticket_id 和预计队列状态
+    A-->>U: 告知已转人工及当前状态
+    Q->>H: 分配具备权限的坐席
+    H->>S: 读取摘要、关键原文和 Artifact
+    H->>S: 接受接管并成为 Active Owner
+    H-->>U: 继续处理，不重复询问已确认信息
+    H->>S: 完成或退回 AI Agent
+```
+
+Human Handoff Package 应额外包含：
+
+```yaml
+human_handoff:
+  queue: payment-risk
+  required_skill: refund-approval-level-2
+  priority: high
+  sla_deadline: 2026-09-03T08:00:00Z
+  customer_sentiment: frustrated
+  compliance_flags:
+    - possible_fraud
+  suggested_actions:
+    - verify_second_charge
+  prohibited_actions:
+    - auto_refund_without_identity_check
+```
+
+必须处理：
+
+- 当前没有人工可用；
+- 排队超时；
+- 坐席拒绝或无权限；
+- 用户离线后重新进入；
+- 人工处理完毕后是否回到 AI；
+- 人工修改的状态如何同步给 Agent；
+- AI 是否允许在人工接管期间继续自动执行；
+- 用户是否能看到当前处理者和工单状态。
+
+推荐在人工接管后冻结高风险自动操作，AI 仅作为 Copilot 提供建议，除非人工明确授权恢复自动执行。
+
+---
+
+#### 6.4.14 Handoff-back 与返回策略
+
+没有返回规则的 Handoff 很容易形成“转过去后再也回不来”或 Agent 间反复踢球。
+
+常见返回策略：
+
+| 策略 | 语义 | 场景 |
+|---|---|---|
+| `never_return` | 目标 Agent 接管到会话结束 | 专业客服永久接管 |
+| `return_on_completion` | 子任务完成后自动回源 Agent | 临时专家任务 |
+| `explicit_transfer_back` | 目标显式调用 Handoff 返回 | 多轮专家协作 |
+| `return_on_failure` | 目标失败时回源或备用 Agent | 可恢复流程 |
+| `return_on_user_request` | 用户要求切回原 Agent | 交互式助手 |
+| `return_to_router` | 所有专家完成后返回 Triage/Router | 中央入口治理 |
+| `return_to_human` | 失败或高风险时转人工 | 合规业务 |
+
+推荐维护 Handoff Stack，但不能只依赖栈：
+
+```yaml
+handoff_chain:
+  - seq: 1
+    source: triage-agent
+    target: billing-agent
+    status: active
+  - seq: 2
+    source: billing-agent
+    target: refund-agent
+    status: pending
+```
+
+栈适合嵌套调用；Mesh Handoff 还需要完整有向链，记录每一跳原因。
+
+循环控制：
+
+```yaml
+loop_guard:
+  max_chain_depth: 5
+  max_same_edge_count: 1
+  max_same_agent_visits: 2
+  cooldown_seconds: 30
+  no_progress_window: 2
+  on_loop_detected: human-support
+```
+
+“无进展”可以定义为：连续两次 Handoff 后，任务状态、已确认事实、Artifact 或验收条件均没有变化。
+
+---
+
+#### 6.4.15 跨运行时 Handoff 与 A2A 的关系
+
+Handoff 是控制权和任务所有权语义；A2A 是远程 Agent 发现、消息、任务、流式结果和 Artifact 的协议。二者可以组合，但不能直接等同。
+
+```mermaid
+sequenceDiagram
+    participant U as 用户/UI
+    participant L as Local Orchestrator
+    participant G as A2A Gateway
+    participant R as Remote Agent
+
+    U->>L: 请求跨域专家处理
+    L->>L: 生成 Handoff Package 并执行策略校验
+    L->>G: 发现 Agent Card 与目标 Skill
+    G->>R: A2A SendMessage / 创建 Task
+    R-->>G: Task(submitted/working)
+    G-->>L: remote_task_id + context_id
+    L->>L: 提交本地 ownership 变更或标记 remote_delegate
+    R-->>G: StatusUpdate / ArtifactUpdate
+    G-->>L: 映射远端事件到本地 Handoff Trace
+    L-->>U: 流式展示远端进度
+    R-->>G: Task(completed) + Artifact
+    G-->>L: 最终结果
+    L->>L: 根据 return_policy 回切或结束
+    L-->>U: 最终答复
+```
+
+建议映射：
+
+| Handoff 概念 | A2A 对应 |
+|---|---|
+| 目标 Agent | Agent Card / `supportedInterfaces` |
+| 所需能力 | Agent Skill |
+| 会话相关性 | `contextId` |
+| 远端工作实例 | `taskId` |
+| Handoff 摘要与结构化状态 | `Message.parts` |
+| 大型中间结果 | Artifact |
+| 进度 | Task Status Update |
+| 用户补充信息 | 在同一 `contextId`/`taskId` 中继续 Message |
+| 远端取消 | Cancel Task |
+| 异步完成 | Streaming 或 Push Notification |
+
+必须注意：
+
+- A2A Server 接受一个 Task，不代表它自动成为本地 UI 的 Conversation Owner；
+- 本地系统通常仍需要维护用户会话、状态展示和失败回退；
+- 远端 `taskId` 与本地 `handoff_id`、`task_id` 应单独保存映射；
+- 目标 Agent Card 的能力声明只用于发现，实际调用仍要做授权；
+- 远端 Agent 可能使用不同的状态模型，需在 Gateway 做状态映射；
+- 跨组织 Handoff 应采用两阶段确认和显式数据出境策略。
+
+```yaml
+remote_mapping:
+  local_handoff_id: ho_01K4A9R3W6
+  local_task_id: task-8842
+  remote_agent_url: https://agent.example.com/a2a
+  remote_context_id: ctx-991
+  remote_task_id: task-remote-551
+  protocol_version: "1.0"
+  state_mapping_version: v2
+```
+
+---
+
+#### 6.4.16 可靠性、一致性与恢复
+
+##### 1. Handoff 的主要失败点
+
+| 阶段 | 失败 | 恢复策略 |
+|---|---|---|
+| 选择目标 | 目标错误或不存在 | 回到源 Agent、重新分类、转人工 |
+| 策略校验 | 权限不足或数据不可出域 | 拒绝 Handoff，采用本地低权限方案 |
+| 构建上下文 | 摘要失败、状态版本冲突 | 重读状态、降级为关键原文加结构化状态 |
+| 目标接受 | 目标繁忙、限流、版本不兼容 | 备用目标、队列、延迟重试 |
+| Commit | Active Owner 更新失败 | 不停止源 Agent，重新提交幂等事务 |
+| 目标执行 | 崩溃、超时、模型错误 | 从 Checkpoint 恢复、回切、转备用 Agent |
+| 回切 | 前序 Agent 不可用 | 返回 Router 或 Human Queue |
+| 结果合并 | 状态冲突、Artifact 校验失败 | 版本合并、隔离异常 Artifact、人工复核 |
+
+##### 2. Checkpoint 边界
+
+建议至少在以下位置创建 Checkpoint：
+
+```text
+C0：Handoff 前，源 Agent 已完成可迁移状态写入
+C1：目标已接受，但 ownership 尚未提交
+C2：ownership 已提交，目标尚未产生首个动作
+C3：目标完成关键副作用后
+C4：回切或最终完成前
+```
+
+##### 3. Active Owner Lease
+
+分布式系统中应避免源 Agent 和目标 Agent 同时认为自己拥有会话。可为 Active Owner 使用租约：
+
+```yaml
+active_owner_lease:
+  session_id: session-102
+  agent_id: billing-agent
+  handoff_id: ho_01K4A9R3W6
+  epoch: 14
+  expires_at: 2026-09-03T07:31:00Z
+```
+
+每次所有权变化递增 `epoch`。只有持有最新 epoch 的 Agent 可以发送用户可见消息或执行需要唯一所有者的副作用。
+
+##### 4. 幂等与重复事件
+
+网络重试可能造成重复 Handoff Request、Accept 或 Commit。所有操作都应以 `handoff_id + idempotency_key` 去重。
+
+推荐语义：
+
+- `prepare` 可安全重试；
+- `accept` 对同一 Handoff 返回相同结果；
+- `commit` 使用 CAS 或数据库事务；
+- 目标收到重复激活事件时不得重复执行已完成副作用；
+- Push、SSE 重连和消息队列采用 at-least-once 时，消费者必须去重。
+
+##### 5. Split-Brain 防护
+
+若两个 Agent 同时发送回复：
+
+1. Gateway 检查 Active Owner Lease；
+2. 拒绝旧 epoch 的输出；
+3. 记录 `stale_owner_write`；
+4. 停止旧 Agent 的工具执行；
+5. 对已经发生的副作用执行补偿或人工审核。
+
+---
+
+#### 6.4.17 可观测性与事件模型
+
+每次 Handoff 应创建独立 Span，并与源 Agent Span、目标 Agent Span建立父子关系或 Span Link。
+
+```yaml
+handoff_span:
+  trace_id: trace-1001
+  span_id: span-handoff-38
+  parent_span_id: span-triage-37
+  operation: agent.handoff
+  source_agent: triage-agent
+  target_agent: billing-agent
+  handoff_id: ho_01K4A9R3W6
+  reason_code: duplicate_charge
+  routing_confidence: 0.96
+  context_strategy: summary_plus_references
+  context_tokens: 1850
+  redaction_count: 3
+  policy_decision: allow
+  preparation_latency_ms: 82
+  target_accept_latency_ms: 41
+  commit_latency_ms: 19
+  total_handoff_latency_ms: 142
+  chain_depth: 1
+  outcome: committed
+```
+
+推荐事件：
+
+```text
+handoff.proposed
+handoff.validation_started
+handoff.policy_allowed
+handoff.policy_denied
+handoff.context_built
+handoff.target_accepted
+handoff.target_rejected
+handoff.committed
+handoff.target_started
+handoff.return_requested
+handoff.returned
+handoff.failed
+handoff.recovered
+handoff.loop_detected
+handoff.human_queued
+handoff.human_accepted
+```
+
+核心指标：
+
+| 指标 | 定义 |
+|---|---|
+| Handoff Attempt Rate | 发起 Handoff 的会话或任务比例 |
+| Handoff Acceptance Rate | 被目标成功接受的 Handoff / 有效请求 |
+| Handoff Success Rate | 目标完成预期阶段或任务的 Handoff / 已提交 Handoff |
+| Routing Accuracy | 目标选择正确的 Handoff / 已标注 Handoff |
+| Context Preservation Rate | 目标无需重复询问即可继续处理的比例 |
+| Repeat Question Rate | Handoff 后重复询问已确认信息的会话比例 |
+| Handoff Loop Rate | 命中循环规则的链路 / Handoff 链路 |
+| Average Chain Depth | 每个会话平均 Handoff 跳数 |
+| P95 Handoff Latency | 从提出到目标可执行的 P95 延迟 |
+| Handoff Token Overhead | 摘要、历史和转移元数据消耗的 Token |
+| Permission Escalation Block Rate | 被策略阻止的越权转移比例 |
+| Human Escalation Rate | 转入人工的会话比例 |
+| Recovery Success Rate | Handoff 失败后自动恢复成功比例 |
+
+同时记录：
+
+- 源 Agent 和目标 Agent 版本；
+- 模型和 Prompt 版本；
+- Agent Registry 版本；
+- Policy Version；
+- 上下文过滤器版本；
+- Handoff Tool Schema 版本；
+- 用户是否明确要求转移；
+- 目标是否请求更多信息；
+- 回切路径和最终责任 Agent。
+
+日志中不应直接保存完整敏感上下文。应保存引用、哈希、分类等级和受控审计副本。
+
+---
+
+#### 6.4.18 Handoff 评估体系
+
+Handoff 评估应分别覆盖“是否该转”“转给谁”“传了什么”“接管后是否有效”“权限是否安全”。
+
+##### 1. 路由正确性
+
+构建带标注的数据集：
+
+```yaml
+case:
+  input: "我的卡被同一笔订单扣了两次"
+  expected_target: billing-agent
+  forbidden_targets:
+    - technical-agent
+  expected_reason_code: duplicate_charge
+```
+
+指标：
+
+```text
+Routing Accuracy
+= 正确目标 Handoff 数 / 所有应发生 Handoff 的样本数
+
+False Handoff Rate
+= 不应转移但发生 Handoff 的样本数 / 所有不应转移样本数
+
+Missed Handoff Rate
+= 应转移但未转移样本数 / 所有应转移样本数
+```
+
+##### 2. 上下文保真度
+
+检查目标 Agent 是否获得：
+
+- 用户目标；
+- 已确认事实；
+- 关键约束；
+- 未解决问题；
+- Artifact；
+- 必要授权范围。
+
+可定义：
+
+```text
+Context Preservation Score
+= 正确传递的关键事实权重之和 / 应传递关键事实权重之和
+```
+
+同时统计：
+
+- Handoff 后重复提问率；
+- 摘要事实错误率；
+- 丢失约束率；
+- 无关信息比例；
+- 敏感信息泄露率；
+- Artifact 不可访问率。
+
+##### 3. 接管效果
+
+- 首次接管成功率；
+- 目标 Agent 首个有效动作延迟；
+- Handoff 后任务完成率；
+- 目标 Agent 再次错误转交率；
+- 回切后状态一致性；
+- 人工坐席接受率；
+- 用户满意度变化；
+- 单次成功 Handoff 成本。
+
+##### 4. 循环与终止
+
+测试：
+
+- A → B → A；
+- A → B → C → A；
+- 同一 Agent 连续请求 Handoff；
+- 无目标可用；
+- 所有目标都拒绝；
+- 超过最大深度；
+- 目标执行无进展；
+- 用户持续改变意图。
+
+##### 5. 安全评估
+
+- 低权限 Agent 尝试转给高权限 Agent；
+- 外部 Prompt Injection 诱导转移；
+- 跨租户 Agent ID 注入；
+- 目标名称伪造；
+- Credential 被写入 Handoff 摘要；
+- 脱敏规则失效；
+- 人工审批被 Handoff 绕过；
+- 旧 Active Owner 继续执行副作用；
+- 远端 Agent Card 被替换或降级攻击。
+
+---
+
+#### 6.4.19 主流框架的 Handoff 实现差异
+
+截至 2026 年 9 月，主流框架并没有完全统一的 Handoff 语义。
+
+| 框架 | Handoff 触发 | 默认上下文 | 控制权模型 | 回切方式 | 关键特点 |
+|---|---|---|---|---|---|
+| OpenAI Agents SDK | 模型调用 `transfer_to_<agent>` Tool | 默认完整历史，可过滤或重写 | 目标 Agent 接管同一次 Run | 目标再 Handoff | `input_type`、`on_handoff`、`input_filter`、动态启用 |
+| Microsoft Agent Framework | Handoff Builder 注入转移 Tool | 维护完整会话，可过滤内部 Handoff 调用 | Mesh，无中央 Manager 持续控场 | Agent 间继续 Handoff | 交互式、Checkpoint、HITL、专用 Executor |
+| LangChain/LangGraph | Tool 返回 `Command` 更新状态和 `goto` | 由 Graph State 明确控制 | 状态机切换 Active Agent 或配置 | `Command` 跳回其他节点 | 可单 Agent 动态配置，也可多 Subgraph |
+| Google ADK | `transfer_to_agent(agent_name)`，由 AutoFlow 拦截 | 共享 Session/Invocation Context，受模式影响 | 在 Agent 层级中切换执行焦点 | Chat 模式显式转回；Task 模式可自动返回 | Parent/Child/Sibling 范围、Agent Mode |
+
+##### 1. OpenAI Agents SDK
+
+OpenAI Agents SDK 将 Handoff 暴露成模型可调用的 Tool；目标为 `Refund Agent` 时，默认 Tool 名类似 `transfer_to_refund_agent`。核心配置包括：
+
+- `handoffs`：为 Agent 注册可转移目标；
+- `handoff_description`：帮助模型判断何时选择目标；
+- `tool_name_override`、`tool_description_override`：自定义 Tool；
+- `on_handoff`：Handoff 被调用时执行回调；
+- `input_type`：让模型为 Handoff 产生少量结构化元数据，如原因、语言、优先级和摘要；
+- `input_filter`：控制目标 Agent 能看到的历史；
+- `is_enabled`：运行时动态启用或禁用某条 Handoff；
+- `nest_handoff_history`、`handoff_history_mapper`：控制多次 Handoff 后的历史压缩和重建。
+
+概念示例：
+
+```python
+from pydantic import BaseModel
+from agents import Agent, handoff
+
+class EscalationData(BaseModel):
+    reason: str
+    priority: str
+
+refund_agent = Agent(
+    name="Refund agent",
+    instructions="处理退款核验与用户沟通。",
+)
+
+triage_agent = Agent(
+    name="Triage agent",
+    instructions="识别问题类型；退款问题转给 Refund agent。",
+    handoffs=[
+        handoff(
+            agent=refund_agent,
+            input_type=EscalationData,
+            # 可增加 on_handoff、input_filter、is_enabled 等
+        )
+    ],
+)
+```
+
+重要语义：
+
+- 默认情况下，目标 Agent 接管并看到之前的完整会话历史；
+- `input_type` 只描述 Handoff Tool 参数，不替代目标 Agent 的主输入；
+- 如果目标只是执行一个结构化子任务并返回结果，应优先使用 `Agent.as_tool(...)`；
+- Handoff 保持在同一次 Run 中；
+- 官方文档指出，Input Guardrail 默认只应用于链路中的第一个 Agent，Output Guardrail 默认只应用于生成最终输出的 Agent。若每一跳都需要校验，应在 Tool、Policy、Middleware 或各 Agent 的边界增加独立防护；
+- 使用服务端管理的 Conversation 时，需要注意某些 Handoff Input Filter 组合的限制。
+
+##### 2. Microsoft Agent Framework
+
+Microsoft Agent Framework 的 Handoff Orchestration 使用 Mesh 拓扑：Agent 之间根据预定义规则直接转移，不由一个持续存在的中央 Manager 管理每一步。
+
+关键能力：
+
+- 根据 Handoff 规则向每个 Agent 自动注入转移 Tool；
+- 检测模型返回的 Handoff Function Call 并路由到目标 Agent；
+- 使用专用 `HandoffAgentExecutor`；
+- 在传给目标 Agent 前过滤内部 Handoff Tool Call 和结果；
+- 保持完整会话历史；
+- 交互式运行：当前 Agent 不再 Handoff 时，可把控制返回给用户继续多轮对话；
+- 支持 Tool Approval 和 Human-in-the-loop；
+- 支持 Checkpoint Storage，以便跨进程重启恢复；
+- 可以配置哪些 Agent 输出属于中间事件、哪些属于终态输出。
+
+该实现明确区分 Handoff 与 Agent-as-Tools：前者转移整个任务所有权，后者始终由主 Agent 保持责任。
+
+##### 3. LangChain / LangGraph
+
+LangChain 的 Handoff 核心机制是：Handoff Tool 返回 `Command`，同时更新 State 并触发 Graph 跳转。
+
+```python
+@tool
+def transfer_to_sales(runtime: ToolRuntime) -> Command:
+    return Command(
+        goto="sales_agent",
+        update={
+            "active_agent": "sales_agent",
+            "messages": [
+                ToolMessage(
+                    content="Transferred to sales agent",
+                    tool_call_id=runtime.tool_call_id,
+                )
+            ],
+        },
+        graph=Command.PARENT,
+    )
+```
+
+两个实现路径：
+
+1. **单 Agent + Middleware**：根据 `current_step` 或 `active_agent` 动态替换 System Prompt 和工具集合；
+2. **多个 Agent Subgraph**：每个专家是独立图节点，通过 `Command.goto` 切换。
+
+官方建议大多数简单 Handoff 先考虑单 Agent 动态配置，因为状态更简单；只有当不同专家本身是复杂 Graph、需要独立检索、反思或状态时，再拆成多个 Subgraph。
+
+实现要点：
+
+- Tool Call 必须有匹配的 `ToolMessage`；
+- 状态中保存 `active_agent`；
+- 新一轮输入从 `active_agent` 对应节点开始；
+- Handoff 状态应通过 Checkpointer 持久化；
+- `Command.PARENT` 可从子图跳转到父图中的其他 Agent 节点；
+- 多分支状态更新需要 Reducer，避免覆盖消息或共享字段。
+
+##### 4. Google ADK
+
+Google ADK 中，`LlmAgent` 可以生成：
+
+```text
+transfer_to_agent(agent_name="Booker")
+```
+
+默认的 AutoFlow 拦截调用，通过根 Agent 查找目标并更新 `InvocationContext`，从而切换执行焦点。目标选择依赖：
+
+- Agent 的 `name`；
+- 清晰且互不重叠的 `description`；
+- 调用方 `instruction` 中的转移规则；
+- 可配置的 Parent、Child、Sibling 转移范围。
+
+ADK 还区分协作模式：
+
+| 模式 | 用户交互 | 控制权 | 返回 Parent |
+|---|---|---|---|
+| `chat` | 可持续多轮 | 目标保持控制，直到显式转回 | 手动 `transfer_to_agent` |
+| `task` | 可为完成任务而澄清 | 直到调用 `finish_task` | 自动返回来源 Agent |
+| `single_turn` | 不与用户多轮交互 | 完成单轮即结束 | 自动返回并携带结果 |
+
+因此，ADK 中“Transfer”可能是持续对话 Handoff，也可能是带自动返回的任务级转移，具体取决于 Agent Mode 和调用上下文。
+
+---
+
+#### 6.4.20 生产级 Handoff 参考流程
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant U as 用户
+    participant S as Source Agent
+    participant R as Agent Registry
+    participant P as Policy Engine
+    participant C as Context Builder
+    participant H as Handoff Coordinator
+    participant T as Target Agent
+    participant D as State/Checkpoint Store
+    participant O as Observability
+
+    U->>S: 新消息
+    S->>S: 识别需要专家接管
+    S->>R: 查询候选 Agent、能力、版本和状态
+    R-->>S: 候选目标列表
+    S->>P: 校验允许边、用户权限、数据边界和预算
+    P-->>S: Allow + Effective Scope + Redaction Rules
+    S->>C: 构建摘要、结构化状态和 Artifact 引用
+    C->>D: 读取一致性快照
+    D-->>C: state_version=7
+    C-->>S: Handoff Package
+    S->>H: prepare(handoff_id, package)
+    H->>T: 请求目标接受
+    T-->>H: accepted(capabilities, lease_requirements)
+    H->>D: 原子提交 Active Owner、epoch 和 Checkpoint
+    D-->>H: committed(epoch=14)
+    H-->>S: commit success，停止源 Agent 主导
+    H-->>T: activate(epoch=14)
+    T->>O: target_started
+    T-->>U: 说明已接管并继续处理
+    T->>D: 更新任务状态和 Artifact
+    alt 目标完成并需回切
+        T->>H: return_to_source(result)
+        H->>D: 更新 Owner 与 Checkpoint
+        H-->>S: reactivate + result
+        S-->>U: 汇总或继续对话
+    else 目标直接完成会话
+        T-->>U: 最终答复
+        T->>D: 标记 Completed
+    else 目标失败
+        T->>H: failed(error, retryability)
+        H->>P: 选择重试、备用 Agent 或人工
+        P-->>H: recovery decision
+        H-->>U: 说明状态并执行恢复
+    end
+```
+
+##### 参考算法
+
+```text
+function handoff(source, requested_target, task):
+    candidates = registry.resolve(requested_target, task.required_skill)
+    target = router.rank_and_select(candidates, task)
+
+    policy = policy_engine.evaluate(
+        source=source,
+        target=target,
+        user=task.user,
+        requested_data=task.context,
+        requested_permissions=task.scopes,
+    )
+    if policy.denied:
+        return source.continue_or_escalate(policy.reason)
+
+    package = context_builder.build(
+        strategy="hybrid",
+        redaction_policy=policy.redaction_policy,
+        state_version=task.state_version,
+    )
+
+    accepted = target.prepare_accept(
+        handoff_id=stable_handoff_id(),
+        package_metadata=package.metadata,
+    )
+    if not accepted:
+        return fallback(target.rejection_reason)
+
+    checkpoint = state_store.commit_handoff(
+        expected_owner=source.id,
+        expected_state_version=task.state_version,
+        new_owner=target.id,
+        new_epoch=task.owner_epoch + 1,
+        package_ref=package.ref,
+    )
+
+    target.activate(checkpoint)
+    source.stop_owning_conversation()
+```
+
+核心原则是：**先验证和准备，后提交所有权；提交成功后，目标才获得唯一有效的执行 epoch。**
+
+---
+
+#### 6.4.21 常见失败模式与反模式
+
+##### 1. 把所有 Agent 做成自由 Mesh
+
+每个 Agent 都能转给任意其他 Agent，导致选择空间扩大、权限边界模糊和循环增加。
+
+**改进**：声明允许边、候选过滤和 Policy Gate。
+
+##### 2. Agent 描述高度重叠
+
+例如三个 Agent 都声明“处理用户问题”，模型无法稳定选择。
+
+**改进**：描述包含明确的正向范围、排除范围和典型触发词。
+
+```yaml
+description: >
+  处理已发生的扣款、发票和账单异常。
+  不处理登录故障、产品功能咨询或售前价格比较。
+```
+
+##### 3. 默认传完整历史
+
+目标 Agent 获得大量无关 Tool Log、敏感数据和旧指令。
+
+**改进**：采用 Hybrid Context、分级脱敏和 Artifact 引用。
+
+##### 4. 只传摘要，没有证据
+
+摘要写错后目标 Agent 无法回查原文。
+
+**改进**：摘要必须带关键消息范围、事实来源和 Artifact 引用。
+
+##### 5. 静默 Handoff
+
+用户不知道处理者变化，目标 Agent 语气、能力或权限突然改变。
+
+**改进**：在不泄露内部实现的前提下说明“已转由账单专家继续处理”，并保持连续体验。
+
+##### 6. Handoff 即权限继承
+
+低权限 Agent 借 Handoff 触发高权限 Tool。
+
+**改进**：每次转移重新计算权限，Credential 不随消息复制。
+
+##### 7. 未完成副作用直接转移
+
+源 Agent 发起退款后立即 Handoff，目标 Agent 再次发起退款。
+
+**改进**：副作用屏障、幂等键、状态确认和补偿事务。
+
+##### 8. 没有显式 Return Policy
+
+目标完成后不知道回复用户、结束任务还是转回源 Agent。
+
+**改进**：每个 Handoff Contract 都包含 `return_policy`。
+
+##### 9. 无循环检测
+
+A 判断 B 更适合，B 又判断 A 更适合。
+
+**改进**：限制同一边次数、访问次数、链深度和无进展窗口。
+
+##### 10. 源和目标同时输出
+
+分布式 Handoff 出现 Split-Brain，用户收到冲突答复。
+
+**改进**：Active Owner Lease、epoch 和 Gateway 输出门禁。
+
+##### 11. Handoff Tool 暴露任意字符串目标
+
+模型可以构造不存在或不允许的 Agent 名称。
+
+**改进**：每个目标注册独立 Tool，或使用枚举 Schema 并在 Registry/Policy 中再次校验。
+
+##### 12. 只评估最终答案
+
+最终回答偶然正确，但中间发生多次错误转移、敏感数据泄露和高额成本。
+
+**改进**：同时评估路由、上下文、安全、延迟、循环和恢复。
+
+---
+
+#### 6.4.22 什么时候优先使用 Handoff
+
+适合 Handoff：
+
+- 专家需要直接与用户持续多轮交流；
+- 不同 Agent 的 System Prompt、工具、权限或合规域差异明显；
+- 当前任务所有权确实需要转移；
+- 用户后续输入应直接交给目标 Agent；
+- 需要人工接管或跨部门接管；
+- 任务的主导者会随意图变化动态切换。
+
+不适合 Handoff：
+
+- 只需要专家返回一个后台结果；
+- 主 Agent 需要统一汇总多个结果；
+- 流程顺序固定且无动态交互；
+- 任务只是一次函数式计算；
+- 多个 Agent 必须同时并行工作；
+- 目标不需要看到用户会话；
+- 无法可靠迁移上下文、状态或权限。
+
+选择逻辑：
+
+```text
+目标 Agent 是否要直接接管用户会话？
+├─ 否 → Agent as Tool / Delegation
+└─ 是
+   ├─ 路径是否固定？
+   │  ├─ 是 → Workflow + Interactive Node
+   │  └─ 否 → Handoff
+   └─ 是否跨运行时？
+      ├─ 否 → 框架内 Handoff
+      └─ 是 → Handoff Coordinator + A2A/远程协议
+```
+
+---
+
+#### 6.4.23 Handoff 实施检查清单
+
+##### 语义与拓扑
+
+- [ ] 是否明确 Conversation、Task、Response 三类所有权；
+- [ ] 是否区分 Handoff、Delegation 和 Agent as Tool；
+- [ ] 是否声明允许的 Handoff 边；
+- [ ] 是否定义目标 Agent 的正向范围和排除范围；
+- [ ] 是否配置最大链深度、同边次数和回切策略；
+- [ ] 是否存在无目标可用时的 Fallback。
+
+##### 上下文与状态
+
+- [ ] 是否定义 Full、Filtered、Summary、Structured 或 Hybrid 策略；
+- [ ] 是否传递目标、已确认事实、约束、未解决问题和验收条件；
+- [ ] 是否保留关键原文和 Artifact 引用；
+- [ ] 是否维护消息 Tool Call/Result 完整性；
+- [ ] 是否使用版本化状态快照；
+- [ ] 是否防止私有记忆和无关租户数据泄露；
+- [ ] 是否禁止传递原始 Credential 和隐藏推理。
+
+##### 权限与安全
+
+- [ ] 每个 Agent 是否使用独立身份；
+- [ ] Handoff 时是否重新计算有效权限；
+- [ ] 跨信任域是否执行脱敏、用户同意和数据出境检查；
+- [ ] 高风险目标是否要求人工审批；
+- [ ] 外部 Agent 返回内容是否按不可信输入处理；
+- [ ] Prompt Injection 是否会沿 Handoff 链传播；
+- [ ] 目标 Agent 是否只能调用被授权的工具。
+
+##### 一致性与可靠性
+
+- [ ] 是否有 `handoff_id` 和 `idempotency_key`；
+- [ ] 是否在提交前处理未完成 Tool Call 和副作用；
+- [ ] 是否在 Handoff 前后创建 Checkpoint；
+- [ ] 是否使用 CAS、事务或 Active Owner Lease；
+- [ ] 是否能处理目标拒绝、超时、限流和崩溃；
+- [ ] 是否防止源和目标同时输出；
+- [ ] 是否有自动回切、备用 Agent 和人工恢复路径。
+
+##### 用户体验
+
+- [ ] 是否向用户说明接管状态；
+- [ ] 目标 Agent 是否避免重复询问已确认信息；
+- [ ] 是否保持语言、格式和服务级别连续；
+- [ ] 用户是否可以要求转回或转人工；
+- [ ] 人工排队时是否持续展示工单和 SLA 状态。
+
+##### 可观测与评估
+
+- [ ] 是否记录 Handoff Span、原因、置信度和 Policy Decision；
+- [ ] 是否记录上下文策略、Token、脱敏数量和延迟；
+- [ ] 是否统计 Routing Accuracy、Repeat Question Rate 和 Loop Rate；
+- [ ] 是否评估上下文保真度和敏感信息泄露；
+- [ ] 是否保存 Agent、Prompt、Policy、Schema 和 Registry 版本；
+- [ ] 是否能从 Trace 重放完整 Handoff 链。
+
+---
 
 ---
 
@@ -994,7 +2565,7 @@ Handoff 与 Agent as Tool 的区别：
 - 投票；
 - 发言权控制。
 
-**适用场景：**
+**适用场景**：
 
 - 头脑风暴；
 - 专家讨论；
@@ -1002,7 +2573,7 @@ Handoff 与 Agent as Tool 的区别：
 - 博弈模拟；
 - 教学演示。
 
-**不适用场景：**
+**不适用场景**：
 
 - 严格 SLA；
 - 极低延迟；
@@ -1033,7 +2604,7 @@ Generator A ─┐
 Generator B ─┘
 ```
 
-**适用场景：**
+**适用场景**：
 
 - 复杂推理；
 - 决策分析；
@@ -1041,7 +2612,7 @@ Generator B ─┘
 - 代码 Review；
 - 多方案比较。
 
-**主要风险：**
+**主要风险**：
 
 - 多个 Agent 共享相同偏见；
 - 多数一致但仍然错误；
@@ -1112,7 +2683,7 @@ flowchart TB
     A5[Release Agent] <--> B
 ```
 
-**优势：**
+**优势**：
 
 - 降低 Agent 间消息爆炸；
 - 状态可审计；
@@ -1120,7 +2691,7 @@ flowchart TB
 - 更适合长任务和分布式系统；
 - 可以使用版本号和乐观锁控制并发。
 
-**风险：**
+**风险**：
 
 - 状态冲突；
 - 脏写和覆盖；
@@ -1140,14 +2711,14 @@ Agent 之间没有单一 Supervisor，可以：
 - 形成临时团队；
 - 竞争或协作。
 
-**优点：**
+**优点**：
 
 - 容错；
 - 扩展性；
 - 适合探索性问题；
 - 能产生自组织行为。
 
-**问题：**
+**问题**：
 
 - 难以解释；
 - 难以保证终止；
@@ -2793,7 +4364,7 @@ AG-UI 是 Agent 后端与用户前端之间的双向、事件驱动协议，适�
 
 默认不应把所有 Agent 的完整消息广播给所有成员。
 
-**原因：**
+**原因**：
 
 - 降低 Token 消耗；
 - 避免上下文污染；
@@ -3071,7 +4642,7 @@ Coding Agent 和数据 Agent 应使用：
 - 临时凭证；
 - 沙箱快照与销毁。
 
-**推荐隔离层次：**
+**推荐隔离层次**：
 
 | 风险等级 | 推荐隔离 |
 |---|---|
@@ -4165,7 +5736,6 @@ Agent 专业化
 27. [AG-UI Protocol](https://github.com/ag-ui-protocol/ag-ui)
 28. [MultiAgentBench](https://arxiv.org/abs/2503.01935)
 29. [MAST: Multi-Agent System Failure Taxonomy](https://arxiv.org/abs/2503.13657)
-
 30. [A2A 1.0 Protocol Specification](https://a2a-protocol.org/latest/specification/)
 31. [A2A Core Concepts](https://a2a-protocol.org/latest/topics/key-concepts/)
 32. [A2A Agent Discovery](https://a2a-protocol.org/latest/topics/agent-discovery/)
@@ -4176,6 +5746,11 @@ Agent 专业化
 37. [What’s New in A2A v1.0](https://a2a-protocol.org/latest/whats-new-v1/)
 38. [A2A Protocol Releases](https://github.com/a2aproject/A2A/releases)
 39. [A2A Joins the Agentic AI Foundation](https://a2a-protocol.org/latest/blog/archive/2026/)
+40. [OpenAI Agents SDK Handoffs](https://openai.github.io/openai-agents-python/handoffs/)
+41. [Microsoft Agent Framework Handoff Orchestration](https://learn.microsoft.com/en-us/agent-framework/workflows/orchestrations/handoff)
+42. [LangChain Handoffs](https://docs.langchain.com/oss/python/langchain/multi-agent/handoffs)
+43. [Google ADK LLM Delegation and Agent Transfer](https://adk.dev/agents/custom-agents/#llm-delegation-and-agent-transfer)
+44. [Google ADK Collaborative Workflows and Agent Modes](https://adk.dev/workflows/collaboration/)
 
 ---
 
