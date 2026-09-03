@@ -507,7 +507,7 @@ Log-based Event
   → 支持Severity和Body
 ```
 
-两者的详细关系、迁移路径与 Event-to-Span-Event Bridge 见 [2.8 Events 详解](#28-events-详解基于-logs-数据模型的结构化事件)。
+两者的详细关系、迁移路径与 Event-to-Span-Event Bridge 见 [7.2.8 Events 详解](#728-events-详解基于-logs-数据模型的结构化事件)。
 ### 2.5.7 Span Link
 
 父子关系适合严格的同步或嵌套因果链；Link 适合非树形关系：
@@ -6075,7 +6075,7 @@ app.artifact.size_bytes = 48211
 app.artifact.status = ready
 ```
 
-Artifact 的完整模型、A2A／MCP／LangChain／OpenAI／Chroma 映射以及安全治理见 [2.9 Artifact 详解](#29-artifact-详解agent-可交付物外部内容与遥测关联)。
+Artifact 的完整模型、A2A／MCP／LangChain／OpenAI／Chroma 映射以及安全治理见 [7.2.9 Artifact 详解](#729-artifact-详解agent-可交付物外部内容与遥测关联)。
 
 ### 4.5.21 内容采集的三种模式
 
@@ -6275,7 +6275,7 @@ error.type = timeout | rate_limit | ProviderError | 429 | ...
 - SQL；
 - 用户输入。
 
-因此异常 Event 同样需要脱敏、截断和权限隔离。通用 Event 数据模型、Bridge 与治理详见 [2.8 Events 详解](#28-events-详解基于-logs-数据模型的结构化事件)。
+因此异常 Event 同样需要脱敏、截断和权限隔离。通用 Event 数据模型、Bridge 与治理详见 [7.2.8 Events 详解](#728-events-详解基于-logs-数据模型的结构化事件)。
 ### 4.5.24 GenAI Metrics
 
 当前规范定义了 Client、Model Server、Workflow、Agent 和 Tool 五组指标。
@@ -12625,7 +12625,7 @@ gen_ai.client.operation.exception
 
 Event 适合瞬时事实。模型推理、工具执行、检索、Agent 运行等具有持续时间的操作仍应使用 Span。
 
-详细数据模型、API／SDK 管线、命名、Severity、Bridge、GenAI Events 与治理规则见 [2.8 Events 详解](#28-events-详解基于-logs-数据模型的结构化事件)。
+详细数据模型、API／SDK 管线、命名、Severity、Bridge、GenAI Events 与治理规则见 [7.2.8 Events 详解](#728-events-详解基于-logs-数据模型的结构化事件)。
 
 ### 7.16.5 Artifact：保存可交付内容、证据和可恢复对象
 
@@ -12659,7 +12659,7 @@ Tool完整结果、终端输出归档
 - Artifact ID、Version ID 和 Content Hash 不应作为 Metric 标签；
 - 跨 Trace 的输入输出血缘应保存在 Catalog，Span Link 只能补充关联 SpanContext。
 
-详细模型见 [2.9 Artifact 详解](#29-artifact-详解agent-可交付物外部内容与遥测关联)。
+详细模型见 [7.2.9 Artifact 详解](#729-artifact-详解agent-可交付物外部内容与遥测关联)。
 
 ### 7.16.6 Eval：回答质量问题
 
@@ -12981,7 +12981,7 @@ app.eval.evidence.artifact.id
 - Eval 引用不可变 Artifact Version，确保评分证据可重现；
 - Trace 被采样或过期后，Artifact Catalog 仍应独立保持正确状态。
 
-完整设计见 [2.9 Artifact 详解](#29-artifact-详解agent-可交付物外部内容与遥测关联)。
+完整设计见 [7.2.9 Artifact 详解](#729-artifact-详解agent-可交付物外部内容与遥测关联)。
 
 ---
 
