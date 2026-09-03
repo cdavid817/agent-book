@@ -46,6 +46,8 @@ Agent / 被观测框架
 12. GenAI Semantic Conventions 的 Span、Attribute、Metric、Event、Exception、Provider 与 MCP 完整规范；
 13. OpenTelemetry EventRecord、EventName、Logs API／SDK、Span Event Bridge 与 Agent 领域事件治理；
 14. Artifact 的身份、版本、Part、Manifest、存储、血缘、安全、框架映射及与 Span／Event／Metric／Eval 的协同。
+15. Traceloop／OpenLLMetry `LangchainInstrumentor` 的 Callback 注入、LangGraph 专项 Patch、Context 传播、Span 去重、内容模式、指标和官方实现差异。
+16. `opentelemetry-instrumentation-langchain` 发行包的模块结构、公共 API、Entry Point 自动加载、配置与生命周期、Attribute／Event 数据模型、Provider 识别、测试矩阵、生产配置、迁移和升级治理。
 
 ---
 
@@ -7802,6 +7804,4104 @@ wrap_tool_call
 
 ---
 
+### 7.9.7 Traceloop／OpenLLMetry `LangchainInstrumentor` 详解
+
+本节专门解释 Traceloop 开源项目 OpenLLMetry 中的：
+
+```python
+from opentelemetry.instrumentation.langchain import LangchainInstrumentor
+```
+
+它是 LangChain／LangGraph 生态中使用较多的一套第三方 OpenTelemetry Instrumentation。其核心价值是：
+
+- 不修改 LangChain 业务代码；
+- 自动向 LangChain Callback Manager 注入 Callback Handler；
+- 把 Chain、LLM、Tool、Retriever 和 LangGraph 运行转换为 OTel Span；
+- 记录模型、Token、输入输出、工具参数、错误和延迟等数据；
+- 使用 OpenTelemetry API、SDK 和 OTLP，可输出到 Traceloop，也可输出到其他 OTel 后端。
+
+不过，必须先明确：
+
+> `opentelemetry-instrumentation-langchain` 是 Traceloop／OpenLLMetry 维护的 Instrumentation，不是 OpenTelemetry 官方 `opentelemetry-instrumentation-genai-langchain`。
+
+两者类名、导入路径和部分语义映射不同。
+
+### 9.7.1 两个容易混淆的 LangChain Instrumentor
+
+截至 2026-09-03，Python 生态中至少存在下面两套名称高度相似的实现。
+
+| 对比项 | Traceloop／OpenLLMetry | OpenTelemetry 官方 GenAI Instrumentation |
+|---|---|---|
+| PyPI 包 | `opentelemetry-instrumentation-langchain` | `opentelemetry-instrumentation-genai-langchain` |
+| 导入路径 | `opentelemetry.instrumentation.langchain` | `opentelemetry.instrumentation.genai.langchain` |
+| 类名 | `LangchainInstrumentor` | `LangChainInstrumentor` |
+| 维护方 | Traceloop／OpenLLMetry | OpenTelemetry 项目 |
+| 主要接入点 | Callback Manager + LangGraph 专项 Patch | Callback Manager + OTel GenAI Telemetry Handler |
+| 兼容字段 | OTel GenAI 字段 + OpenLLMetry／Traceloop 字段 | 以 OpenTelemetry GenAI 语义约定为主 |
+| 默认内容策略 | 默认采集内容，可通过环境变量关闭 | 默认不采集内容，需显式开启 |
+| LangGraph 专项增强 | Pregel、Command、Agent Factory、Middleware Hook | 以官方实现当前支持范围为准 |
+
+准确识别方式：
+
+```python
+# Traceloop / OpenLLMetry
+from opentelemetry.instrumentation.langchain import LangchainInstrumentor
+
+# OpenTelemetry 官方 GenAI Instrumentation
+from opentelemetry.instrumentation.genai.langchain import LangChainInstrumentor
+```
+
+不要仅凭类名中的大小写判断，生产环境应检查：
+
+```bash
+pip show opentelemetry-instrumentation-langchain
+pip show opentelemetry-instrumentation-genai-langchain
+pip freeze | grep -E 'langchain|openllmetry|traceloop|opentelemetry'
+```
+
+两套包都声明了名为 `langchain` 的 `opentelemetry_instrumentor` Entry Point。如果同时安装并使用 `opentelemetry-instrument` 自动加载，可能同时向 Callback Manager 注入不同 Handler，造成重复 Span、重复 Token 或父子关系混乱。因此通常应二选一。
+
+### 9.7.2 OpenLLMetry、Traceloop SDK 与 Instrumentor 的关系
+
+三个概念需要分开：
+
+```text
+OpenLLMetry
+  → Traceloop 维护的开源 GenAI Instrumentation 集合
+
+opentelemetry-instrumentation-langchain
+  → OpenLLMetry 中负责 LangChain / LangGraph 的单独 Instrumentation 包
+
+traceloop-sdk
+  → 帮助用户统一初始化 OTel Provider、Exporter、Resource 和各类 Instrumentation 的便捷 SDK
+```
+
+完整关系：
+
+```mermaid
+flowchart LR
+    APP["LangChain / LangGraph 应用"]
+    LCI["OpenLLMetry LangchainInstrumentor"]
+    API["OpenTelemetry API"]
+    SDK["OpenTelemetry SDK"]
+    EXP["OTLP Exporter"]
+    COL["Collector 或 OTLP 后端"]
+    TL["Traceloop SDK<br/>可选便捷初始化层"]
+
+    APP --> LCI
+    LCI --> API
+    API --> SDK
+    SDK --> EXP
+    EXP --> COL
+    TL -.配置 Provider 与 Instrumentor.-> LCI
+    TL -.配置 SDK 与 Exporter.-> SDK
+```
+
+因此可以有两种主要使用方式。
+
+#### 方式一：使用 Traceloop SDK
+
+```python
+from traceloop.sdk import Traceloop
+
+Traceloop.init(app_name="rag-agent-service")
+```
+
+这种方式适合：
+
+- 希望快速启用多个 LLM、向量数据库和框架探针；
+- 不想自己组装 OTel SDK；
+- 使用 Traceloop 或兼容 OTLP 的后端；
+- 接受 Traceloop SDK 对 Resource、Exporter 和 Instrumentation 生命周期的统一管理。
+
+#### 方式二：直接使用单独 Instrumentor
+
+```python
+from opentelemetry.instrumentation.langchain import LangchainInstrumentor
+
+LangchainInstrumentor().instrument()
+```
+
+这种方式适合：
+
+- 企业已经有统一 OpenTelemetry SDK；
+- 需要自行配置 Sampler、Processor、Exporter 和 Collector；
+- 不希望引入完整 `traceloop-sdk`；
+- 希望只启用 LangChain／LangGraph Instrumentation。
+
+推荐企业平台优先采用第二种方式，把 Provider 和 Exporter 所有权保留在宿主应用中。
+
+### 9.7.3 当前版本与依赖基线
+
+截至 2026-09-03，PyPI 上 `opentelemetry-instrumentation-langchain` 的最新版本为 `0.62.3`，要求 Python `>=3.10,<4`。
+
+发布包声明的关键依赖包括：
+
+```text
+opentelemetry-api
+opentelemetry-instrumentation
+opentelemetry-semantic-conventions
+opentelemetry-semantic-conventions-ai
+```
+
+测试依赖基线覆盖：
+
+```text
+langchain >= 1.0, < 2
+langgraph >= 1.0, < 2
+langchain-openai >= 1.0, < 2
+openai >= 1.52.2, < 3
+```
+
+这不意味着任意组合都完全兼容。它仍然依赖：
+
+- LangChain Callback 接口的参数和生命周期；
+- LangGraph 内部模块路径；
+- `wrapt` 包装语义；
+- OpenTelemetry Context 实现；
+- GenAI Semantic Conventions 版本；
+- 不同模型 Provider 返回的 `LLMResult` 和 Usage 结构。
+
+因此生产环境应锁定整组依赖，而不是只锁一个 Instrumentor：
+
+```text
+Python
+OpenTelemetry API / SDK / Instrumentation
+opentelemetry-semantic-conventions-ai
+LangChain
+LangGraph
+模型 Provider 适配包
+OpenLLMetry LangChain Instrumentation
+```
+
+### 9.7.4 三种启动模式
+
+#### 模式 A：Traceloop SDK 自动初始化
+
+```bash
+pip install traceloop-sdk langchain langgraph
+```
+
+```python
+from traceloop.sdk import Traceloop
+
+Traceloop.init(
+    app_name="customer-support-agent",
+    resource_attributes={
+        "deployment.environment.name": "production",
+        "service.version": "2.3.0",
+    },
+)
+```
+
+此时 Traceloop SDK 负责：
+
+- 创建或使用 OTel Provider；
+- 配置 Exporter；
+- 发现并启用支持的 Instrumentation；
+- 设置服务资源属性；
+- 组织 Workflow、Task、Agent、Tool 等 OpenLLMetry 语义。
+
+#### 模式 B：显式调用 Instrumentor
+
+```bash
+pip install \
+  opentelemetry-api \
+  opentelemetry-sdk \
+  opentelemetry-exporter-otlp \
+  opentelemetry-instrumentation-langchain
+```
+
+```python
+from opentelemetry.instrumentation.langchain import LangchainInstrumentor
+
+instrumentor = LangchainInstrumentor(
+    use_attributes=True,
+    disable_trace_context_propagation=False,
+)
+
+instrumentor.instrument(
+    tracer_provider=tracer_provider,
+    meter_provider=meter_provider,
+    logger_provider=logger_provider,
+)
+```
+
+需要注意：
+
+- `use_attributes` 是构造函数参数；
+- `tracer_provider`、`meter_provider`、`logger_provider` 是 `instrument()` 参数；
+- 未传 Provider 时，将使用进程中的全局 Provider；
+- 同一进程不要重复调用多个 Instrumentor 初始化路径。
+
+#### 模式 C：`opentelemetry-instrument` 零代码启动
+
+该包注册了：
+
+```toml
+[project.entry-points."opentelemetry_instrumentor"]
+langchain = "opentelemetry.instrumentation.langchain:LangchainInstrumentor"
+```
+
+因此安装包后，标准 Python 自动埋点加载器可以发现它：
+
+```bash
+export OTEL_SERVICE_NAME=rag-agent-service
+export OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+export OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+export TRACELOOP_TRACE_CONTENT=false
+
+opentelemetry-instrument python app.py
+```
+
+这里所谓“零代码”是：
+
+```text
+opentelemetry-instrument
+  → Python sitecustomize 初始化
+  → 扫描 opentelemetry_instrumentor Entry Point
+  → 创建 LangchainInstrumentor
+  → 调用 instrument()
+  → Patch LangChain / LangGraph
+```
+
+它仍然需要安装包、调整启动命令，并不表示完全没有运行时注入。
+
+### 9.7.5 `instrument()` 初始化时做了什么
+
+`LangchainInstrumentor` 继承自 OpenTelemetry `BaseInstrumentor`。当前实现的 `_instrument()` 大致执行以下步骤：
+
+```mermaid
+sequenceDiagram
+    participant App as 应用启动代码
+    participant Inst as LangchainInstrumentor
+    participant OTel as OTel API / Provider
+    participant LC as LangChain
+    participant LG as LangGraph
+
+    App->>Inst: instrument(...)
+    Inst->>OTel: get_tracer(...)
+    Inst->>OTel: get_meter(...)
+    Inst->>OTel: 创建 duration / token Histogram
+    opt use_attributes=false
+        Inst->>OTel: get_logger(...)
+    end
+    Inst->>Inst: 创建 TraceloopCallbackHandler
+    Inst->>LC: Patch BaseCallbackManager.__init__
+    Inst->>LG: Patch Pregel / Command / Agent Factory / Middleware
+    opt 开启模型上下文传播
+        Inst->>LC: Patch 部分 OpenAI Model 方法
+    end
+```
+
+核心对象只有一个 `TraceloopCallbackHandler` 实例，它持有：
+
+```text
+Tracer
+Duration Histogram
+Token Histogram
+run_id → SpanHolder 映射
+CallbackManager 引用
+```
+
+因此它不是“给每次调用临时创建一个 Handler”，而是在初始化阶段创建 Handler，再注入后续产生的 Callback Manager。
+
+### 9.7.6 Callback Manager 自动注入机制
+
+最核心的自动接入点是：
+
+```text
+langchain_core.callbacks.BaseCallbackManager.__init__
+```
+
+Instrumentation 使用 `wrapt.wrap_function_wrapper` 包装构造方法。简化逻辑如下：
+
+```python
+def wrapped_callback_manager_init(original, instance, args, kwargs):
+    original(*args, **kwargs)
+
+    for handler in instance.inheritable_handlers:
+        if isinstance(handler, TraceloopCallbackHandler):
+            break
+    else:
+        instance.add_handler(traceloop_handler, inherit=True)
+```
+
+关键点如下。
+
+#### 先调用原始构造方法
+
+必须先让 LangChain 初始化自身状态：
+
+```text
+handlers
+inheritable_handlers
+parent_run_id
+tags
+metadata
+```
+
+然后才能安全插入 Handler。
+
+#### 检查重复 Handler
+
+通过遍历 `inheritable_handlers` 避免相同类型 Handler 重复加入。
+
+不过，这只能避免同类型 Traceloop Handler 重复，无法阻止另一套官方 OTel Handler 同时存在。
+
+#### 设置 `inherit=True`
+
+Handler 被加入可继承列表后，子 Chain、Tool、Retriever 和 Model 创建的 Callback Manager 能继续继承它。
+
+因此无需在每个 Runnable 上显式写：
+
+```python
+config={"callbacks": [handler]}
+```
+
+#### `run_inline=True`
+
+`TraceloopCallbackHandler` 设置 `run_inline=True`，目的是让回调尽量在调用路径内执行，减少异步调度造成的 Context 丢失和事件乱序。
+
+### 9.7.7 运行期数据真正来自 Callback
+
+Monkey Patch 只负责插入 Handler。真正的 Agent 运行数据来自 LangChain Callback 生命周期。
+
+| Callback | 捕获时机 | 主要动作 |
+|---|---|---|
+| `on_chain_start` | Chain／Runnable／Node 开始 | 创建 Workflow 或 Task Span |
+| `on_chain_end` | Chain 正常结束 | 写输出、状态并结束 Span |
+| `on_chain_error` | Chain 异常 | 写 `error.type`、异常事件并结束 Span |
+| `on_chat_model_start` | Chat Model 开始 | 创建 Chat Client Span，解析 Messages 和参数 |
+| `on_llm_start` | Text Completion 开始 | 创建 Completion Client Span，解析 Prompt |
+| `on_llm_end` | 模型调用结束 | 提取 Model、Response ID、Token、Finish Reason、输出 |
+| `on_llm_error` | 模型异常 | 设置 ERROR、记录 Exception |
+| `on_tool_start` | Tool 开始 | 创建 `execute_tool` Span，记录名称和参数 |
+| `on_tool_end` | Tool 正常结束 | 写 Tool Result 并结束 Span |
+| `on_tool_error` | Tool 异常 | 设置 ERROR 并结束 Span |
+| `on_retriever_start` | Retriever 开始 | 创建检索 Span，记录 Query |
+| `on_retriever_end` | Retriever 完成 | 记录文档与数量并结束 Span |
+| `on_retriever_error` | Retriever 异常 | 设置 ERROR 并结束 Span |
+
+当前实现没有覆盖任意普通 Python 函数。下面的内部逻辑仍不可见：
+
+```python
+def route(state):
+    score = calculate_business_risk(state)
+    return "manual_review" if score > 0.8 else "auto_execute"
+```
+
+要观察 `score`、分支原因和策略版本，仍需应用层 Span／Event。
+
+### 9.7.8 Span 创建与映射规则
+
+当前 OpenLLMetry 实现同时维护：
+
+- Traceloop／OpenLLMetry 兼容属性；
+- OpenTelemetry GenAI 属性；
+- 部分 OpenLLMetry 自定义操作名。
+
+实际映射比“所有 Chain 都变成 `invoke_workflow`”更复杂。
+
+| LangChain／LangGraph 对象 | 当前 Span 名称示例 | SpanKind | `gen_ai.operation.name` |
+|---|---|---:|---|
+| 根 Chain | `rag_chain.workflow` | `INTERNAL` | 当前实现按 Agent 类操作处理为 `invoke_agent` |
+| 嵌套 Chain／Node | `execute_task rewrite_query` | `INTERNAL` | 自定义 `execute_task` |
+| Chat Model | `ChatOpenAI.chat` | `CLIENT` | `chat` |
+| Text LLM | `OpenAI.completion` | `CLIENT` | `text_completion` |
+| Tool | `execute_tool search_documents` | `INTERNAL` | `execute_tool` |
+| Retriever | `vector_db_retrieve VectorStoreRetriever` | `CLIENT` | 自定义 `vector_db_retrieve` |
+| LangGraph 流式图调用 | `invoke_agent support_graph` | 默认内部 Span | `invoke_agent` |
+| LangGraph Command 路由 | `goto reviewer` | `INTERNAL` | 自定义 `goto` |
+| Agent Factory | `create_agent react_agent` | `INTERNAL` | `create_agent` |
+| AgentMiddleware Hook | `execute_task Guardrail.before_model` | `INTERNAL` | 自定义 `execute_task` |
+
+这意味着：
+
+> OpenLLMetry 当前实现正在向 OTel GenAI Semantic Conventions 对齐，但并非所有对象都与官方最新规范一一等价。
+
+尤其需要注意以下三点。
+
+#### Workflow 的映射
+
+根 Chain 会被标记为 OpenLLMetry `workflow` 类型，但当前实现把 Workflow／Agent 一并写为：
+
+```text
+gen_ai.operation.name = invoke_agent
+```
+
+如果平台需要严格区分：
+
+```text
+invoke_workflow
+invoke_agent
+```
+
+应在内部 SemConv Mapper 或 Collector 中做规范化，不能只看 `traceloop.span.kind` 或 Span 名称推断。
+
+#### Task 的映射
+
+`execute_task`、`gen_ai.task.*` 属于 OpenLLMetry 扩展语义，不应假设所有 OTel 后端都原生理解。
+
+#### Retriever 的映射
+
+Retriever 当前使用：
+
+```text
+vector_db_retrieve
+```
+
+而不是直接使用本文前面描述的标准化 `retrieval` 模型。因此跨不同 Instrumentation 聚合检索次数时，需要统一操作词典。
+
+### 9.7.9 `run_id`、`parent_run_id` 与父子 Span 恢复
+
+LangChain Callback 会提供：
+
+```text
+run_id
+parent_run_id
+```
+
+Handler 内部维护：
+
+```python
+self.spans: dict[UUID, SpanHolder]
+```
+
+`SpanHolder` 主要保存：
+
+```text
+span
+context token
+显式 Context
+children run_id 列表
+workflow_name
+entity_name
+entity_path
+association properties token
+start_time
+request_model
+```
+
+创建子 Span 时，优先使用：
+
+```python
+context=set_span_in_context(parent_span)
+```
+
+而不是只依赖“当前 Span”。这有两个优点：
+
+- 即使 Callback 在复杂调用路径中触发，也能按 `parent_run_id` 找到预期父节点；
+- 能恢复 LangChain 自身的运行树，而不是仅恢复 Python 栈上的临时调用关系。
+
+简化过程：
+
+```text
+on_chain_start(run=A, parent=None)
+  → spans[A] = Workflow Span
+
+on_retriever_start(run=B, parent=A)
+  → context = set_span_in_context(spans[A].span)
+  → spans[B] = Retrieval Span
+  → spans[A].children += B
+
+on_retriever_end(run=B)
+  → end spans[B]
+  → 删除 B
+```
+
+父 Span 结束时，Handler 还会尝试结束并清理尚未结束的子 Span，防止：
+
+- Span 泄漏；
+- 内存中的 `run_id` 映射无限增长；
+- 异常路径留下永久未结束 Span。
+
+### 9.7.10 同步与异步 Context 管理
+
+在同步调用中，典型过程是：
+
+```text
+start_span
+  → attach(set_span_in_context(span))
+  → 执行业务
+  → detach(token)
+  → span.end()
+```
+
+LangGraph 和 LangChain 的异步、流式、并发执行更复杂：
+
+- Callback 可能在不同 `asyncio.Task` 中触发；
+- Context token 可能在一个 Task 中创建、另一个 Task 中清理；
+- 并行 Node 会同时维护多个 `run_id`；
+- Generator／Async Generator 的真正结束时间晚于方法返回；
+- ContextVars 在 Task 切换时复制，但 token 不能任意跨 Context 重置。
+
+当前实现为此提供：
+
+```text
+_safe_attach_context
+_safe_detach_context
+SpanHolder.token
+ContextVar 形式的当前 LangGraph Node
+LangGraph Graph SpanHolder
+first_child_pending 标记
+```
+
+`_safe_detach_context` 采用 Fail-safe 策略：异步边界中 token 无效或已在其他 Context 清理时，不让观测异常影响业务执行。
+
+这能提高稳定性，但也意味着：
+
+> “没有抛 Context 异常”不等于 Span 父子关系一定正确。
+
+生产验收必须覆盖：
+
+```text
+同步 invoke
+异步 ainvoke
+stream
+astream
+并行节点
+子图
+ToolNode
+异常中断
+用户取消
+Generator 提前关闭
+```
+
+### 9.7.11 LangGraph 的专项 Patch
+
+Traceloop `LangchainInstrumentor` 不只注入 Callback Handler，还会检测 LangGraph 是否安装，并 Patch 多个内部边界。
+
+#### `Pregel.stream` 与 `Pregel.astream`
+
+这两个方法代表 LangGraph 编译图的流式执行入口。
+
+Wrapper 会：
+
+1. 获取 Graph 名称；
+2. 创建 `invoke_agent {graph_name}` Span；
+3. 写入 `gen_ai.provider.name=langgraph`；
+4. 写入 Agent 名称；
+5. 从 `config.configurable.thread_id` 提取 Conversation ID；
+6. 尝试提取 Graph Nodes 和 Edges；
+7. 把 Graph Span 放入 Context；
+8. 在 Generator／Async Generator 完成或异常后结束 Span。
+
+因为它包裹的是 Generator 生命周期，所以不是在 `stream()` 返回迭代器时立即结束 Span，而是在迭代完成时结束。
+
+#### `Command.__init__`
+
+LangGraph 的 `Command(goto=...)` 可表达动态路由。Wrapper 会在能够同时识别源节点和目标节点时创建：
+
+```text
+goto reviewer
+```
+
+并记录类似：
+
+```text
+langgraph.command.source_node
+langgraph.command.goto_node
+langgraph.command.goto_nodes
+```
+
+这让 Trace 可以显示：
+
+```text
+planner
+  └── goto reviewer
+      └── reviewer
+```
+
+但创建对象并不总等于路由已经成功执行，因此该 Span 更准确地表达“路由命令生成”，而不是完整的节点切换耗时。
+
+#### Agent Factory
+
+Instrumentation 会包装：
+
+```text
+langgraph.prebuilt.chat_agent_executor.create_react_agent
+langgraph.prebuilt.create_react_agent
+langchain.agents.factory.create_agent
+langchain.agents.create_agent
+```
+
+用于创建：
+
+```text
+create_agent {agent_name}
+```
+
+并尽量提取：
+
+- Agent 名称；
+- Provider；
+- System Instructions；
+- Tool Definitions；
+- Tool 参数 Schema。
+
+需要注意，这是 **Agent 创建／配置 Span**，不是一次 Agent 运行 Span。
+
+#### AgentMiddleware Hook
+
+当前实现包装：
+
+```text
+before_model
+after_model
+before_agent
+after_agent
+
+abefore_model
+aafter_model
+abefore_agent
+aafter_agent
+```
+
+每个 Hook 形成：
+
+```text
+execute_task {MiddlewareClass}.{hook_name}
+```
+
+适合定位：
+
+- Guardrail 耗时；
+- Prompt 改写耗时；
+- 动态模型路由；
+- 权限检查；
+- 预算控制；
+- 前后处理异常。
+
+不过，如果 Middleware 本身又创建手工 Span，需要治理重复嵌套。
+
+### 9.7.12 LangGraph Graph Span 与 Callback Span 如何衔接
+
+单纯包装 `Pregel.stream` 会产生 Graph 根 Span，而 Callback Handler 又会为第一个 Chain／Node 创建 Span。为了让两者正确嵌套，当前实现使用几个 Context Key：
+
+```text
+langgraph_flow
+langgraph_graph_span
+langgraph_first_child_pending
+```
+
+逻辑如下：
+
+```mermaid
+flowchart TD
+    A["Pregel.stream / astream"] --> B["创建 Graph Span"]
+    B --> C["把 Graph SpanHolder 写入 OTel Context"]
+    C --> D["标记 first_child_pending = true"]
+    D --> E["第一个 Callback on_chain_start"]
+    E --> F["显式使用 Graph SpanHolder.context 作为父 Context"]
+    F --> G["first_child_pending = false"]
+    G --> H["后续 Span 按 run_id / parent_run_id 连接"]
+```
+
+这是 Traceloop 针对 LangGraph 图入口和 Callback 树之间“缺一层父 Context”问题增加的专项修复逻辑。
+
+### 9.7.13 模型 Provider 识别
+
+`on_chat_model_start`／`on_llm_start` 进入时，Instrumentation 会从 LangChain 序列化对象的类名中检测 Provider，例如：
+
+```text
+ChatOpenAI     → openai
+ChatAnthropic  → anthropic
+ChatBedrock    → aws.bedrock
+其他类         → 由 vendor detection 规则判断
+```
+
+并写入：
+
+```text
+gen_ai.provider.name
+```
+
+请求阶段还会尝试提取：
+
+```text
+gen_ai.request.model
+gen_ai.request.max_tokens
+gen_ai.request.temperature
+gen_ai.request.top_p
+gen_ai.tool.definitions
+```
+
+响应阶段提取：
+
+```text
+gen_ai.response.model
+gen_ai.response.id
+gen_ai.response.finish_reasons
+gen_ai.usage.input_tokens
+gen_ai.usage.output_tokens
+总 Token 与缓存 Token 扩展字段
+```
+
+不同 LangChain Provider 返回结构差异较大，Instrumentation 会从多个候选字段回退提取，例如：
+
+```text
+model_name
+model_id
+response_metadata
+llm_output.token_usage
+llm_output.usage
+message.usage_metadata
+```
+
+因此 Token 缺失可能来自：
+
+- Provider 没有返回 Usage；
+- LangChain Adapter 没有把 Usage 传入 `LLMResult`；
+- 流式调用未产生最终聚合结果；
+- Provider 字段名发生变化；
+- Instrumentation 版本不匹配。
+
+### 9.7.14 模型 Span 去重与 Suppression
+
+当同时启用：
+
+```text
+LangChain Instrumentation
+OpenAI / Anthropic / Bedrock Provider Instrumentation
+HTTP Client Instrumentation
+```
+
+可能出现：
+
+```text
+LangChain LLM Span
+└── Provider SDK LLM Span
+    └── HTTP Span
+```
+
+如果前两层都表示同一次逻辑模型推理，就会重复计算：
+
+- LLM 调用次数；
+- Token；
+- 成本；
+- 延迟；
+- 错误率。
+
+OpenLLMetry 的策略是：
+
+1. LangChain Callback Handler 创建 LLM Span；
+2. 在 Context 中设置 `SUPPRESS_LANGUAGE_MODEL_INSTRUMENTATION_KEY=True`；
+3. 尽量抑制下游模型 Provider Instrumentation；
+4. 仍可保留 HTTP Transport Span。
+
+因此其默认所有权更接近：
+
+```text
+LangChain Callback Handler
+  → 权威逻辑 LLM Span
+
+Provider SDK Instrumentation
+  → 被 Suppress
+
+HTTPX / Requests Instrumentation
+  → 可保留网络 Span
+```
+
+这与“由 OpenAI Instrumentation 负责权威 Chat Span”的另一种架构不同。两种方案都可以，但必须统一。
+
+### 9.7.15 OpenAI 请求 Trace Context 注入
+
+除 Suppression 外，当前实现还会包装部分 LangChain OpenAI 方法：
+
+```text
+langchain_community.llms.openai.BaseOpenAI
+langchain_openai.llms.base.BaseOpenAI
+langchain_openai.chat_models.base.BaseChatOpenAI
+```
+
+包装器从：
+
+```text
+run_manager.run_id
+```
+
+找到当前 LangChain LLM Span，然后：
+
+```python
+ctx = set_span_in_context(span_holder.span)
+TraceContextTextMapPropagator().inject(extra_headers, context=ctx)
+```
+
+最终把：
+
+```text
+traceparent
+tracestate
+```
+
+写入请求的 `extra_headers`。
+
+其作用是让支持 W3C Trace Context 的远端模型网关、代理或企业自建模型服务继续当前 Trace。
+
+典型链路：
+
+```text
+LangChain LLM Span
+└── 企业 Model Gateway Server Span
+    └── Provider 调用
+```
+
+对于不识别 `traceparent` 的公共模型 API，该 Header 通常不会自动产生远端 Span，但仍可能经过企业代理或网关使用。
+
+可以通过：
+
+```python
+LangchainInstrumentor(
+    disable_trace_context_propagation=True,
+)
+```
+
+关闭这类模型请求头注入。
+
+适合关闭的情况：
+
+- 安全策略不允许向第三方发送追踪 Header；
+- 网关会自行生成新的 Trace；
+- 下游 SDK 对 `extra_headers` 不兼容；
+- 已经有另一层标准 HTTP Propagator 负责传播；
+- 需要排查 Header 注入导致的兼容问题。
+
+### 9.7.16 当前 OpenAI 包装范围的边界
+
+当前发布源码对下面的方法实施 Trace Header 注入：
+
+```text
+BaseOpenAI._generate
+BaseOpenAI._agenerate
+BaseOpenAI._stream
+BaseOpenAI._astream
+BaseChatOpenAI._generate
+BaseChatOpenAI._agenerate
+```
+
+其中 Chat Model 的 `_stream`／`_astream` 包装在当前源码中未启用。因此不能假设所有 ChatOpenAI 流式路径都会由这层 Wrapper 注入 Header。
+
+此外：
+
+- 其他 Provider 不一定使用相同 Header 注入逻辑；
+- HTTPX Instrumentation 仍可能在传输层自动注入 Context；
+- 自定义 BaseChatModel 子类可能完全绕过已知包装点。
+
+生产测试应直接检查出站请求是否包含预期 `traceparent`，而不是仅根据代码配置推断。
+
+### 9.7.17 内容采集模式：Span Attribute 与 OTel Event
+
+`LangchainInstrumentor` 当前支持两种内容表达模式。
+
+#### 模式一：`use_attributes=True`，默认
+
+```python
+LangchainInstrumentor(
+    use_attributes=True,
+).instrument(...)
+```
+
+模型输入输出被序列化到 Span Attribute，例如：
+
+```text
+gen_ai.system_instructions
+gen_ai.input.messages
+gen_ai.output.messages
+gen_ai.tool.definitions
+gen_ai.tool.call.arguments
+gen_ai.tool.call.result
+```
+
+结构化消息通常被编码为 JSON 字符串：
+
+```json
+[
+  {
+    "role": "user",
+    "parts": [
+      {
+        "type": "text",
+        "content": "查找订单 1001"
+      }
+    ]
+  }
+]
+```
+
+优点：
+
+- 大多数 Trace 后端容易展示；
+- Span 与内容天然同生命周期；
+- 查询简单。
+
+缺点：
+
+- Span 体积大；
+- Attribute 长度限制可能截断；
+- 敏感内容随 Trace 扩散；
+- Sampling 会同时丢失内容；
+- 多模态 Base64 可能造成严重负载。
+
+#### 模式二：`use_attributes=False`
+
+```python
+LangchainInstrumentor(
+    use_attributes=False,
+).instrument(
+    tracer_provider=tracer_provider,
+    meter_provider=meter_provider,
+    logger_provider=logger_provider,
+)
+```
+
+Instrumentation 使用 Logs API 发出带 `event_name` 的 LogRecord，例如：
+
+```text
+gen_ai.user.message
+gen_ai.system.message
+gen_ai.assistant.message
+gen_ai.tool.message
+gen_ai.choice
+```
+
+事件 Body 中保存结构化 Message 或 Choice，Attribute 中设置：
+
+```text
+gen_ai.provider.name = langchain
+```
+
+这一模式需要有效的 LoggerProvider 和 Logs Exporter，否则内容事件不会进入后端。
+
+需要注意：
+
+> 这些 EventName 反映 OpenLLMetry 当前兼容实现，不应直接等同于本文 GenAI Semantic Conventions 章节中的最新标准推理详情事件。
+
+跨 Instrumentation 查询时，应通过 Schema Version 或 Mapper 统一。
+
+### 9.7.18 `TRACELOOP_TRACE_CONTENT` 隐私开关
+
+PyPI 包默认采集 Prompt、Completion 和 Embedding 等内容。可以全局关闭：
+
+```bash
+export TRACELOOP_TRACE_CONTENT=false
+```
+
+代码中的判断逻辑等价于：
+
+```text
+环境变量未设置
+  → 默认 true
+
+TRACELOOP_TRACE_CONTENT=false
+  → 不发送正文
+
+Context 中存在显式 override
+  → 可以按局部调用重新开启
+```
+
+关闭后，Instrumentation 仍可记录：
+
+- Span 名称；
+- Provider；
+- Model；
+- Token；
+- Duration；
+- Finish Reason；
+- 状态和异常；
+- 部分不含正文的 Tool Call 元数据。
+
+会被删除或不写入的内容包括：
+
+- Prompt 文本；
+- Completion 文本；
+- Tool Arguments；
+- Tool Result；
+- Retriever Query 和 Document 正文；
+- Chain 输入输出；
+- Message Event 的 Content。
+
+生产环境建议默认：
+
+```bash
+TRACELOOP_TRACE_CONTENT=false
+```
+
+再通过受控的调试策略，对低比例、低敏感度、特定租户或特定 Trace 临时开启，而不是全局永久开启。
+
+### 9.7.19 多模态内容风险
+
+当前内容转换逻辑可以把 LangChain Message 中的多模态 Part 转成：
+
+```text
+text
+uri + modality=image
+blob + modality=image + mime_type + content
+```
+
+如果输入包含 Base64 图片，`blob.content` 可能直接进入 Span Attribute 或 Event Body。
+
+因此必须限制：
+
+- 单条内容最大长度；
+- 单 Span 最大内容总量；
+- 是否允许 Base64；
+- 是否只记录媒体类型、大小和 Artifact 引用；
+- Collector 的 Redaction 与 Truncation；
+- 数据保留期和访问控制。
+
+更稳妥的生产模型是：
+
+```text
+图片 / 音频 / PDF 原文
+  → Artifact Store
+
+Span / Event
+  → media_type
+  → size_bytes
+  → content_hash
+  → artifact_id
+  → 不透明 storage_ref
+```
+
+不要依赖 `TRACELOOP_TRACE_CONTENT=false` 作为唯一安全边界，还应在应用侧和 Collector 侧实施双层防护。
+
+### 9.7.20 Chain、Tool 与 Retriever 输入输出
+
+除模型消息外，Instrumentation 还可能采集：
+
+#### Chain／Task
+
+```text
+inputs
+tags
+metadata
+kwargs
+outputs
+```
+
+#### Tool
+
+```text
+input_str
+inputs
+kwargs
+output
+```
+
+并映射到：
+
+```text
+traceloop.entity.input
+traceloop.entity.output
+gen_ai.task.input
+gen_ai.task.output
+gen_ai.tool.call.arguments
+gen_ai.tool.call.result
+```
+
+#### Retriever
+
+```text
+query
+tags
+metadata
+返回 documents
+page_content
+document metadata
+document count
+```
+
+这里的隐私风险有时比 Prompt 更高，因为 Tool 或 Retriever 可能返回：
+
+- 数据库完整记录；
+- 个人身份信息；
+- 文件正文；
+- Access Token；
+- 内部 URL；
+- 源代码；
+- 搜索结果和权限数据。
+
+生产系统应按数据类型治理，而不是只按“Prompt／Completion”治理。
+
+### 9.7.21 Metadata 与 Association Properties
+
+LangChain Callback 的 `metadata` 会被清洗为 OTel 可接受的标量或标量数组，然后以：
+
+```text
+{metadata_key_prefix}.{key}
+```
+
+写入 Span。
+
+构造函数默认：
+
+```python
+metadata_key_prefix=SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES
+```
+
+可以改成企业自己的命名空间：
+
+```python
+LangchainInstrumentor(
+    metadata_key_prefix="app.association",
+)
+```
+
+例如 LangChain 调用：
+
+```python
+graph.invoke(
+    input_state,
+    config={
+        "metadata": {
+            "tenant.id_hash": "t-42",
+            "experiment.name": "router-v2",
+            "prompt.version": "2026-09-03",
+        }
+    },
+)
+```
+
+可映射为：
+
+```text
+app.association.tenant.id_hash
+app.association.experiment.name
+app.association.prompt.version
+```
+
+不要把以下字段直接放入普通 Metadata：
+
+```text
+原始 user_id
+email
+session transcript
+完整文件路径
+动态 request body
+大对象
+任意嵌套业务对象
+```
+
+Metric 不应复制高基数 Association Properties。
+
+### 9.7.22 Conversation ID 提取
+
+当前实现会尝试从 LangGraph Runnable Config 中读取：
+
+```python
+config["configurable"]["thread_id"]
+```
+
+并映射到：
+
+```text
+gen_ai.conversation.id
+```
+
+示例：
+
+```python
+graph.invoke(
+    {"messages": [...]},
+    config={
+        "configurable": {
+            "thread_id": "conversation-123"
+        },
+        "run_name": "support_graph",
+    },
+)
+```
+
+注意边界：
+
+- `thread_id` 应是应用真实存在的会话标识；
+- 不要把 Trace ID 复制成 Conversation ID；
+- 不要把每次执行的随机 Run ID 当成 Conversation ID；
+- 如包含个人身份，应使用不可逆或受控的稳定标识；
+- Conversation ID 不应成为 Metric Label。
+
+### 9.7.23 Agent ID 的语义兼容问题
+
+当前 OpenLLMetry 源码会把 LangChain `run_id` 写入：
+
+```text
+gen_ai.agent.id
+```
+
+但本文前面的规范分析已经指出：
+
+```text
+gen_ai.agent.id
+  → 更适合表示稳定 Agent 资源 ID
+
+一次执行的 run_id
+  → 更适合 app.agent.run.id
+```
+
+因此企业统一模型中建议增加规范化：
+
+```text
+原始字段：gen_ai.agent.id = <run_id>
+
+内部标准：
+  app.agent.run.id = <run_id>
+  gen_ai.agent.id = <稳定 Agent Definition ID，可用时>
+```
+
+如果无法修改 Instrumentation，可以在 Collector 或入库 Mapper 中：
+
+1. 检测 Instrumentation Scope 为 OpenLLMetry LangChain；
+2. 把原 `gen_ai.agent.id` 复制到 `app.agent.run.id`；
+3. 从 Agent Registry 补充稳定 Agent ID；
+4. 避免按错误的 Agent ID 做资源级聚合。
+
+这类兼容处理应附带：
+
+```text
+telemetry.schema.version
+instrumentation.name
+instrumentation.version
+mapper.version
+```
+
+### 9.7.24 Metrics 生成机制
+
+初始化时，Instrumentor 会创建两个 Histogram：
+
+```text
+LLM operation duration Histogram
+LLM token usage Histogram
+```
+
+在 `on_llm_end` 阶段记录：
+
+#### Duration
+
+```text
+value = 当前时间 - SpanHolder.start_time
+
+attributes:
+  gen_ai.provider.name
+  gen_ai.response.model
+```
+
+#### Token Usage
+
+分别记录：
+
+```text
+input token
+output token
+```
+
+常用属性：
+
+```text
+gen_ai.provider.name
+gen_ai.token.type
+gen_ai.response.model
+```
+
+Token 来源会从多个结构回退：
+
+```text
+prompt_tokens
+input_token_count
+input_tokens
+
+completion_tokens
+generated_token_count
+output_tokens
+
+total_tokens
+usage_metadata
+```
+
+指标层的注意事项：
+
+- 不要再由 Span-to-Metrics Pipeline 重复统计同一 Token；
+- Model 名称可能存在请求名与响应名差异；
+- `unknown` 需要单独监控比例；
+- 缓存 Token 是否包含在 Input Token 中要统一口径；
+- 流式响应没有最终 Usage 时指标可能缺失；
+- 不要把 `run_id`、`thread_id`、Prompt 名称动态值作为 Metric 属性。
+
+### 9.7.25 该 Instrumentor 不提供完整流式 Token 时间线
+
+当前 Callback Handler 没有实现 `on_llm_new_token` 的逐 Token 处理。主要 LLM Duration 和 Token 指标在 `on_llm_end` 时完成。
+
+因此仅使用该 Instrumentor 时，通常不能直接获得：
+
+```text
+Time To First Token
+每个 Chunk 间隔
+每秒输出 Token
+客户端取消发生在哪个 Chunk
+流式响应中间状态
+```
+
+可选方案：
+
+1. 增加自定义 LangChain Callback，专门记录首 Token 时间；
+2. 使用 Provider SDK Instrumentation，但必须重新设计 Suppression 和 Span 所有权；
+3. 在模型网关层记录流式 Chunk；
+4. 只生成低基数 TTFT Metric，不为每个 Token 创建 Event；
+5. 对 Stream 关闭、取消和异常单独记录 Event。
+
+不要为每个 Token 创建 Span 或 Log Event，这会造成极大的遥测放大。
+
+### 9.7.26 Error 与 Fail-open 机制
+
+Chain、LLM、Tool、Agent、Retriever 的异常最终进入统一错误处理：
+
+```text
+gen_ai.task.status = failure
+error.type = 异常类名
+Span Status = ERROR
+Span.record_exception(error)
+结束并清理 Span
+```
+
+同时，Callback 方法使用 `dont_throw` 包装。
+
+其设计原则是：
+
+> Instrumentation 失败不能让 Agent 业务失败。
+
+当序列化、属性转换或 Context 操作异常时：
+
+- 记录 Debug 日志；
+- 可调用用户传入的 `exception_logger`；
+- 不把 Instrumentation 异常重新抛给 LangChain；
+- 业务继续执行。
+
+可配置：
+
+```python
+def report_instrumentation_error(error: Exception) -> None:
+    logger.warning(
+        "langchain instrumentation failed",
+        exc_info=error,
+    )
+
+LangchainInstrumentor(
+    exception_logger=report_instrumentation_error,
+).instrument(...)
+```
+
+这里需要额外监控：
+
+```text
+Instrumentation 错误次数
+序列化失败次数
+找不到 run_id 的次数
+Context attach / detach 失败次数
+Span 结束时找不到 Holder 的次数
+```
+
+否则 Fail-open 会让业务保持可用，但可观测数据可能静默缺失。
+
+### 9.7.27 序列化机制与风险
+
+Chain、Tool、Retriever 的输入输出会经过 JSON Encoder。它尝试处理：
+
+```text
+dict
+Dataclass
+Pydantic BaseModel
+带 to_json() 的对象
+datetime
+其他对象的 str()
+```
+
+并会尝试移除 Callback 对象，避免递归或序列化无关运行时状态。
+
+风险包括：
+
+- `dataclasses.asdict()` 会递归深拷贝字段；
+- 对象内部锁、Socket、文件句柄可能无法复制；
+- `str()` 可能输出 Secret 或大对象；
+- 深层嵌套对象会放大 CPU 和内存；
+- 自定义对象的 `to_json()` 可能有副作用；
+- Tool Result 可能不可序列化。
+
+因此生产系统应：
+
+```text
+优先关闭正文采集
+限制属性长度
+限制嵌套深度
+使用安全序列化白名单
+Collector 二次截断
+监控 Instrumentation Error
+```
+
+### 9.7.28 直接接入企业 OpenTelemetry SDK
+
+下面示例展示 Trace、Metric 和 Logs Provider 统一配置。代码重点是所有 Instrumentation 共享同一组 Provider，而不是让 Traceloop 单独创建第二套 SDK。
+
+```python
+from __future__ import annotations
+
+import os
+
+from opentelemetry import metrics, trace
+from opentelemetry.exporter.otlp.proto.grpc._log_exporter import OTLPLogExporter
+from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+from opentelemetry.instrumentation.langchain import LangchainInstrumentor
+from opentelemetry.sdk._logs import LoggerProvider
+from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
+from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
+from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+
+
+def configure_observability() -> None:
+    endpoint = os.getenv(
+        "OTEL_EXPORTER_OTLP_ENDPOINT",
+        "http://otel-collector:4317",
+    )
+
+    resource = Resource.create(
+        {
+            "service.name": "rag-agent-service",
+            "service.version": "2.3.0",
+            "deployment.environment.name": "production",
+        }
+    )
+
+    tracer_provider = TracerProvider(resource=resource)
+    tracer_provider.add_span_processor(
+        BatchSpanProcessor(
+            OTLPSpanExporter(
+                endpoint=endpoint,
+                insecure=True,
+            )
+        )
+    )
+    trace.set_tracer_provider(tracer_provider)
+
+    metric_reader = PeriodicExportingMetricReader(
+        OTLPMetricExporter(
+            endpoint=endpoint,
+            insecure=True,
+        )
+    )
+    meter_provider = MeterProvider(
+        resource=resource,
+        metric_readers=[metric_reader],
+    )
+    metrics.set_meter_provider(meter_provider)
+
+    logger_provider = LoggerProvider(resource=resource)
+    logger_provider.add_log_record_processor(
+        BatchLogRecordProcessor(
+            OTLPLogExporter(
+                endpoint=endpoint,
+                insecure=True,
+            )
+        )
+    )
+
+    LangchainInstrumentor(
+        use_attributes=False,
+        disable_trace_context_propagation=False,
+        metadata_key_prefix="app.association",
+    ).instrument(
+        tracer_provider=tracer_provider,
+        meter_provider=meter_provider,
+        logger_provider=logger_provider,
+    )
+```
+
+生产中还应补充：
+
+- TLS；
+- OTLP 认证 Header；
+- Sampler；
+- SDK Limits；
+- Shutdown／ForceFlush；
+- Resource Detector；
+- Collector Redaction；
+- 指标 View；
+- Exporter 重试和队列。
+
+### 9.7.29 使用 Traceloop SDK 的快速接入
+
+```bash
+pip install traceloop-sdk langchain langgraph langchain-openai
+```
+
+```python
+from traceloop.sdk import Traceloop
+
+Traceloop.init(
+    app_name="rag-agent-service",
+    resource_attributes={
+        "service.version": "2.3.0",
+        "deployment.environment.name": "development",
+    },
+    disable_batch=True,
+)
+```
+
+本地调试时 `disable_batch=True` 可以让 Span 更快被导出，但生产环境通常应使用 Batch Processor。
+
+如果输出到自建 Collector，应根据 Traceloop SDK 当前配置接口设置 OTLP Endpoint 与 Header，并确认：
+
+- Endpoint 是 gRPC 还是 HTTP；
+- 是否需要 `/v1/traces`；
+- TLS 与 `insecure` 是否匹配；
+- Trace、Metric、Log 是否都启用；
+- 后端是否理解 OpenLLMetry 扩展字段。
+
+### 9.7.30 LangGraph 示例与预期 Trace
+
+```python
+from typing import TypedDict
+
+from langchain_openai import ChatOpenAI
+from langgraph.graph import END, START, StateGraph
+from opentelemetry.instrumentation.langchain import LangchainInstrumentor
+
+
+class State(TypedDict):
+    question: str
+    answer: str
+
+
+LangchainInstrumentor(
+    use_attributes=True,
+).instrument()
+
+model = ChatOpenAI(model="gpt-4.1-mini")
+
+
+def answer_node(state: State) -> State:
+    response = model.invoke(state["question"])
+    return {
+        **state,
+        "answer": str(response.content),
+    }
+
+
+builder = StateGraph(State)
+builder.add_node("answer", answer_node)
+builder.add_edge(START, "answer")
+builder.add_edge("answer", END)
+graph = builder.compile()
+
+graph.invoke(
+    {
+        "question": "OpenTelemetry 如何观测 LangGraph？",
+        "answer": "",
+    },
+    config={
+        "run_name": "otel_qa_graph",
+        "configurable": {
+            "thread_id": "conversation-001",
+        },
+        "metadata": {
+            "prompt.version": "v3",
+        },
+    },
+)
+```
+
+预期结构近似：
+
+```text
+invoke_agent otel_qa_graph              ← Pregel Graph Wrapper
+└── otel_qa_graph.workflow              ← Callback 根 Chain
+    └── execute_task answer             ← LangGraph Node / Chain
+        └── ChatOpenAI.chat             ← LangChain LLM Span
+            └── HTTP POST               ← 可选传输层 Span
+```
+
+实际层级取决于：
+
+- LangGraph 版本；
+- Callback 发出方式；
+- 是否调用 `invoke`、`stream`、`ainvoke` 或 `astream`；
+- 是否启用 HTTP／Provider Instrumentation；
+- Suppression 是否生效；
+- 后端是否隐藏内部 Span。
+
+### 9.7.31 与 OpenAI Instrumentation 的组合方式
+
+#### 组合 A：LangChain 拥有 LLM Span
+
+```text
+LangGraph / LangChain Span
+└── LangChain LLM Span
+    └── HTTP Client Span
+```
+
+配置原则：
+
+- 启用 `LangchainInstrumentor`；
+- 允许其 Suppress OpenAI LLM Instrumentation；
+- 使用 LangChain Callback 提供 Token 和消息；
+- HTTP Instrumentation 只表示传输。
+
+优点：
+
+- 与 LangChain `run_id` 树一致；
+- Provider 统一；
+- 不重复 Token。
+
+缺点：
+
+- Provider SDK 独有字段可能缺失；
+- TTFT 和流式 Chunk 细节可能不足；
+- Usage 依赖 LangChain 返回结构。
+
+#### 组合 B：Provider SDK 拥有 LLM Span
+
+```text
+LangGraph / LangChain Task Span
+└── OpenAI SDK Chat Span
+    └── HTTP Client Span
+```
+
+配置原则：
+
+- LangChain 层只创建 Workflow、Agent、Task、Tool、Retriever；
+- 不让 LangChain Handler 创建权威 LLM Span，或过滤该 Span；
+- OpenAI Instrumentation 负责模型、流式、Token；
+- 通过当前 Context 自动作为 LangChain Task 的子 Span。
+
+优点：
+
+- Provider 数据更完整；
+- 更容易观察 SDK 重试和流式；
+- 语义由 Provider Instrumentation 统一。
+
+缺点：
+
+- 需要定制或过滤 OpenLLMetry 默认 LLM 行为；
+- 可能失去 LangChain Callback 的模型运行语义；
+- Parent Context 必须正确传播。
+
+不能同时把两个 Span 都计为一次模型调用。
+
+### 9.7.32 与官方 `LangChainInstrumentor` 的选择
+
+| 选择条件 | 更适合 OpenLLMetry `LangchainInstrumentor` | 更适合官方 `LangChainInstrumentor` |
+|---|---:|---:|
+| 已使用 Traceloop SDK | 是 | 通常否 |
+| 需要 OpenLLMetry Workflow／Task 字段 | 是 | 否 |
+| 需要 LangGraph Pregel、Command、Middleware 专项 Span | 当前实现更丰富 | 以官方当前支持为准 |
+| 要求严格贴合最新 OTel GenAI SemConv | 需要 Mapper | 更优先 |
+| 默认不允许采集内容 | 必须显式关闭 | 官方默认策略更保守 |
+| 已有企业统一 OTel SDK | 两者均可 | 两者均可 |
+| 希望最少第三方扩展字段 | 否 | 是 |
+| 已有 Traceloop Dashboard／数据模型 | 是 | 需要兼容验证 |
+
+不要根据“哪个包名字更像官方”做选择，应根据：
+
+```text
+Span模型
+SemConv版本
+内容治理
+LangGraph覆盖范围
+后端兼容性
+依赖稳定性
+升级策略
+```
+
+进行验证。
+
+### 9.7.33 OpenLLMetry 语义与官方 GenAI 语义的兼容层
+
+建议在企业平台中维护显式 Mapper：
+
+```text
+OpenLLMetry 原始遥测
+    ↓
+Instrumentation Scope 识别
+    ↓
+Version-aware SemConv Mapper
+    ↓
+企业 Canonical GenAI Schema
+    ↓
+Trace / Metric / Eval 分析
+```
+
+示例映射：
+
+| OpenLLMetry 当前值 | 企业统一值 |
+|---|---|
+| 根 `.workflow` + `invoke_agent` | `invoke_workflow` |
+| `execute_task` | `app.agent.task.execute` 或内部 Task 类型 |
+| `vector_db_retrieve` | `retrieval` |
+| `gen_ai.agent.id=<run_id>` | `app.agent.run.id=<run_id>` |
+| `traceloop.entity.input` | 受控 `app.operation.input.ref` |
+| `traceloop.entity.output` | 受控 `app.operation.output.ref` |
+| `gen_ai.user.message` Event | 统一 Message Content Schema |
+| `gen_ai.choice` Event | 统一 Output Message／Inference Details Schema |
+
+不要在 Collector 中无条件按字段名改写全部服务，应至少判断：
+
+```text
+otel.scope.name
+otel.scope.version
+service.name
+telemetry.schema.version
+```
+
+### 9.7.34 自动接入失效的常见原因
+
+#### Instrumentor 没有被加载
+
+检查：
+
+```bash
+python -c "from opentelemetry.instrumentation.langchain import LangchainInstrumentor; print(LangchainInstrumentor)"
+```
+
+以及：
+
+```bash
+opentelemetry-bootstrap -a requirements | grep langchain
+```
+
+#### 初始化顺序错误
+
+应尽量在构造 LangChain Graph、Model、Callback Manager 之前执行 Instrumentation：
+
+```python
+LangchainInstrumentor().instrument()
+
+# 然后再创建模型、图和 Agent
+```
+
+#### 同时启用了两套 LangChain Instrumentation
+
+检查安装包和 Entry Point，避免：
+
+```text
+opentelemetry-instrumentation-langchain
+opentelemetry-instrumentation-genai-langchain
+```
+
+同时自动加载。
+
+#### 全局 Provider 已被提前设置
+
+OpenTelemetry 全局 Provider 通常只能设置一次。初始化顺序错误可能导致：
+
+- Instrumentor 使用 No-op Provider；
+- Traceloop SDK 无法替换已有 Provider；
+- 数据发往错误 Exporter；
+- Resource 缺失。
+
+#### Callback 被显式覆盖
+
+某些代码会创建新的 Callback Manager 或传入只包含局部 Handler 的配置。应检查 Traceloop Handler 是否仍在 `inheritable_handlers`。
+
+#### LangGraph 内部路径变化
+
+专项 Patch 依赖：
+
+```text
+langgraph.pregel.Pregel
+langgraph.types.Command
+langgraph.prebuilt...
+langchain.agents.middleware.types.AgentMiddleware
+```
+
+版本变化可能使某些 Wrapper 不再生效，但 Callback 基础路径仍可能工作。
+
+#### Sampling 丢弃根 Span
+
+Head Sampling 可能让完整 Trace 不记录。先用 AlwaysOn 或 Console Exporter 验证，不要直接判断 Instrumentation 失效。
+
+#### 内容关闭被误判为无遥测
+
+`TRACELOOP_TRACE_CONTENT=false` 只应关闭内容，不应关闭 Span、Token 和延迟。后端看不到 Prompt 不代表探针失效。
+
+### 9.7.35 重复 Span 排查
+
+出现下面结构时：
+
+```text
+ChatOpenAI.chat
+└── openai.chat
+    └── POST /v1/chat/completions
+```
+
+先判断三层含义：
+
+| Span | 是否应保留 |
+|---|---|
+| LangChain LLM Span | 作为逻辑模型调用时保留 |
+| OpenAI SDK LLM Span | 如仅重复同一逻辑调用，应 Suppress 或过滤 |
+| HTTP Client Span | 作为网络尝试通常保留 |
+
+排查字段：
+
+```text
+otel.scope.name
+otel.scope.version
+gen_ai.operation.name
+gen_ai.request.model
+gen_ai.response.id
+gen_ai.usage.input_tokens
+gen_ai.usage.output_tokens
+parent_span_id
+```
+
+治理方法：
+
+1. 明确 Span 所有权；
+2. 只启用一套 LangChain Instrumentation；
+3. 验证 Suppression Key 是否跨异步边界传播；
+4. 在 Collector 过滤非权威模型 Span；
+5. Token 成本系统按权威 Scope 统计；
+6. 用 `response.id + trace_id` 辅助识别重复调用，但不要把它做 Metric Label。
+
+### 9.7.36 Trace 断链排查
+
+典型断链：
+
+```text
+Graph Span
+├── Node Span
+└── HTTP Span 出现在 Trace 根部
+```
+
+排查：
+
+```text
+Callback run_id / parent_run_id 是否完整
+当前 Span 是否正确 attach
+异步 Task 是否复制 Context
+线程池是否显式传 Context
+Generator 是否在另一个 Task 中消费
+Graph 第一子节点是否使用 Graph SpanHolder.context
+HTTP Client 是否读取当前 Context
+自定义 Runnable 是否丢弃 callbacks/config
+```
+
+建议构造最小矩阵：
+
+```text
+同步单节点
+同步两节点
+异步单节点
+异步并行节点
+stream
+astream
+ToolNode
+子图
+异常节点
+取消
+```
+
+并断言每个 Span 的 `parent_span_id`，而不是只检查 Span 数量。
+
+### 9.7.37 生产配置建议
+
+推荐基线：
+
+```text
+1. 固定 LangChain、LangGraph、OpenLLMetry 和 OTel 版本
+2. 同一进程只启用一套 LangChain Instrumentation
+3. 由宿主应用拥有统一 OTel SDK
+4. 默认 TRACELOOP_TRACE_CONTENT=false
+5. 只在授权调试会话开启正文
+6. 统一模型 Span 所有权
+7. 使用 Collector 执行 Redaction、Limits 和 Tail Sampling
+8. 对 OpenLLMetry 自定义字段增加版本化 Mapper
+9. 单独监控 Instrumentation 自身错误
+10. 为 sync / async / stream / astream 建立契约测试
+```
+
+建议 Resource：
+
+```text
+service.name
+service.version
+deployment.environment.name
+service.instance.id
+telemetry.sdk.language
+telemetry.sdk.name
+telemetry.sdk.version
+```
+
+建议额外应用字段：
+
+```text
+app.workflow.run.id
+app.agent.run.id
+app.prompt.version
+app.tool.version
+app.eval.dataset.version
+app.security.content_capture_policy
+```
+
+### 9.7.38 接入验收清单
+
+#### 初始化
+
+- [ ] 只安装或启用一套 LangChain Instrumentation；
+- [ ] Instrumentor 在 Graph／Model 构造前初始化；
+- [ ] TracerProvider、MeterProvider、LoggerProvider 指向预期实例；
+- [ ] `service.name` 正确；
+- [ ] OTLP Endpoint、协议、TLS 和 Header 正确；
+- [ ] Shutdown／ForceFlush 已实现。
+
+#### Trace
+
+- [ ] 根 Graph／Chain Span 存在；
+- [ ] Node／Task 正确嵌套；
+- [ ] Tool Span 正确；
+- [ ] Retriever Span 正确；
+- [ ] LLM Span 只有一个权威逻辑层；
+- [ ] HTTP Span 位于 LLM／Tool／Retriever 下方；
+- [ ] 异常 Span 设置 `error.type` 与 ERROR Status；
+- [ ] `thread_id` 正确映射为 Conversation ID；
+- [ ] 并行与异步父子关系正确。
+
+#### Metrics
+
+- [ ] LLM Duration 有数据；
+- [ ] Input／Output Token 有数据；
+- [ ] `unknown` Model 比例可监控；
+- [ ] Token 未重复统计；
+- [ ] Metric Attribute 无高基数 Run ID；
+- [ ] 缓存 Token 口径清晰。
+
+#### 内容与安全
+
+- [ ] 生产默认关闭 Prompt／Completion 正文；
+- [ ] Tool Arguments／Result 同样受控；
+- [ ] Retriever Document 正文受控；
+- [ ] Base64 多模态内容不会进入遥测；
+- [ ] Collector 有脱敏和长度限制；
+- [ ] 数据访问和保留策略已配置；
+- [ ] 预签名 URL、Secret 和 Authorization Header 不进入遥测。
+
+#### 兼容性
+
+- [ ] `invoke_agent`／Workflow 映射已确认；
+- [ ] `execute_task` 自定义语义已处理；
+- [ ] `vector_db_retrieve` 已映射到统一 Retrieval 模型；
+- [ ] `gen_ai.agent.id=<run_id>` 已按内部模型修正；
+- [ ] Instrumentation Scope 和版本已入库；
+- [ ] 升级前后有 Golden Trace 对比。
+
+### 9.7.39 升级测试建议
+
+每次升级以下任一组件时都应重新验证：
+
+```text
+LangChain
+LangGraph
+langchain-openai / langchain-anthropic / langchain-aws
+OpenTelemetry API / SDK
+wrapt
+opentelemetry-semantic-conventions
+opentelemetry-semantic-conventions-ai
+opentelemetry-instrumentation-langchain
+```
+
+Golden Trace 至少断言：
+
+```text
+Span 数量
+Span 名称
+SpanKind
+parent_span_id
+gen_ai.operation.name
+gen_ai.provider.name
+request / response model
+Token
+Finish Reason
+Tool Name
+Retriever Name
+Conversation ID
+Error Status
+内容开关行为
+```
+
+还应断言“不应该存在”的数据：
+
+```text
+重复 LLM Span
+重复 Token
+完整 Prompt
+Tool Secret
+文档正文
+Base64 媒体
+高基数 Metric Series
+未结束 Span
+```
+
+### 9.7.40 本节结论
+
+Traceloop／OpenLLMetry 的 `LangchainInstrumentor` 不是简单的“一个 Hook”。其完整机制是：
+
+```text
+Entry Point / Traceloop.init / 手工 instrument()
+    ↓
+Monkey Patch BaseCallbackManager.__init__
+    ↓
+自动注入可继承 TraceloopCallbackHandler
+    ↓
+LangChain Callback 捕获 Chain / LLM / Tool / Retriever
+    ↓
+run_id / parent_run_id 恢复 Span 树
+    ↓
+LangGraph Pregel / Command / Agent Factory / Middleware 专项 Patch
+    ↓
+Suppression 避免下游 LLM Span 重复
+    ↓
+Trace Context Header 连接模型网关
+    ↓
+OTel API 创建 Span / Metric / LogRecord Event
+    ↓
+统一 OTel SDK 与 OTLP 导出
+```
+
+它的优势是 LangChain／LangGraph 覆盖面广、接入成本低，并能与 OpenTelemetry 基础设施兼容；主要工程风险则是：
+
+- 与官方同名 Instrumentation 混淆；
+- 自定义 OpenLLMetry 语义与官方 SemConv 不完全一致；
+- 默认内容采集带来的安全风险；
+- LangGraph 异步与流式 Context 复杂度；
+- Provider Instrumentation 重复；
+- 版本升级导致 Patch 失效；
+- Fail-open 造成遥测静默缺失。
+
+因此企业生产接入的重点不是“成功调用 `instrument()`”，而是建立：
+
+```text
+Span所有权
+语义映射
+内容治理
+兼容性锁定
+Golden Trace契约测试
+Instrumentation自监控
+```
+
+---
+
+### 7.9.8 `opentelemetry-instrumentation-langchain` 包级详解
+
+第 9.7 节从运行机制角度解释了 Traceloop／OpenLLMetry 的 `LangchainInstrumentor`。本节进一步从**发行包、源码模块、公共 API、生命周期、数据模型、兼容性和生产治理** 角度，对 `opentelemetry-instrumentation-langchain` 做包级说明。
+
+首先必须确认名称：
+
+```text
+PyPI发行包：
+  opentelemetry-instrumentation-langchain
+
+Python导入命名空间：
+  opentelemetry.instrumentation.langchain
+
+Instrumentor类：
+  LangchainInstrumentor
+
+维护项目：
+  Traceloop / OpenLLMetry
+```
+
+它不等同于 OpenTelemetry 官方 GenAI 仓库中的：
+
+```text
+PyPI发行包：
+  opentelemetry-instrumentation-genai-langchain
+
+Python导入命名空间：
+  opentelemetry.instrumentation.genai.langchain
+
+Instrumentor类：
+  LangChainInstrumentor
+
+维护项目：
+  open-telemetry / opentelemetry-python-genai
+```
+
+二者都可以观测 LangChain／LangGraph，但实现、字段、内容模型、版本策略和 Span 所有权并不完全相同，不能因为名称相近而混为同一包。
+
+### 9.8.1 包的定位
+
+`opentelemetry-instrumentation-langchain` 是一个 **OpenTelemetry Instrumentation Library**。它不提供 LangChain 本身，也不提供可观测后端。其职责是：
+
+```text
+LangChain / LangGraph运行时事件
+    ↓
+Callback、Monkey Patch和Wrapper
+    ↓
+OpenTelemetry Span / Metric / LogRecord Event
+    ↓
+应用配置的OpenTelemetry SDK
+    ↓
+OTLP Exporter / Collector / Backend
+```
+
+它主要解决四个问题：
+
+1. 自动把 OpenTelemetry Callback Handler 注入 LangChain Callback Manager；
+2. 把 Chain、Agent、LLM、Tool、Retriever 等生命周期映射为 Span；
+3. 对 LangGraph 的 Graph、Node、Command、Agent Factory 和 Middleware 增加专项包装；
+4. 提取模型参数、消息、Tool Call、Usage、Metadata、Conversation ID 等数据，并生成指标或事件。
+
+它不负责：
+
+- 创建业务 Agent；
+- 执行 LangGraph；
+- 存储 Prompt 或 Artifact；
+- 提供 Trace 查询界面；
+- 自动理解任意自研 Python 决策逻辑；
+- 保证所有 LangChain／LangGraph 版本都兼容；
+- 代替应用配置 TracerProvider、MeterProvider、LoggerProvider 和 Exporter。
+
+### 9.8.2 当前发行状态与依赖边界
+
+截至 2026-09-03，PyPI 上可见的当前版本为：
+
+```text
+opentelemetry-instrumentation-langchain == 0.62.3
+Python：>=3.10,<4
+License：Apache-2.0
+```
+
+发行版本号应以 PyPI／Wheel METADATA 为准。用于审计的对应仓库快照中，`pyproject.toml` 仍可能显示前一开发版本号；因此供应链核验应同时保存 Wheel 哈希、PyPI 元数据、源码 Commit 和构建 Provenance，不能只读取仓库中的单个版本字段。
+
+该版本的发行依赖包括：
+
+```text
+opentelemetry-api >= 1.38.0, < 2
+opentelemetry-instrumentation >= 0.59b0
+opentelemetry-semantic-conventions >= 0.63b1
+opentelemetry-semantic-conventions-ai >= 0.5.1, < 0.6.0
+```
+
+可选 extra：
+
+```text
+opentelemetry-instrumentation-langchain[instruments]
+    └── langchain
+```
+
+需要注意三点。
+
+第一，基础包没有把全部 Provider 集成作为强依赖。即使安装了 `[instruments]`，通常仍要按业务需要单独安装：
+
+```text
+langgraph
+langchain-openai
+langchain-anthropic
+langchain-community
+其他模型或向量库集成
+```
+
+第二，源码中的自动依赖检查声明较宽：
+
+```text
+langchain-core > 0.1.0
+```
+
+这表示 `BaseInstrumentor` 的依赖检查可能允许较宽的 `langchain-core` 版本进入初始化流程，但“依赖检查通过”不等于该组合已被当前版本的测试矩阵完整验证。
+
+第三，该包同时使用 OpenTelemetry 官方语义约定包和 OpenLLMetry 的 AI 扩展语义包，所以输出并非天然等同于某一版官方 GenAI Semantic Conventions。生产系统应根据 Instrumentation Scope 和版本执行规范化映射。
+
+### 9.8.3 推荐安装方式
+
+#### 方式一：项目已安装 LangChain／LangGraph
+
+```bash
+pip install \
+  opentelemetry-api \
+  opentelemetry-sdk \
+  opentelemetry-exporter-otlp \
+  opentelemetry-instrumentation-langchain
+```
+
+这是最可控的方式。LangChain、LangGraph和各模型 Provider 由应用自己的锁文件管理。
+
+#### 方式二：让 Instrumentation 安装基础 LangChain
+
+```bash
+pip install 'opentelemetry-instrumentation-langchain[instruments]'
+```
+
+该方式适合实验环境，但不能替代完整的依赖锁定。`[instruments]` 只声明 `langchain`，不代表自动安装所有 Provider、向量库和 LangGraph 组合。
+
+#### 方式三：使用 Traceloop SDK 统一初始化
+
+```bash
+pip install traceloop-sdk
+```
+
+然后由：
+
+```python
+from traceloop.sdk import Traceloop
+
+Traceloop.init(...)
+```
+
+间接初始化 OpenLLMetry Instrumentation。此方式接入快，但需要检查 Traceloop SDK 是否创建或替换了应用原有的 OTel Provider、Exporter、Resource 和采样策略。
+
+#### 方式四：零代码自动加载
+
+```bash
+opentelemetry-instrument python app.py
+```
+
+前提是：
+
+- 包已安装在目标 Python 环境中；
+- OTel 自动埋点启动链已经加载；
+- LangChain 依赖检查通过；
+- 没有通过环境配置禁用该 Instrumentation；
+- 应用没有同时加载冲突的 LangChain Instrumentation。
+
+### 9.8.4 包、模块与职责地图
+
+当前发行源码的核心模块可以概括为：
+
+```text
+opentelemetry.instrumentation.langchain
+├── __init__.py
+├── callback_handler.py
+├── config.py
+├── event_emitter.py
+├── event_models.py
+├── langgraph_utils.py
+├── patch.py
+├── span_utils.py
+├── utils.py
+├── vendor_detection.py
+└── version.py
+```
+
+| 模块 | 主要职责 |
+|---|---|
+| `__init__.py` | 定义 `LangchainInstrumentor`，完成 instrument／uninstrument、Callback Manager 注入、LangGraph Patch 与模型调用传播包装 |
+| `callback_handler.py` | 接收 LangChain Callback，维护运行状态并创建、补充、结束 Span |
+| `config.py` | 保存进程级配置，如内容模式、异常回调、Event Logger 和 Metadata 前缀 |
+| `event_emitter.py` | 将消息和 Choice 转为带 `event_name` 的 OpenTelemetry LogRecord Event |
+| `event_models.py` | 定义 Message、Choice、Tool Call 等事件数据结构 |
+| `langgraph_utils.py` | 提取 LangGraph Graph Node 和 Edge 结构 |
+| `patch.py` | 实现 Pregel、Command、Agent Factory、Middleware 等专项 Wrapper |
+| `span_utils.py` | 维护 `SpanHolder`，处理消息、Tool、Usage、Finish Reason 和指标属性 |
+| `utils.py` | 内容开关、事件模式判断、安全序列化、Fail-open 装饰器等通用逻辑 |
+| `vendor_detection.py` | 根据 LangChain 类名推断模型 Provider |
+| `version.py` | 暴露 Instrumentation 版本 |
+
+这个模块拆分说明，该包并不是单纯的 Callback Handler：
+
+```text
+自动注入层
++ Callback翻译层
++ LangGraph运行时Patch层
++ 模型传播包装层
++ 数据规范化层
++ Metric/Event生成层
+```
+
+### 9.8.5 公共 API
+
+最直接的公共入口是：
+
+```python
+from opentelemetry.instrumentation.langchain import LangchainInstrumentor
+```
+
+构造器当前提供以下关键参数：
+
+```python
+LangchainInstrumentor(
+    exception_logger=None,
+    disable_trace_context_propagation=False,
+    use_attributes=None,
+    metadata_key_prefix=...,
+    use_legacy_attributes=None,
+)
+```
+
+| 参数 | 含义 | 推荐策略 |
+|---|---|---|
+| `exception_logger` | Instrumentation 内部异常的回调出口 | 生产环境接入内部诊断日志或计数器 |
+| `disable_trace_context_propagation` | 是否禁用对部分 OpenAI LangChain Wrapper 的 `traceparent` 注入 | 调用支持 Trace Context 的企业模型网关时通常保持 `False` |
+| `use_attributes` | `True` 使用 Span Attribute 内容模式；`False` 使用 OTel Event 模式 | 新代码优先使用该参数 |
+| `metadata_key_prefix` | LangChain Metadata 写入 Span 时使用的属性前缀 | 使用稳定、受治理的低冲突命名空间 |
+| `use_legacy_attributes` | 旧名称，当前已弃用 | 不再使用 |
+
+`use_attributes` 与 `use_legacy_attributes` 不能同时传入，否则会抛出 `TypeError`。
+
+`use_legacy_attributes` 会触发弃用警告。虽然内部配置字段仍叫 `use_legacy_attributes`，但对外应把模式理解为：
+
+```text
+use_attributes=True
+    → 以Span Attribute为主要内容载体
+
+use_attributes=False
+    → 以OpenTelemetry LogRecord Event为主要消息输入载体
+```
+
+### 9.8.6 `BaseInstrumentor` 生命周期
+
+`LangchainInstrumentor` 继承 OpenTelemetry Python Contrib 的 `BaseInstrumentor`。这带来以下行为：
+
+```text
+同一Instrumentor子类通常是进程级单例
+        ↓
+instrument()检查依赖并避免重复初始化
+        ↓
+调用子类的_instrument()
+        ↓
+uninstrument()调用子类的_uninstrument()
+```
+
+工程上应把它视为**进程级基础设施初始化**，而不是每个请求、每个 Agent 或每个租户都创建一套实例。
+
+错误用法：
+
+```python
+def handle_request(request):
+    LangchainInstrumentor().instrument()
+    return graph.invoke(...)
+```
+
+推荐用法：
+
+```python
+def bootstrap_telemetry():
+    LangchainInstrumentor().instrument(...)
+
+bootstrap_telemetry()
+start_application()
+```
+
+因为 Instrumentation 修改的是进程内共享类方法、Callback Manager 构造过程和全局配置，不适合在请求路径中反复开关。
+
+### 9.8.7 零代码自动发现入口
+
+发行包声明了 OpenTelemetry Instrumentor Entry Point：
+
+```toml
+[project.entry-points."opentelemetry_instrumentor"]
+langchain = "opentelemetry.instrumentation.langchain:LangchainInstrumentor"
+```
+
+当使用：
+
+```bash
+opentelemetry-instrument python app.py
+```
+
+自动加载器会发现该 Entry Point，并执行与以下逻辑等价的初始化：
+
+```python
+LangchainInstrumentor().instrument()
+```
+
+这里有一个重要约束：自动加载路径通常不能为该 Instrumentor 传入应用级构造参数。因此：
+
+- 需要 `use_attributes=False`；
+- 需要自定义 `metadata_key_prefix`；
+- 需要设置 `exception_logger`；
+- 需要禁用特定传播 Wrapper；
+
+这些场景更适合显式初始化，而不是只依赖零代码启动。
+
+### 9.8.8 `_instrument()` 的执行顺序
+
+`instrument()` 最终进入 `_instrument()`。其主要步骤可以概括为：
+
+```mermaid
+flowchart TD
+    A[LangchainInstrumentor.instrument] --> B[解析TracerProvider MeterProvider LoggerProvider]
+    B --> C[创建Tracer和Meter]
+    C --> D[创建模型耗时和Token Histogram]
+    D --> E[按模式初始化OTel Logger]
+    E --> F[创建共享TraceloopCallbackHandler]
+    F --> G[包装BaseCallbackManager.__init__]
+    G --> H[包装LangGraph Pregel stream和astream]
+    H --> I[包装Command和Agent Factory]
+    I --> J[包装AgentMiddleware生命周期]
+    J --> K{禁用Trace Context传播?}
+    K -- 否 --> L[包装部分OpenAI LangChain模型入口]
+    K -- 是 --> M[跳过OpenAI传播包装]
+```
+
+这说明初始化不只是“增加一个 Handler”，还会修改多个类方法。版本兼容测试必须覆盖所有实际使用的包装点。
+
+### 9.8.9 `uninstrument()` 的真实边界
+
+`_uninstrument()` 会对初始化时包装的方法执行 `unwrap`，主要包括：
+
+```text
+BaseCallbackManager.__init__
+LangGraph Pregel.stream / astream
+LangGraph Command.__init__
+Agent Factory
+AgentMiddleware各生命周期方法
+部分LangChain OpenAI模型入口
+```
+
+但应准确理解它的边界。
+
+#### 可以做到
+
+- 阻止后续新建 Callback Manager 自动注入 Handler；
+- 恢复被 `wrapt` 包装的类方法；
+- 阻止后续新调用继续经过这些 Wrapper。
+
+#### 不应假设自动做到
+
+- 从已创建的 Callback Manager 中删除已经注入的 Handler；
+- 自动结束仍在执行的 Span；
+- 自动清空所有已经产生的后端数据；
+- 自动撤销其他 Instrumentation 创建的 Wrapper；
+- 在并发请求执行中安全切换观测状态。
+
+从源码行为推断，`uninstrument()` 主要回滚方法级 Patch，并没有遍历所有已存在 Callback Manager 删除共享 Handler。因此，在测试之外，不建议把它当作生产运行时的动态 Feature Toggle。需要彻底切换 Instrumentation 时，进程重启通常更可预测。
+
+### 9.8.10 进程级全局配置模型
+
+`config.py` 中的 `Config` 使用类属性保存：
+
+```text
+exception_logger
+use_legacy_attributes
+Event Logger
+metadata_key_prefix
+```
+
+这意味着配置是进程级共享状态，而不是：
+
+```text
+每次Run独立
+每个Graph独立
+每个Agent独立
+每个租户独立
+```
+
+由此产生几个工程结论：
+
+1. 同一 Python 进程中不能稳定地让一部分 Graph 使用 Attribute 模式、另一部分 Graph 使用 Event 模式；
+2. 不应在请求中动态修改 `metadata_key_prefix`；
+3. 多租户内容策略不能只靠重新构造 Instrumentor；
+4. 单元测试之间必须恢复全局配置或隔离进程；
+5. 动态开关内容采集应使用受控 Context Override 或应用自己的策略层，而不是反复 `instrument()`。
+
+### 9.8.11 Callback Manager 注入机制
+
+核心自动接入点是：
+
+```text
+langchain_core.callbacks.BaseCallbackManager.__init__
+```
+
+包装器在原构造函数完成后：
+
+1. 检查 `inheritable_handlers` 中是否已有同类型 Handler；
+2. 如果没有，则加入共享的 `TraceloopCallbackHandler`；
+3. 设置为 inheritable，使其传播给下游 Chain、Tool、Retriever 和模型调用。
+
+简化伪代码：
+
+```python
+def wrapped_init(original, manager, *args, **kwargs):
+    original(manager, *args, **kwargs)
+
+    if not contains_traceloop_handler(manager.inheritable_handlers):
+        manager.add_handler(shared_handler, inherit=True)
+```
+
+这一机制带来两个边界。
+
+#### 初始化时机边界
+
+在 `instrument()` 之前已经创建好的 Callback Manager 不会因为后续 Patch 自动重新执行构造函数。因此推荐：
+
+```text
+初始化OTel SDK
+    ↓
+初始化LangchainInstrumentor
+    ↓
+创建Graph、Chain、Agent和Callback Manager
+    ↓
+开始接收请求
+```
+
+#### 自定义 Callback 边界
+
+如果业务在调用时替换、过滤或重建 Callback Manager，需要检查 OTel Handler 是否仍然位于 `inheritable_handlers`，而不是只检查普通 `handlers`。
+
+### 9.8.12 Handler 的运行状态模型
+
+`TraceloopCallbackHandler` 内部维护：
+
+```python
+self.spans: dict[UUID, SpanHolder]
+```
+
+其中 `SpanHolder` 保存的典型状态包括：
+
+```text
+Span对象
+Context Token
+父子关系
+子Run ID列表
+Workflow名称
+Entity名称和路径
+Association Properties Token
+开始时间
+请求模型
+```
+
+状态主键是 LangChain 的：
+
+```text
+run_id
+```
+
+父子关系主要来自：
+
+```text
+parent_run_id
+```
+
+因此，该包恢复调用树的核心不是 Python 调用栈，而是 LangChain Callback 协议携带的运行标识。
+
+```text
+on_chain_start(run_id=A, parent_run_id=None)
+    → 创建根Span A
+
+on_tool_start(run_id=B, parent_run_id=A)
+    → 找到A
+    → 创建B并以A为父Span
+
+on_tool_end(run_id=B)
+    → 补充结果
+    → 结束并移除B
+```
+
+这比单纯依赖“当前 Span”更能应对部分异步、批处理和回调顺序场景，但仍要求 `run_id` 生命周期正确且回调完整。
+
+### 9.8.13 Callback 到 Span 的精确映射
+
+| Callback | 典型 Span | 主要信息 |
+|---|---|---|
+| `on_chain_start` | Workflow、Agent或Task Span | 名称、输入、Tag、Metadata、父子关系 |
+| `on_chain_end` | 结束对应 Chain Span | 输出、状态、耗时 |
+| `on_chain_error` | Chain Span Error | `error.type`、Exception、失败状态 |
+| `on_chat_model_start` | Chat Model Client Span | Messages、模型、参数、Tool Definitions |
+| `on_llm_start` | Text Completion Client Span | Prompt、模型、参数 |
+| `on_llm_end` | 结束 Model Span | Choices、Response Model、Usage、Finish Reason |
+| `on_llm_error` | Model Span Error | Error Type、Exception、失败状态 |
+| `on_tool_start` | `execute_tool` Span | Tool 名称、描述、输入、Call ID |
+| `on_tool_end` | 结束 Tool Span | Tool Result、状态 |
+| `on_tool_error` | Tool Span Error | Error Type、Exception |
+| `on_retriever_start` | Retrieval Span | Query、Retriever 名称 |
+| `on_retriever_end` | 结束 Retrieval Span | Documents及Metadata，可受内容开关控制 |
+| `on_retriever_error` | Retrieval Span Error | Error Type、Exception |
+
+当前 Handler 没有通过 `on_llm_new_token` 生成每个 Token 的原生时间线。因此，不应仅凭该包假设可以得到：
+
+```text
+每个Token到达时间
+精确TTFT
+每个Chunk间隔
+流式Chunk大小分布
+```
+
+这些指标通常还需要底层模型 SDK Instrumentation、HTTP 流式探针或应用级流包装。
+
+### 9.8.14 Span 名称、Kind 与操作语义
+
+该包的命名不完全等同于官方 GenAI Semantic Conventions。
+
+典型模式包括：
+
+```text
+<name>.workflow
+<name>.agent
+execute_task <name>
+execute_tool <name>
+vector_db_retrieve <name>
+<model-name>.chat
+<model-name>.completion
+```
+
+典型 SpanKind：
+
+| Span | 常见 Kind |
+|---|---|
+| Workflow／Agent／Task | `INTERNAL` |
+| Tool | 通常为 `INTERNAL` |
+| LLM／Chat Model | `CLIENT` |
+| Retriever | 通常为 `INTERNAL` |
+
+当前实现中，根 Workflow 和部分 Agent 语义可能使用：
+
+```text
+gen_ai.operation.name = invoke_agent
+```
+
+Task 可能使用 OpenLLMetry 自定义：
+
+```text
+gen_ai.operation.name = execute_task
+```
+
+Retriever 可能使用：
+
+```text
+gen_ai.operation.name = vector_db_retrieve
+```
+
+因此企业侧建议增加 Mapper：
+
+```text
+根.workflow + invoke_agent
+    → invoke_workflow
+
+execute_task
+    → app.agent.task.execute
+
+vector_db_retrieve
+    → retrieval
+```
+
+不要只根据 Span 名称猜测语义，应同时读取：
+
+```text
+otel.scope.name
+或 instrumentation_scope.name
+
+otel.scope.version
+或 instrumentation_scope.version
+
+gen_ai.operation.name
+span.kind
+```
+
+### 9.8.15 Attribute 内容模式
+
+默认模式是：
+
+```python
+LangchainInstrumentor(use_attributes=True)
+```
+
+它会把可采集的消息、输出、Tool 定义等内容写入 Span Attribute。典型数据包括：
+
+```text
+gen_ai.system_instructions
+gen_ai.input.messages
+gen_ai.output.messages
+模型请求参数
+Tool Definitions
+Tool Arguments
+Tool Results
+Retriever Query
+Retriever Documents
+```
+
+优点：
+
+- Trace 后端通常可以直接显示；
+- 不要求部署 Logs Pipeline；
+- 便于单条 Trace 调试；
+- 与部分既有 OpenLLMetry 后端兼容。
+
+风险：
+
+- Span 体积膨胀；
+- Attribute 长度和数量限制导致截断；
+- Prompt、代码、文档、Tool 参数泄露；
+- Tail Sampling 前的 Collector 内存压力增加；
+- Trace 存储保留期通常长于业务内容所需保留期；
+- 同一内容可能被 LangChain 层和模型 SDK 层重复采集。
+
+生产环境不应因为该模式是默认值就直接采用默认内容策略。
+
+### 9.8.16 Event 内容模式
+
+设置：
+
+```python
+LangchainInstrumentor(use_attributes=False)
+```
+
+会初始化 OpenTelemetry Logger，并把模型输入消息等内容表达为 LogRecord Event。典型 `event_name`：
+
+```text
+gen_ai.user.message
+gen_ai.system.message
+gen_ai.assistant.message
+gen_ai.tool.message
+gen_ai.choice
+```
+
+这一模式的完整出口是：
+
+```text
+LangChain Callback
+    ↓
+event_emitter.py
+    ↓
+Logger.emit(event_name=...)
+    ↓
+Logs SDK
+    ↓
+OTLP Logs
+    ↓
+Collector
+```
+
+使用 Event 模式必须同时确认：
+
+- 已配置 `LoggerProvider`；
+- 已安装并配置 OTLP Log Exporter；
+- Collector 开启 OTLP Logs Receiver；
+- 后端保留 `event_name` 字段；
+- 日志脱敏、采样和保留期已经配置；
+- TraceId／SpanId 能随当前 Context 自动关联。
+
+否则可能出现“Trace 有 Span，但消息 Event 看不到”的情况。
+
+### 9.8.17 Event 模式不是完全无 Attribute
+
+需要特别注意当前实现的兼容行为。
+
+模型开始时：
+
+```text
+Attribute模式
+    → 把输入消息写到Span Attribute
+
+Event模式
+    → 发出gen_ai.*.message Event
+```
+
+模型结束时：
+
+```text
+Event模式
+    → 发出gen_ai.choice Event
+    → 同时仍可能为了向后兼容写入部分响应Span Attribute
+```
+
+所以 `use_attributes=False` 更准确的含义是：
+
+> **消息输入优先切换到 Event 模型，而不是保证所有内容相关 Span Attribute 都绝对消失。**
+
+此外，Chain、Tool 和 Retriever 并没有与模型消息完全对称的领域 Event 集合。切换到 Event 模式后，应通过 Golden Trace／Golden Event 验证每类数据究竟位于：
+
+```text
+Span Attribute
+LogRecord Event
+两者同时存在
+两者都不存在
+```
+
+不能仅凭构造参数名称推断后端数据形态。
+
+### 9.8.18 内容采集开关与优先级
+
+全局环境变量：
+
+```bash
+export TRACELOOP_TRACE_CONTENT=false
+```
+
+用于关闭 Prompt、Completion、Embedding、Tool 参数、Retriever 文档等敏感正文采集。
+
+默认行为通常是：
+
+```text
+未设置TRACELOOP_TRACE_CONTENT
+    → 允许内容采集
+```
+
+这与许多“默认不采集正文”的安全策略不同，必须显式治理。
+
+该包还支持通过 OpenTelemetry Context 中的：
+
+```text
+override_enable_content_tracing
+```
+
+覆盖全局内容策略。由此得到推荐优先级：
+
+```text
+平台强制安全策略
+    > 请求级受控Context Override
+    > TRACELOOP_TRACE_CONTENT
+    > 包默认值
+```
+
+不要把 Context Override 暴露为普通用户可任意设置的请求参数，否则用户可能绕过默认的内容禁用策略。
+
+即使关闭内容采集，通常仍可保留：
+
+```text
+Span名称
+Operation名称
+模型Provider
+请求模型
+响应模型
+Token Usage
+耗时
+错误类型
+Tool名称
+Retriever名称
+Conversation ID
+受控Metadata
+```
+
+### 9.8.19 Message 与多模态内容规范化
+
+`span_utils.py` 会把 LangChain Message 转换为统一消息部件。典型输入：
+
+```text
+SystemMessage
+HumanMessage
+AIMessage
+ToolMessage
+FunctionMessage
+ChatMessage
+```
+
+典型部件：
+
+```text
+text
+image URL
+base64 image blob
+tool call
+tool result
+其他JSON结构
+```
+
+多模态处理大致是：
+
+```text
+文本块
+    → text part
+
+image_url
+    → URI形式的image part
+
+base64 image
+    → blob形式的image part
+
+未知结构块
+    → JSON序列化后作为文本或通用内容
+```
+
+这种规范化有助于跨 Provider 展示，但也会增加风险：
+
+- Base64 图片体积巨大；
+- Data URL 可能包含完整敏感图片；
+- 未知对象转字符串可能泄露内部字段；
+- JSON 序列化可能复制大段文档或状态；
+- Attribute／Event 后端未必适合保存二进制内容。
+
+生产建议：
+
+```text
+大型图片和文件
+    → Artifact Store
+
+遥测
+    → 只记录artifact_id、media_type、size、hash和安全引用
+```
+
+### 9.8.20 Tool 定义、调用与结果
+
+模型请求中的 Tool Definition 通常被规范化为：
+
+```text
+tool name
+tool description
+input schema
+```
+
+模型输出中的 Tool Call 通常包含：
+
+```text
+tool call id
+tool name
+arguments
+```
+
+Tool 执行 Span 通常包含：
+
+```text
+gen_ai.operation.name = execute_tool
+gen_ai.tool.name
+gen_ai.tool.type
+gen_ai.tool.description
+gen_ai.tool.call.id
+arguments
+result
+```
+
+安全边界：
+
+- JSON Schema 可能包含内部系统字段；
+- Tool Arguments 可能包含 Token、密码、文件正文或 SQL；
+- Tool Result 可能包含客户数据；
+- Shell Tool 可能包含完整命令和工作区路径；
+- Browser Tool 可能包含 Cookie、页面正文和下载链接。
+
+建议将 Tool 名称和结构性属性作为默认可观测字段，而将 Arguments、Result 和 Schema 正文设为 Opt-In。
+
+### 9.8.21 模型请求与响应映射
+
+模型开始阶段通常提取：
+
+```text
+Provider
+请求模型
+最大输出Token
+Temperature
+Top P
+System Instructions
+Input Messages
+Tool Definitions
+```
+
+模型结束阶段通常提取：
+
+```text
+响应模型
+Response ID
+Output Messages或Choices
+Finish Reason
+Input Token
+Output Token
+Total Token
+Cache Read Token
+Cache Creation Token
+```
+
+Finish Reason 会做跨 Provider 归一化，例如：
+
+| Provider 原始值 | 归一化结果 |
+|---|---|
+| `stop` | `stop` |
+| `end_turn` | `stop` |
+| `stop_sequence` | `stop` |
+| `length` | `length` |
+| `max_tokens` | `length` |
+| `tool_calls` | `tool_call` |
+| `function_call` | `tool_call` |
+| `tool_use` | `tool_call` |
+| `content_filter` | `content_filter` |
+
+归一化有助于跨 Provider 聚合，但原始 Provider 值仍可能包含额外语义。需要精确审计时，可以额外保留受控的原始值字段。
+
+### 9.8.22 Token Usage 与指标
+
+该包创建模型操作耗时和 Token Usage Histogram。Token 维度通常包括：
+
+```text
+input
+output
+total
+cache_read
+cache_creation
+```
+
+指标属性可能包括：
+
+```text
+Provider
+Request Model
+Response Model
+Token Type
+```
+
+需要防止三类重复统计：
+
+1. LangChain Instrumentation 生成 Token Metric；
+2. OpenAI／Anthropic Provider Instrumentation 生成 Token Metric；
+3. 后端从 Span Attribute 再派生 Token Metric。
+
+推荐指定唯一权威口径：
+
+```text
+模型逻辑调用Span
+    → 由Provider SDK Instrumentation拥有
+
+Workflow / Tool / Retriever
+    → 由LangChain Instrumentation拥有
+
+成本指标
+    → 从唯一模型Span或统一Usage事件派生
+```
+
+如果选择保留 LangChain 模型 Span，则应通过 Scope 过滤避免对同一调用重复计费。
+
+### 9.8.23 Retriever 数据模型
+
+Retriever 开始阶段可记录：
+
+```text
+Retriever名称
+Query
+父Run ID
+Metadata
+```
+
+Retriever 结束阶段可以记录：
+
+```text
+Document page_content
+Document metadata
+Document数量
+```
+
+这是最容易造成遥测放大的路径之一。一个 `top_k=20` 的检索调用可能把 20 份长文档及其 Metadata 全部复制到 Trace。
+
+生产推荐只保留：
+
+```text
+query hash或脱敏摘要
+top_k
+returned_count
+collection / index name
+rerank model
+latency
+score统计
+artifact_id或document_id
+```
+
+文档正文进入 Artifact Store 或受访问控制的 Evidence Store，Trace 中只记录引用。
+
+### 9.8.24 Metadata 与 Association Properties
+
+LangChain Callback 中的 `metadata` 会经过类型清洗，再使用可配置前缀写入 Span。
+
+默认前缀与 OpenLLMetry 的 Association Properties 体系相关。可配置：
+
+```python
+LangchainInstrumentor(
+    metadata_key_prefix="app.association",
+)
+```
+
+适合的 Metadata：
+
+```text
+environment
+release_channel
+workflow_type
+agent_version
+prompt_version
+experiment_group
+tenant_tier
+```
+
+不适合直接写入：
+
+```text
+user_id原值
+session_id作为Metric标签
+完整文件路径
+Prompt正文
+任意嵌套业务对象
+大数组
+预签名URL
+认证Token
+```
+
+Metadata 进入 Span 后，会影响：
+
+- 存储体积；
+- 属性基数；
+- 查询索引；
+- Tail Sampling 规则；
+- 隐私与租户隔离。
+
+因此应先定义 Allowlist，而不是把任意 LangChain Metadata 透传到遥测。
+
+### 9.8.25 Conversation ID 映射
+
+对于 LangGraph，当前实现会尝试从配置中提取：
+
+```text
+configurable.thread_id
+```
+
+并映射为：
+
+```text
+gen_ai.conversation.id
+```
+
+该映射只有在 `thread_id` 真正代表业务会话或线程时才成立。不要把以下值机械映射为 Conversation ID：
+
+```text
+Trace ID
+随机Request ID
+Graph Run ID
+用户ID
+Prompt Hash
+```
+
+如果 `thread_id` 属于敏感、高基数或跨租户标识，应在进入遥测前执行：
+
+```text
+稳定哈希
+租户作用域前缀
+访问控制
+保留期治理
+```
+
+### 9.8.26 Provider 识别机制
+
+该包主要根据 LangChain 对象的类名和模式推断 Provider，覆盖的典型类别包括：
+
+```text
+OpenAI
+Azure OpenAI
+Anthropic
+AWS Bedrock
+Google Vertex AI
+Google GenAI
+Cohere
+Hugging Face
+Ollama
+Together
+Replicate
+Fireworks
+Groq
+Mistral
+```
+
+识别失败时可能回退到：
+
+```text
+langchain
+```
+
+这是启发式识别，不是 Provider 的权威协议协商。以下情况容易误判：
+
+- 企业自定义 ChatModel Wrapper；
+- 类名被代理或重新导出；
+- 一个统一网关兼容多个 Provider；
+- 自研模型类名包含类似关键字；
+- Provider SDK 升级后重命名类；
+- 动态 Router 在一次运行中切换模型。
+
+推荐让 Provider SDK Instrumentation 或模型网关提供权威 Provider／Model 信息，并把 LangChain 检测值作为候选或回退值。
+
+另一个细节是：Span 上的 Provider 可能来自类名检测，而 Event Emitter 的公共 Event Attribute 使用 `langchain` 作为 Provider。由此可能出现：
+
+```text
+同一次调用的Span：provider=openai
+对应消息Event：provider=langchain
+```
+
+后端关联时应明确一个字段表示“Instrumentation来源”，另一个字段表示“实际模型Provider”，不要把二者当作完全同义字段。
+
+### 9.8.27 LangGraph 专项覆盖范围
+
+该包不仅依赖 LangChain Callback，还会包装 LangGraph：
+
+```text
+Pregel.stream
+Pregel.astream
+Command.__init__
+create_react_agent
+create_agent
+AgentMiddleware.before_model
+AgentMiddleware.after_model
+AgentMiddleware.before_agent
+AgentMiddleware.after_agent
+对应异步方法
+```
+
+它可以补充：
+
+```text
+Graph根Span
+Graph Nodes
+Graph Edges
+Node Task Span
+Command goto动态路由
+Agent Factory创建信息
+System Instructions
+Tool Definitions
+Middleware Task Span
+```
+
+但仍然存在边界：
+
+- 普通 Node 函数内部的任意 Python 逻辑不可见；
+- 未经这些入口执行的自定义 Runtime 不一定被覆盖；
+- LangGraph 内部模块路径变化可能使 Patch 失效；
+- 自定义 Middleware 若绕过标准基类可能无法捕获；
+- Checkpointer 内部数据库操作仍需数据库 Instrumentation；
+- Graph 状态 Diff 并不会天然完整记录；
+- Streaming Chunk 时间线仍需额外观测。
+
+### 9.8.28 模型 Span 抑制与 Trace Context 传播
+
+该包使用 OpenTelemetry Context 中的语言模型 Instrumentation 抑制标记，避免下游 Provider Instrumentation 再次生成同义模型 Span。
+
+目标结构：
+
+```text
+LangChain模型Span
+└── HTTP Client Span
+```
+
+而不是：
+
+```text
+LangChain模型Span
+└── OpenAI模型Span
+    └── HTTP Client Span
+```
+
+但是否抑制下游 Provider Span，应根据 Span 所有权决定。
+
+#### 选择 LangChain 模型 Span 为权威
+
+```text
+保留LangChain模型Span
+抑制OpenAI／Anthropic模型Span
+保留HTTP Transport Span
+```
+
+#### 选择 Provider 模型 Span 为权威
+
+```text
+保留LangChain Workflow／Tool／Retriever
+抑制或过滤LangChain模型Span
+保留Provider模型Span
+保留HTTP Transport Span
+```
+
+该包还会对部分 LangChain OpenAI 模型入口注入：
+
+```text
+traceparent
+```
+
+写入 `extra_headers`，用于连接支持 W3C Trace Context 的企业模型网关。
+
+需要注意：公共 OpenAI API 是否使用该 Header 建立服务端 OTel 父子 Span，取决于服务端能力；单纯发送 `traceparent` 不意味着远端一定继续该 Trace。
+
+当前部分 ChatOpenAI 流式包装点在源码中未启用，因此同步、异步、流式和不同 Provider 的传播覆盖并不完全对称。上线前必须以实际调用方式做契约测试。
+
+### 9.8.29 Instrumentation Scope 与语义版本识别
+
+所有下游查询和规范化都应保存：
+
+```text
+instrumentation_scope.name
+instrumentation_scope.version
+service.name
+service.version
+telemetry.schema.version
+mapper.version
+```
+
+对于该包，Scope 通常可识别为：
+
+```text
+opentelemetry.instrumentation.langchain
+```
+
+企业后端应按 Scope 区分：
+
+```text
+OpenLLMetry LangChain Instrumentation
+OpenTelemetry官方GenAI LangChain Instrumentation
+Provider SDK Instrumentation
+HTTP Instrumentation
+应用手工Span
+```
+
+不要只用 Span 名或 `gen_ai.operation.name` 判断来源，因为不同 Instrumentation 可能产生相似名称，却采用不同内容结构和 Requirement Level。
+
+### 9.8.30 自动加载冲突
+
+如果环境中同时安装：
+
+```text
+opentelemetry-instrumentation-langchain
+opentelemetry-instrumentation-genai-langchain
+```
+
+并使用：
+
+```bash
+opentelemetry-instrument python app.py
+```
+
+两套 Instrumentor 都可能被自动发现。可能出现：
+
+```text
+两个Callback Handler
+两个Workflow Span
+两个Tool Span
+两个Retriever Span
+模型Span与Token重复
+内容被采集两次
+父子关系变深或错位
+```
+
+治理方法：
+
+1. 生产环境只选择一个 LangChain 框架层 Instrumentation；
+2. 通过 `pip freeze` 和 Entry Point 枚举确认实际加载集合；
+3. 对未选中的 Instrumentation 使用禁用配置；
+4. 对 Provider SDK 和 HTTP 层单独定义 Span 所有权；
+5. 在 CI 中对 Golden Trace 的 Span 数量和拓扑做断言。
+
+### 9.8.31 测试覆盖与已知缺口
+
+当前源码测试目录覆盖了多类场景，包括：
+
+```text
+Agent
+Chain
+LCEL
+LangGraph
+LLM
+Tool Call
+Structured Output
+非ASCII消息
+Finish Reason
+Generation Role
+JSON Encoder
+Context Token生命周期
+Association Properties清理
+Metrics
+```
+
+其中 Context 生命周期测试关注：
+
+- 模型抑制标记在 Span 结束后被清理；
+- Association Properties Context 被清理；
+- 重复 `run_id` 生命周期；
+- 根 Chain Context 不持续堆积。
+
+这类测试非常重要，因为 Context 泄漏会导致后续无关请求错误继承父 Span 或抑制状态。
+
+同时，当前源码快照中部分 Batch Metadata 测试因录制测试问题处于跳过状态。这不等于功能必然错误，但意味着依赖批量调用与 Metadata 组合的生产系统应自行补充回归测试。
+
+建议企业测试矩阵至少覆盖：
+
+| 维度 | 场景 |
+|---|---|
+| 调用模式 | invoke、ainvoke、stream、astream、batch、abatch |
+| LangGraph | 普通 Node、条件边、Command goto、子图、Middleware |
+| 模型 | OpenAI、Anthropic、企业网关、自定义 ChatModel |
+| Tool | 正常、异常、超时、结构化输出、大结果 |
+| Retriever | 空结果、多文档、大文档、Metadata异常类型 |
+| Context | asyncio、线程池、并发请求、取消、重试 |
+| 内容 | Attribute、Event、关闭内容、请求级 Override |
+| 组合探针 | LangChain＋Provider＋HTTP＋数据库 |
+| 生命周期 | instrument、重复instrument、uninstrument、进程重启 |
+
+### 9.8.32 并发与生命周期风险
+
+共享 Handler 通过 `run_id` 字典管理活动 Span。设计上可以处理大量并发 Run，但生产仍需监控：
+
+```text
+活动spans字典大小
+未结束Span数量
+超长Span
+重复run_id
+Callback缺失
+Context attach/detach异常
+取消后残留状态
+```
+
+常见风险：
+
+1. 流式调用未消费完且没有显式关闭；
+2. 自定义 Runnable 只触发 start，不触发 end/error；
+3. 任务被强制取消，框架未完整回调；
+4. 进程在 BatchSpanProcessor Flush 前退出；
+5. 线程池或自定义 Task 调度没有传播 Context；
+6. 同一个 `run_id` 被错误复用；
+7. 运行中调用 `uninstrument()`。
+
+建议设置守护指标：
+
+```text
+app.instrumentation.langchain.active_runs
+app.instrumentation.langchain.orphaned_runs
+app.instrumentation.langchain.callback_errors
+app.instrumentation.langchain.context_cleanup_errors
+app.instrumentation.langchain.serialization_errors
+```
+
+这些不是当前包保证提供的标准指标，可由应用的 `exception_logger`、Collector 或扩展 Handler 补充。
+
+### 9.8.33 Fail-open 与自监控
+
+Instrumentation 内部多个辅助函数采用 Fail-open 思路：
+
+```text
+遥测序列化或设置属性失败
+    → 捕获异常
+    → 记录调试信息或调用exception_logger
+    → 尽量不影响Agent主流程
+```
+
+优点是遥测故障不阻断业务；缺点是可能出现“业务正常但遥测静默缺失”。
+
+因此生产环境应设置：
+
+```python
+def report_instrumentation_error(error: Exception) -> None:
+    # 写入独立、不会再次触发LangChain Instrumentation的诊断通道
+    internal_logger.exception(
+        "langchain instrumentation failure",
+        exc_info=error,
+    )
+```
+
+不要把 `exception_logger` 再接回会触发同一 LangChain 调用的 LLM 日志分析器，以免形成递归。
+
+### 9.8.34 Telemetry Amplification 控制
+
+该包可能从多个位置采集内容：
+
+```text
+Chain input / output
+Model input / output
+Tool arguments / result
+Retriever query / documents
+LangGraph state or metadata
+Multimodal image content
+```
+
+一次 RAG Agent 请求的遥测体积可能远大于业务请求本身。
+
+推荐限制：
+
+```text
+单Attribute最大长度
+单Span最大属性数
+单Event Body最大长度
+单Trace最大Span数
+单Retriever最大文档数
+单Tool Result最大记录字节数
+单Graph最大Node／Edge数量
+```
+
+治理顺序：
+
+1. 应用内在采集前截断和脱敏；
+2. 关闭默认正文采集；
+3. 大内容写 Artifact Store；
+4. Collector 再执行 Redaction、Filter 和 Transform；
+5. 后端按 Scope 设置独立保留期；
+6. 对超大 Trace 设置保护性采样和丢弃策略。
+
+### 9.8.35 推荐生产初始化示例
+
+下面示例采用：
+
+- 统一 Traces、Metrics、Logs Provider；
+- OTLP 导出；
+- Event 模式；
+- 默认关闭正文；
+- 自定义 Metadata 前缀；
+- Instrumentation 自诊断；
+- 由应用统一拥有 Provider 生命周期。
+
+```python
+from __future__ import annotations
+
+import logging
+import os
+
+from opentelemetry import metrics, trace
+from opentelemetry._logs import set_logger_provider
+from opentelemetry.exporter.otlp.proto.grpc._log_exporter import OTLPLogExporter
+from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+from opentelemetry.instrumentation.langchain import LangchainInstrumentor
+from opentelemetry.sdk._logs import LoggerProvider
+from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
+from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
+from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+
+internal_logger = logging.getLogger("telemetry.langchain")
+
+
+def instrumentation_error(error: Exception) -> None:
+    internal_logger.error(
+        "opentelemetry-instrumentation-langchain internal error: %s",
+        error,
+        exc_info=error,
+    )
+
+
+def configure_telemetry() -> None:
+    endpoint = os.environ.get(
+        "OTEL_EXPORTER_OTLP_ENDPOINT",
+        "http://127.0.0.1:4317",
+    )
+
+    # OpenLLMetry默认倾向于采集内容，生产环境显式关闭。
+    os.environ.setdefault("TRACELOOP_TRACE_CONTENT", "false")
+
+    resource = Resource.create(
+        {
+            "service.name": "agent-service",
+            "service.version": "1.0.0",
+            "deployment.environment.name": os.environ.get(
+                "DEPLOYMENT_ENVIRONMENT",
+                "production",
+            ),
+        }
+    )
+
+    tracer_provider = TracerProvider(resource=resource)
+    tracer_provider.add_span_processor(
+        BatchSpanProcessor(OTLPSpanExporter(endpoint=endpoint))
+    )
+    trace.set_tracer_provider(tracer_provider)
+
+    metric_reader = PeriodicExportingMetricReader(
+        OTLPMetricExporter(endpoint=endpoint)
+    )
+    meter_provider = MeterProvider(
+        resource=resource,
+        metric_readers=[metric_reader],
+    )
+    metrics.set_meter_provider(meter_provider)
+
+    logger_provider = LoggerProvider(resource=resource)
+    logger_provider.add_log_record_processor(
+        BatchLogRecordProcessor(OTLPLogExporter(endpoint=endpoint))
+    )
+    set_logger_provider(logger_provider)
+
+    LangchainInstrumentor(
+        exception_logger=instrumentation_error,
+        use_attributes=False,
+        metadata_key_prefix="app.association",
+        # 企业模型网关支持traceparent时保留False。
+        disable_trace_context_propagation=False,
+    ).instrument(
+        tracer_provider=tracer_provider,
+        meter_provider=meter_provider,
+        logger_provider=logger_provider,
+    )
+```
+
+应用关闭时应执行 Provider 的 Flush／Shutdown，而不是只调用 `uninstrument()`。
+
+### 9.8.36 最小安全配置
+
+如果暂时不接入 Logs Pipeline，可使用 Attribute 模式，但必须关闭正文：
+
+```bash
+export TRACELOOP_TRACE_CONTENT=false
+```
+
+```python
+from opentelemetry.instrumentation.langchain import LangchainInstrumentor
+
+LangchainInstrumentor(
+    use_attributes=True,
+    metadata_key_prefix="app.association",
+).instrument()
+```
+
+此时仍需验证：
+
+```text
+模型名是否存在
+Token是否存在
+Tool名称是否存在
+错误是否存在
+父子关系是否正确
+Prompt正文是否确实不存在
+Tool Arguments是否确实不存在
+Retriever Documents是否确实不存在
+```
+
+### 9.8.37 包身份与加载诊断脚本
+
+下面的诊断脚本可以确认实际安装的是哪一个包、版本和 Entry Point：
+
+```python
+from __future__ import annotations
+
+from importlib import metadata
+
+
+def show_distribution(name: str) -> None:
+    try:
+        dist = metadata.distribution(name)
+    except metadata.PackageNotFoundError:
+        print(f"{name}: not installed")
+        return
+
+    print(f"{name}: {dist.version}")
+    print(f"  requires-python: {dist.metadata.get('Requires-Python')}")
+
+
+show_distribution("opentelemetry-instrumentation-langchain")
+show_distribution("opentelemetry-instrumentation-genai-langchain")
+
+print("\nOpenTelemetry instrumentor entry points:")
+for entry_point in metadata.entry_points(group="opentelemetry_instrumentor"):
+    if "langchain" in entry_point.name.lower() or "langchain" in entry_point.value.lower():
+        print(f"  {entry_point.name} -> {entry_point.value}")
+
+try:
+    from opentelemetry.instrumentation.langchain import LangchainInstrumentor
+
+    instrumentor = LangchainInstrumentor()
+    print("\nOpenLLMetry class:", type(instrumentor))
+    print("dependencies:", instrumentor.instrumentation_dependencies())
+except ImportError as error:
+    print("\nOpenLLMetry import failed:", error)
+
+try:
+    from opentelemetry.instrumentation.genai.langchain import LangChainInstrumentor
+
+    print("Official GenAI class:", LangChainInstrumentor)
+except ImportError as error:
+    print("Official GenAI import failed:", error)
+```
+
+Callback Manager 诊断：
+
+```python
+from langchain_core.callbacks import CallbackManager
+
+manager = CallbackManager.configure()
+
+for handler in manager.inheritable_handlers:
+    print(
+        type(handler).__module__,
+        type(handler).__qualname__,
+    )
+```
+
+期望能看到类似：
+
+```text
+opentelemetry.instrumentation.langchain.callback_handler
+TraceloopCallbackHandler
+```
+
+如果同时出现官方和 OpenLLMetry Handler，应检查是否发生重复自动加载。
+
+### 9.8.38 Golden Trace 验收样例
+
+对以下最小 Graph：
+
+```text
+Graph
+├── Retriever Node
+├── LLM Node
+└── Tool Node
+```
+
+建议定义期望拓扑：
+
+```text
+invoke_workflow rag_graph                 1个
+├── retrieval knowledge_base             1个
+├── chat model-x                          1个权威模型Span
+│   └── HTTP POST                         0或1个Transport Span
+└── execute_tool calculator               1个
+```
+
+验收断言：
+
+```text
+根Span数量 = 1
+权威模型Span数量 = 1
+Tool Span数量 = 实际Tool调用次数
+Retriever Span数量 = 实际Retriever调用次数
+input_tokens只统计一次
+output_tokens只统计一次
+所有Span具有同一Trace ID
+父Span结束后不存在孤立活动Run
+TRACELOOP_TRACE_CONTENT=false时正文检索为0条
+Event模式下event_name和TraceId／SpanId可查询
+```
+
+### 9.8.39 与官方 `genai-langchain` 包的选择
+
+| 判断维度 | `opentelemetry-instrumentation-langchain` | `opentelemetry-instrumentation-genai-langchain` |
+|---|---|---|
+| 维护方 | Traceloop／OpenLLMetry | OpenTelemetry 官方 GenAI 项目 |
+| 主要类 | `LangchainInstrumentor` | `LangChainInstrumentor` |
+| 语义体系 | 官方 OTel + OpenLLMetry AI 扩展的混合 | 面向官方 GenAI Semantic Conventions |
+| LangGraph专项Patch | 较多 | 以当前官方实现能力为准 |
+| Traceloop后端兼容 | 原生路径 | 需验证 |
+| 内容默认策略 | 默认倾向采集，需显式关闭 | 以官方包当前配置为准 |
+| Event模型 | OpenLLMetry消息和Choice Event | 官方 GenAI Event模型 |
+| 迁移成本 | 已有OpenLLMetry数据模型时较低 | 追求官方SemConv一致性时较低 |
+
+选择原则：
+
+```text
+已有Traceloop／OpenLLMetry后端、字段和Dashboard
+    → 优先评估opentelemetry-instrumentation-langchain
+
+新建平台且希望紧跟官方GenAI SemConv
+    → 优先评估opentelemetry-instrumentation-genai-langchain
+
+需要OpenLLMetry更深的LangGraph Patch
+    → 做兼容性PoC后选择OpenLLMetry包
+
+两套都不能完整表达自研Loop、权限、预算和审批
+    → 仍需应用层原生埋点
+```
+
+### 9.8.40 版本升级清单
+
+升级该包前至少检查：
+
+- [ ] Python 版本范围；
+- [ ] `opentelemetry-api`、SDK、Instrumentation 和 SemConv 版本；
+- [ ] `langchain-core`、`langchain`、`langgraph` 版本；
+- [ ] Provider 集成版本；
+- [ ] `BaseCallbackManager.__init__` 路径；
+- [ ] Pregel、Command、Agent Factory、Middleware 路径；
+- [ ] 同步／异步／流式 Wrapper 是否仍命中；
+- [ ] Attribute 和 Event 模式输出差异；
+- [ ] `TRACELOOP_TRACE_CONTENT=false` 是否仍生效；
+- [ ] 请求级内容 Override 是否符合安全策略；
+- [ ] Provider 识别结果；
+- [ ] Finish Reason 映射；
+- [ ] Token、Cache Token 提取；
+- [ ] Metadata 前缀和类型清洗；
+- [ ] Instrumentation Scope 和版本；
+- [ ] Provider Span 是否重复；
+- [ ] `traceparent` 是否被正确注入；
+- [ ] `uninstrument()` 行为；
+- [ ] Context 清理与并发隔离；
+- [ ] Collector Transform 和后端 Dashboard 是否兼容；
+- [ ] Golden Trace／Golden Event 契约测试是否通过。
+
+### 9.8.41 “可加载依赖”与维护者测试基线
+
+Instrumentor 对自动加载器声明的最低条件是：
+
+```python
+_instruments = ("langchain-core > 0.1.0",)
+```
+
+这只是“是否允许尝试加载”的依赖门槛。当前发行源码的主要测试依赖则集中在更窄、更新的组合，例如：
+
+```text
+langchain >= 1.0, < 2.0
+langgraph >= 1.0, < 2.0
+langchain-openai >= 1.0, < 2.0
+langchain-community >= 0.4, < 0.5
+openai >= 1.52.2, < 3
+```
+
+两者的含义不同：
+
+| 约束 | 回答的问题 |
+|---|---|
+| `instrumentation_dependencies()` | 当前环境是否具备基本加载条件 |
+| 包的测试依赖 | 维护者主要在哪些版本组合上执行回归 |
+| 企业兼容矩阵 | 当前业务实际使用的调用路径是否经过验证 |
+
+因此：
+
+> 自动加载器没有跳过该包，只能证明依赖检查通过，不能证明所有 Callback、LangGraph Patch、Provider Wrapper 和流式路径都兼容。
+
+尤其是以下内部路径对版本变化敏感：
+
+```text
+langgraph.pregel.Pregel.stream
+langgraph.pregel.Pregel.astream
+langgraph.types.Command.__init__
+langgraph.prebuilt.create_react_agent
+langchain.agents.factory.create_agent
+langchain.agents.middleware.types.AgentMiddleware
+```
+
+框架升级后可能出现“主 Callback 链仍有数据，但 Graph、Command 或 Middleware 细粒度 Span 静默消失”的部分失效状态。
+
+### 9.8.42 把观测依赖作为 Release Train 锁定
+
+不要只声明：
+
+```text
+opentelemetry-instrumentation-langchain>=0.62
+```
+
+建议把以下组件作为一个经过验证的 Release Train：
+
+```text
+Python
+OpenTelemetry API
+OpenTelemetry SDK
+OpenTelemetry Instrumentation Base
+OpenTelemetry Semantic Conventions
+OpenLLMetry AI Semantic Conventions
+opentelemetry-instrumentation-langchain
+LangChain
+LangGraph
+Provider集成
+Provider SDK
+OTLP Exporter
+Collector
+```
+
+约束文件示例：
+
+```text
+# observability-constraints.txt
+opentelemetry-api==1.38.0
+opentelemetry-sdk==1.38.0
+opentelemetry-instrumentation==0.59b0
+opentelemetry-semantic-conventions==0.63b1
+opentelemetry-semantic-conventions-ai==0.5.1
+opentelemetry-instrumentation-langchain==0.62.3
+
+# framework-constraints.txt
+langchain==x.y.z
+langgraph==x.y.z
+langchain-openai==x.y.z
+openai==x.y.z
+```
+
+示例中的 `x.y.z` 必须替换为项目自身测试通过的版本，不能机械复制。
+
+升级流程应是：
+
+```text
+更新候选依赖
+    ↓
+pip check和静态导入检查
+    ↓
+运行单元与集成测试
+    ↓
+回放Golden Trace / Golden Event数据集
+    ↓
+比较Span树、属性、Token和内容策略
+    ↓
+验证Collector与Dashboard
+    ↓
+灰度发布
+```
+
+### 9.8.43 多进程、热重载与 Notebook
+
+#### 多进程 Worker
+
+每个 Python Worker 都有独立的：
+
+```text
+模块级Config
+LangchainInstrumentor状态
+Callback Handler
+TracerProvider / MeterProvider / LoggerProvider
+Batch Processor后台线程
+Exporter连接
+```
+
+推荐每个 Worker 在自己的启动阶段初始化一次。Pre-fork 部署需要特别验证：
+
+- Provider 和 Batch Processor 是否在 Fork 前创建；
+- Exporter 后台线程是否能在子进程正常工作；
+- Fork 后是否复用了不可安全共享的网络连接；
+- 每个 Worker 是否正确 Flush／Shutdown；
+- `service.instance.id` 是否能区分不同 Worker。
+
+更可预测的方式通常是：
+
+```text
+Master不创建OTel后台线程
+    ↓
+Worker Fork完成
+    ↓
+每个Worker独立初始化Provider和Instrumentation
+```
+
+#### 开发热重载
+
+Uvicorn、Watchfiles 等热重载工具可能通过新进程或模块重导入启动应用。初始化函数应：
+
+- 输出 PID、Instrumentation 包名和版本；
+- 只在实际服务进程中初始化；
+- 避免模块副作用导致重复调用；
+- 在进程退出时 Flush；
+- 不依赖旧进程中的 `uninstrument()` 清理新进程状态。
+
+#### Jupyter Notebook
+
+Notebook 中反复执行初始化 Cell，容易产生：
+
+```text
+instrument()重复警告
+旧Callback Manager仍持有Handler
+新旧Provider混用
+Exporter重复
+Trace层级异常
+```
+
+实验结束后可以尝试：
+
+```text
+uninstrument()
+释放旧Graph、Agent和Callback Manager
+Shutdown旧Provider
+```
+
+但最可靠的恢复方式仍是重启 Kernel。
+
+### 9.8.44 与官方包之间的迁移方法
+
+从 OpenLLMetry 包迁移到官方：
+
+```text
+opentelemetry-instrumentation-langchain
+    →
+opentelemetry-instrumentation-genai-langchain
+```
+
+不应采用“直接替换包，看界面是否还有 Trace”的方式。推荐：
+
+1. 固定旧环境并建立 Golden Trace／Golden Event；
+2. 导出所有依赖旧字段的 Dashboard、Alert、成本统计、Eval 和审计查询；
+3. 在独立环境安装官方包，避免同进程双 Instrumentor；
+4. 使用同一组离线数据回放；
+5. 对比 Span 数量、拓扑、Kind、属性、Event、Token、错误和内容策略；
+6. 建立 OpenLLMetry 字段到官方 GenAI 字段的版本化 Mapper；
+7. 修改下游查询并执行回归；
+8. 灰度发布并监控数据缺口；
+9. 保留可快速回滚的镜像；
+10. 在最终镜像中枚举 Entry Point，确认只存在目标 LangChain Instrumentor。
+
+反向迁移也应采用同样方法。
+
+迁移比较表至少应包含：
+
+| 对象 | 旧实现 | 新实现 | 迁移动作 |
+|---|---|---|---|
+| Workflow | Span名和Operation | Span名和Operation | Mapper／查询调整 |
+| Agent | ID、名称、版本 | ID、名称、版本 | 重新定义Run ID边界 |
+| Model | 输入输出、Usage | 输入输出、Usage | 防止Token重复 |
+| Tool | Arguments、Result | Arguments、Result | 内容策略迁移 |
+| Retriever | 自定义Operation | 官方Retrieval语义 | 属性改名 |
+| Event | OpenLLMetry消息Event | 官方GenAI Event | EventName与Body转换 |
+| Metric | 旧Meter常量 | 官方Metric | Dashboard重建 |
+
+### 9.8.45 生产验收清单
+
+#### 包与依赖
+
+- [ ] 已记录完整 PyPI 包名、版本和源码 Commit；
+- [ ] Python、LangChain、LangGraph、Provider 和 OTel 版本已锁定；
+- [ ] `pip check` 通过；
+- [ ] 镜像中不存在两套 LangChain Instrumentation；
+- [ ] Entry Point 枚举结果已写入构建日志；
+- [ ] 自动加载依赖范围与实际测试范围已区分。
+
+#### 初始化与生命周期
+
+- [ ] Instrumentation 在 Graph／Callback Manager 创建前初始化；
+- [ ] 每个进程只初始化一次；
+- [ ] Pre-fork、Worker、热重载和 Notebook 模式已验证；
+- [ ] Provider 所有权明确；
+- [ ] 退出时可以 Flush／Shutdown；
+- [ ] 不依赖运行中反复 `instrument()`／`uninstrument()` 做控制面。
+
+#### Trace、Metric 与 Event
+
+- [ ] Workflow、Agent、LLM、Tool、Retriever 的 Span 所有权明确；
+- [ ] 没有重复 LLM Span 和重复 Token；
+- [ ] `run_id`／`parent_run_id` 层级正确；
+- [ ] 同步、异步、流式和 Batch 路径均已验证；
+- [ ] Metrics 没有高基数标签；
+- [ ] Event 模式具备 LoggerProvider、Processor、Exporter 和 Collector Logs Pipeline；
+- [ ] Event 与 Span 的 TraceId／SpanId 可以关联。
+
+#### 内容与安全
+
+- [ ] `TRACELOOP_TRACE_CONTENT` 的生产值明确；
+- [ ] 请求级内容 Override 受信任策略控制；
+- [ ] Prompt、Completion、Tool 参数和检索文档默认不外发；
+- [ ] Metadata 使用 Allowlist；
+- [ ] 多模态和大内容进入 Artifact Store；
+- [ ] Collector 有二次 Redaction；
+- [ ] 访问控制、保留期和审计策略已配置。
+
+#### 兼容与运维
+
+- [ ] 已建立 Golden Trace 和 Golden Event；
+- [ ] 已监控 Instrumentation 内部异常；
+- [ ] 已监控活动 Run、孤儿 Span 和 Context 清理失败；
+- [ ] 已监控 Collector 拒收、队列和 Exporter 失败；
+- [ ] 已验证 LangGraph 专项 Patch；
+- [ ] 已准备升级和回滚矩阵；
+- [ ] 后端能够按 Instrumentation Scope 区分数据来源。
+
+### 9.8.46 本节结论
+
+`opentelemetry-instrumentation-langchain` 应被理解为一个完整的 OpenLLMetry LangChain／LangGraph 适配包，而不是只有一个 `LangchainInstrumentor` 类。
+
+其实际能力由以下部分共同构成：
+
+```text
+PyPI发行与Entry Point
+        ↓
+BaseInstrumentor生命周期
+        ↓
+进程级Config
+        ↓
+Callback Manager自动注入
+        ↓
+TraceloopCallbackHandler
+        ↓
+run_id / parent_run_id状态恢复
+        ↓
+LangGraph专项Patch
+        ↓
+模型抑制与Trace Context传播
+        ↓
+Span Attribute / LogRecord Event / Metric
+        ↓
+统一OTel SDK与OTLP管线
+```
+
+生产使用时最关键的不是安装命令，而是明确：
+
+1. **只保留一套 LangChain 框架层 Instrumentation；**
+2. **定义 LangChain、Provider SDK 和 HTTP Span 的所有权；**
+3. **显式关闭或严格治理 Prompt、Tool、Retriever 正文；**
+4. **把该包的 OpenLLMetry 字段映射到企业统一语义；**
+5. **将 `instrument()` 视为进程级启动动作，而不是请求级开关；**
+6. **通过 Scope、版本和 Golden Trace 管理升级；**
+7. **监控 Fail-open 导致的静默遥测缺失；**
+8. **对 LangGraph、异步、流式和 Batch 场景单独回归。**
+
+---
+
 ## 7.10 OpenAI Python SDK 的接入机制
 
 ### 7.10.1 核心机制
@@ -8113,6 +12213,7 @@ retrieval product_documents       ← Agent / RAG 框架
 | OpenAI Agents SDK | 框架层 | Tracing Processor | Workflow、Agent、Function Tool |
 | LangChain | 框架层 | Callback Manager、Handler | Chain、Model、Tool、Retriever |
 | LangGraph | 框架层 | LangChain Callback、Graph Runtime | Graph、Node、Agent、Tool |
+| Traceloop／OpenLLMetry `LangchainInstrumentor` | 框架层（含 SDK 传播补丁） | Callback Handler、CallbackManager Monkey Patch、LangGraph 专项 Wrapper | Chain、Graph、Task、LLM、Tool、Retriever |
 | LlamaIndex | 框架层 | Dispatcher、EventHandler、SpanHandler | Agent、RAG、LLM、Retriever |
 | CrewAI | 框架层 | Event Bus、Listener | Crew、Agent、Task、Tool、LLM |
 | Haystack | 框架层 | Tracer Interface、Connector | Pipeline、Component |
@@ -8247,6 +12348,8 @@ OTLP
     ↓
 Collector
 ```
+
+这里的 `LangChain OTel Handler` 可能来自 OpenTelemetry 官方 `opentelemetry-instrumentation-genai-langchain`，也可能来自 Traceloop／OpenLLMetry `opentelemetry-instrumentation-langchain`。两者不能仅凭相似类名混用；应按第 9.7 节确定唯一 Span 所有者、内容策略和语义映射。
 
 ### 7.14.6 OpenAI SDK 的协同过程
 
@@ -9412,6 +13515,15 @@ HTTP 200 只代表传输成功，不代表：
 | Metric | 聚合趋势数据 |
 | Log | 结构化运行记录 |
 | Instrumentation | 把框架行为翻译为 OTel 遥测的适配器 |
+| OpenLLMetry | Traceloop 维护的开源 GenAI OpenTelemetry Instrumentation 集合，可接入 Traceloop或既有 OTel 后端 |
+| Traceloop SDK | 统一初始化 OpenLLMetry Instrumentation、OTel Provider、Exporter 和 Resource 的便捷层 |
+| Traceloop `LangchainInstrumentor` | `opentelemetry-instrumentation-langchain` 中的 Instrumentor，通过 Callback 注入及 LangGraph 专项 Patch 观测 LangChain／LangGraph |
+| `opentelemetry-instrumentation-langchain` | Traceloop／OpenLLMetry 发布的 LangChain／LangGraph Instrumentation Distribution；导入类为 `opentelemetry.instrumentation.langchain.LangchainInstrumentor` |
+| `opentelemetry-instrumentation-genai-langchain` | OpenTelemetry 项目维护的官方 GenAI LangChain Instrumentation；与 Traceloop 包不是同一实现 |
+| `opentelemetry_instrumentor` Entry Point | Python OTel 自动埋点加载器发现和实例化 Instrumentor 的包元数据入口组；同名实现并存时必须治理冲突 |
+| Golden Trace | 用固定输入、依赖版本和预期遥测结构验证 Span 数量、拓扑、属性、Event、Metric、Context 与敏感字段边界的契约样本 |
+| Instrumentation Suppression | 通过 OTel Context 标记抑制下游同类 Instrumentation，防止同一模型调用生成重复 Span |
+| Association Properties | OpenLLMetry 将业务 Metadata 写入 Span 时使用的可配置属性命名空间 |
 | API | 创建遥测对象的稳定接口 |
 | SDK | API 的运行时实现，负责采样、处理和导出 |
 | Semantic Conventions | 统一 Span、属性、Metric 和 Event 命名的规范 |
@@ -9525,6 +13637,32 @@ HTTP 200 只代表传输成功，不代表：
 - OpenAI Agents Instrumentation：<https://github.com/open-telemetry/opentelemetry-python-genai/tree/main/instrumentation/opentelemetry-instrumentation-genai-openai-agents>
 - LangChain Instrumentation：<https://github.com/open-telemetry/opentelemetry-python-genai/tree/main/instrumentation/opentelemetry-instrumentation-genai-langchain>
 
+### Traceloop／OpenLLMetry
+
+- OpenLLMetry 仓库：<https://github.com/traceloop/openllmetry>
+- `opentelemetry-instrumentation-langchain` PyPI：<https://pypi.org/project/opentelemetry-instrumentation-langchain/>
+- `opentelemetry-instrumentation-langchain` 包 README：<https://github.com/traceloop/openllmetry/blob/9965d248308340ab47f29ccf84b360ebf3fde41a/packages/opentelemetry-instrumentation-langchain/README.md>
+- 0.62.3 PyPI Provenance 对应源码快照：<https://github.com/traceloop/openllmetry/tree/9965d248308340ab47f29ccf84b360ebf3fde41a/packages/opentelemetry-instrumentation-langchain>
+- 包依赖、Extra 与 `opentelemetry_instrumentor` Entry Point：<https://github.com/traceloop/openllmetry/blob/9965d248308340ab47f29ccf84b360ebf3fde41a/packages/opentelemetry-instrumentation-langchain/pyproject.toml>
+- 包内模块目录：<https://github.com/traceloop/openllmetry/tree/9965d248308340ab47f29ccf84b360ebf3fde41a/packages/opentelemetry-instrumentation-langchain/opentelemetry/instrumentation/langchain>
+- `LangchainInstrumentor` 初始化、Patch 与 Unpatch：<https://github.com/traceloop/openllmetry/blob/9965d248308340ab47f29ccf84b360ebf3fde41a/packages/opentelemetry-instrumentation-langchain/opentelemetry/instrumentation/langchain/__init__.py>
+- LangChain Callback Handler：<https://github.com/traceloop/openllmetry/blob/9965d248308340ab47f29ccf84b360ebf3fde41a/packages/opentelemetry-instrumentation-langchain/opentelemetry/instrumentation/langchain/callback_handler.py>
+- LangGraph 专项 Patch：<https://github.com/traceloop/openllmetry/blob/9965d248308340ab47f29ccf84b360ebf3fde41a/packages/opentelemetry-instrumentation-langchain/opentelemetry/instrumentation/langchain/patch.py>
+- LangGraph 图结构提取：<https://github.com/traceloop/openllmetry/blob/9965d248308340ab47f29ccf84b360ebf3fde41a/packages/opentelemetry-instrumentation-langchain/opentelemetry/instrumentation/langchain/langgraph_utils.py>
+- Instrumentor 进程级共享配置：<https://github.com/traceloop/openllmetry/blob/9965d248308340ab47f29ccf84b360ebf3fde41a/packages/opentelemetry-instrumentation-langchain/opentelemetry/instrumentation/langchain/config.py>
+- Span、消息、Tool、Token 与响应规范化：<https://github.com/traceloop/openllmetry/blob/9965d248308340ab47f29ccf84b360ebf3fde41a/packages/opentelemetry-instrumentation-langchain/opentelemetry/instrumentation/langchain/span_utils.py>
+- OTel Log Event Emitter：<https://github.com/traceloop/openllmetry/blob/9965d248308340ab47f29ccf84b360ebf3fde41a/packages/opentelemetry-instrumentation-langchain/opentelemetry/instrumentation/langchain/event_emitter.py>
+- Event 数据模型：<https://github.com/traceloop/openllmetry/blob/9965d248308340ab47f29ccf84b360ebf3fde41a/packages/opentelemetry-instrumentation-langchain/opentelemetry/instrumentation/langchain/event_models.py>
+- 内容开关、Event 模式与 Fail-open 工具：<https://github.com/traceloop/openllmetry/blob/9965d248308340ab47f29ccf84b360ebf3fde41a/packages/opentelemetry-instrumentation-langchain/opentelemetry/instrumentation/langchain/utils.py>
+- Provider 识别：<https://github.com/traceloop/openllmetry/blob/9965d248308340ab47f29ccf84b360ebf3fde41a/packages/opentelemetry-instrumentation-langchain/opentelemetry/instrumentation/langchain/vendor_detection.py>
+- 包级测试目录：<https://github.com/traceloop/openllmetry/tree/9965d248308340ab47f29ccf84b360ebf3fde41a/packages/opentelemetry-instrumentation-langchain/tests>
+- Context Token 生命周期测试：<https://github.com/traceloop/openllmetry/blob/9965d248308340ab47f29ccf84b360ebf3fde41a/packages/opentelemetry-instrumentation-langchain/tests/test_context_token_lifecycle.py>
+- Batch Metadata 测试：<https://github.com/traceloop/openllmetry/blob/9965d248308340ab47f29ccf84b360ebf3fde41a/packages/opentelemetry-instrumentation-langchain/tests/test_batch_metadata.py>
+- OpenTelemetry Python `BaseInstrumentor`：<https://github.com/open-telemetry/opentelemetry-python-contrib/blob/main/opentelemetry-instrumentation/src/opentelemetry/instrumentation/instrumentor.py>
+- OpenTelemetry 官方 `opentelemetry-instrumentation-genai-langchain` PyPI：<https://pypi.org/project/opentelemetry-instrumentation-genai-langchain/>
+- OpenTelemetry 官方包 `pyproject.toml`：<https://github.com/open-telemetry/opentelemetry-python-genai/blob/main/instrumentation/opentelemetry-instrumentation-genai-langchain/pyproject.toml>
+- OpenTelemetry 官方 LangChain GenAI Instrumentation：<https://github.com/open-telemetry/opentelemetry-python-genai/tree/main/instrumentation/opentelemetry-instrumentation-genai-langchain>
+
 ### 框架资料
 
 - OpenAI Agents Tracing：<https://openai.github.io/openai-agents-python/tracing/>
@@ -9586,6 +13724,8 @@ Artifact存储、版本与血缘
 - **协议层解释请求如何传输；**
 - **应用层解释为什么这么做；**
 - **Instrumentation 负责翻译；**
+- **Traceloop／OpenLLMetry 等第三方 Instrumentation 负责补充框架适配，但必须治理语义版本、内容采集与重复 Span；**
+- **同一进程只保留一个权威 LangChain Instrumentor，并把 Distribution、Entry Point、Provider、内容策略和 Golden Trace 纳入发布治理；**
 - **OpenTelemetry API 负责统一写入；**
 - **Semantic Conventions 负责统一表达；**
 - **SDK 负责处理和导出；**
