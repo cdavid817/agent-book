@@ -167,670 +167,9 @@ flowchart TB
 
 ---
 
-## 17.3 主流通用多 Agent 框架
+## 17.3 主流多 Agent 编排模式
 
-### 17.3.1 Microsoft Agent Framework
-
-**定位：企业级、跨语言、生产级 Agent 与多 Agent 工作流框架。**
-
-Microsoft Agent Framework 将 AutoGen 的 Agent 抽象与 Semantic Kernel 的类型安全、Middleware、Telemetry、会话状态等能力整合，并增加图工作流、持久化状态和 Human-in-the-loop。
-
-其多 Agent 编排模式主要包括：
-
-- Sequential；
-- Concurrent；
-- Handoff；
-- Group Chat；
-- Magentic。
-
-它支持 Python、.NET 和 Go，并覆盖长运行任务、检查点、恢复、Telemetry、Middleware、A2A、MCP 等企业能力。
-
-**适用场景**：
-
-- Azure 和 Microsoft Foundry 技术栈；
-- .NET 企业应用；
-- 企业流程自动化；
-- 需要显式工作流和持久化状态；
-- 多 Agent 长任务；
-- 需要审计、治理、恢复和人工审批。
-
-**优势**：
-
-- 企业能力完整；
-- Agent 与 Workflow 抽象统一；
-- 适合强治理场景；
-- 与 Azure 生态集成紧密；
-- 支持多种编排模式。
-
-**注意事项**：
-
-- Microsoft AutoGen 已进入维护模式，新项目应重点评估 Microsoft Agent Framework；
-- 从 AutoGen 或 Semantic Kernel 迁移时，需要重新验证 Group Chat、状态、Handoff 和终止行为；
-- Workflow 比自由群聊更强调显式控制。
-
-参考：[Microsoft Agent Framework Overview](https://learn.microsoft.com/en-us/agent-framework/overview/)
-
----
-
-### 17.3.2 LangGraph 与 Deep Agents
-
-**定位：低层图运行时，加高层长任务 Agent Harness。**
-
-LangGraph 将 Agent 工作流建模为由状态、节点和边组成的图，可以在同一个系统中混合：
-
-- 确定性代码节点；
-- LLM Agent 节点；
-- 条件路由；
-- 并发分支；
-- 循环；
-- Human-in-the-loop；
-- 持久化和恢复。
-
-LangGraph 的核心优势不是预定义大量“角色模板”，而是允许开发者精确控制运行图、共享状态、分支、循环和生命周期。
-
-LangChain 还提供 Deep Agents 作为更高层的 Agent Harness，内置：
-
-- 规划；
-- 文件系统；
-- Skill；
-- 上下文管理；
-- 子 Agent；
-- 长任务执行能力。
-
-Deep Agents 强调 **Context Quarantine**：把独立任务委派给拥有独立上下文的子 Agent，避免主 Agent 的上下文被大量搜索结果、中间日志和工具输出污染。
-
-**适用场景**：
-
-- 复杂状态机；
-- 长运行任务；
-- Coding Agent；
-- Deep Research；
-- 需要中断、恢复和人工干预；
-- 高度定制的多 Agent 拓扑。
-
-**优势**：
-
-- 图结构表达能力强；
-- 对状态和生命周期控制精细；
-- 支持循环、条件分支和并行；
-- 适合 Durable Execution；
-- 生态成熟。
-
-**注意事项**：
-
-- LangGraph 更像运行时和状态机，不是开箱即用的“虚拟团队”；
-- Agent 协议、角色模型和共享状态结构通常需要自行设计；
-- 灵活性很高，但工程复杂度也较高。
-
-参考：
-
-- [LangGraph Graph API](https://docs.langchain.com/oss/python/langgraph/graph-api)
-- [Deep Agents Subagents](https://docs.langchain.com/oss/python/deepagents/subagents)
-
----
-
-### 17.3.3 OpenAI Agents SDK
-
-**定位：轻量级 Agent 原语，以及 OpenAI 模型、工具、Tracing 的统一运行时。**
-
-OpenAI Agents SDK 提供 Python 和 TypeScript 实现，核心抽象相对精简：
-
-- Agent；
-- Runner；
-- Tool；
-- Handoff；
-- Agent as Tool；
-- Session；
-- Guardrail；
-- Tracing。
-
-其多 Agent 编排有两种核心范式：
-
-1. **Agents as Tools**：管理 Agent 保持用户会话控制权，把专家 Agent 作为工具调用；
-2. **Handoff**：当前 Agent 把会话控制权转交给另一个 Agent。
-
-前者适合由管理 Agent 统一汇总结果，后者适合客服分流、专家接管等场景。
-
-SDK 还可以通过普通代码实现：
-
-- 顺序链；
-- 并行调用；
-- Evaluator-Optimizer；
-- 结构化路由；
-- 自定义重试和预算控制。
-
-**适用场景**：
-
-- OpenAI 模型和 Responses API；
-- Python、Node.js、TypeScript 服务；
-- Voice Agent；
-- Tool Calling 密集型应用；
-- 轻量级 Supervisor/Worker；
-- 不希望引入重量级图框架的系统。
-
-**优势**：
-
-- 核心抽象简单；
-- Handoff 和 Agent as Tool 语义清晰；
-- Guardrail 和 Tracing 集成度高；
-- Python 与 TypeScript 生态兼顾；
-- 易于嵌入现有服务。
-
-**注意事项**：
-
-- 复杂持久化工作流仍需要数据库、消息队列或 Durable Execution 基础设施；
-- Handoff 不等于子任务调用，两者在上下文所有权和最终回答责任上不同；
-- Agent as Tool 默认不会自动继承父 Agent 的全部会话状态，需要显式设计上下文传递。
-
-参考：
-
-- [OpenAI Agents SDK Multi-Agent](https://openai.github.io/openai-agents-python/multi_agent/)
-- [OpenAI Agents SDK Tracing](https://openai.github.io/openai-agents-python/tracing/)
-
----
-
-### 17.3.4 Google Agent Development Kit
-
-**定位：Google 提供的跨语言 Agent 开发框架，与 Gemini Enterprise Agent Platform 深度集成。**
-
-ADK 支持把多个 Agent 和可执行节点组合为工作流。Agent 可以包含子 Agent，并通过以下方式协作：
-
-- 层级关系；
-- 任务委派；
-- 工作流节点；
-- A2A；
-- 工具调用；
-- 共享会话和状态。
-
-ADK 支持 Python、TypeScript、Go、Java 和 Kotlin；ADK 2.0 在部分语言中进一步引入图工作流能力。
-
-**适用场景**：
-
-- Gemini 和 Google Cloud；
-- 多语言团队；
-- A2A 跨系统 Agent；
-- Google Search、Maps、Workspace 和 Cloud 数据服务；
-- 从本地开发平滑部署到托管 Agent Runtime。
-
-**优势**：
-
-- 多语言覆盖较完整；
-- A2A 原生支持；
-- 与 Google Cloud 托管能力结合紧密；
-- 适合跨组织 Agent 服务；
-- 工具与云服务生态丰富。
-
-**注意事项**：
-
-- ADK 与 Google Cloud 结合最完整；
-- 在其他基础设施上运行时，部分托管能力需要自行替代；
-- 各语言 SDK 的功能成熟度可能不完全一致。
-
-参考：
-
-- [Google ADK Multi-Agent Systems](https://google.github.io/adk-docs/agents/multi-agents/)
-- [Google ADK A2A](https://google.github.io/adk-docs/a2a/)
-
----
-
-### 17.3.5 CrewAI
-
-**定位：角色驱动的多 Agent 团队，以及事件驱动业务工作流。**
-
-CrewAI 的核心分为两个层次：
-
-- **Crew**：由多个具有角色、目标和工具的 Agent 组成；
-- **Flow**：负责确定性、事件驱动、带状态的执行流程。
-
-Crew 提供自主协作，Flow 提供显式流程控制。一个 Flow 节点可以运行：
-
-- 单次 LLM 调用；
-- 普通函数；
-- 一个 Agent；
-- 一个完整 Crew。
-
-**适用场景**：
-
-- 市场分析；
-- 内容生产；
-- 调研报告；
-- 业务流程自动化；
-- “研究员—作者—审核员”式团队；
-- 快速原型。
-
-**优势**：
-
-- 角色和任务描述直观；
-- 上手成本较低；
-- Crew 与 Flow 可以组合；
-- 适合业务团队建模；
-- 文档和示例较丰富。
-
-**注意事项**：
-
-- 单纯依赖 Agent 自主对话容易产生冗余讨论；
-- 复杂生产系统应更多使用 Flow 控制关键路径；
-- 需要额外关注状态一致性、重试幂等和分布式执行。
-
-参考：[CrewAI Introduction](https://docs.crewai.com/en/introduction)
-
----
-
-### 17.3.6 PydanticAI
-
-**定位：Python 类型安全、结构化输出和依赖注入优先的 Agent 框架。**
-
-PydanticAI 强调：
-
-- Pydantic 数据模型；
-- 类型安全输入输出；
-- Dependency Injection；
-- 模型无关；
-- Graph 工作流；
-- 多 Agent 应用；
-- 可观测性和测试。
-
-它适合将 Agent 作为后端应用中的一个类型安全组件，而不是单独搭建一个庞大的 Agent 平台。
-
-**适用场景**：
-
-- FastAPI/Python 后端；
-- 强结构化输入输出；
-- 金融、法务、数据处理等对 Schema 要求较高的系统；
-- 希望避免 Agent 之间传递自由文本；
-- 需要较强测试和类型检查能力的项目。
-
-**优势**：
-
-- 类型系统友好；
-- 与 Python 后端工程实践契合；
-- 结构化输出能力强；
-- 依赖注入清晰；
-- 便于单元测试和 Mock。
-
-参考：[PydanticAI Multi-Agent Applications](https://ai.pydantic.dev/multi-agent-applications/)
-
----
-
-### 17.3.7 LlamaIndex AgentWorkflow
-
-**定位：数据、RAG 和知识密集型多 Agent 工作流。**
-
-LlamaIndex 支持三类常见多 Agent 模式：
-
-- Agent Handoff；
-- Agent as Tool；
-- 自定义 Workflow。
-
-`AgentWorkflow` 可以管理一个或多个 Agent 的交互，适合研究、检索、报告生成和企业数据访问。
-
-**适用场景**：
-
-- RAG；
-- 企业知识库；
-- 数据库和文档检索；
-- Research Agent；
-- 不同数据源由不同 Agent 管理的系统。
-
-**优势**：
-
-- 数据连接器和检索生态丰富；
-- 文档、索引、知识库能力成熟；
-- 适合知识密集型任务；
-- 可与多种模型和向量数据库组合。
-
-参考：[LlamaIndex Multi-Agent Patterns](https://developers.llamaindex.ai/python/framework/understanding/agent/multi_agent/)
-
----
-
-### 17.3.8 Agno
-
-**定位：Agent、Team、Workflow、AgentOS 和控制平面一体化。**
-
-Agno 的 Team 可以协调 Agent 或嵌套 Team，主要模式包括：
-
-- Coordinate；
-- Route；
-- Broadcast；
-- Tasks。
-
-Team Leader 可以根据成员角色委派任务并汇总结果。Agno 还提供 AgentOS 和 Control Plane，用于部署、监控和管理 Agent 平台。
-
-**适用场景**：
-
-- 快速搭建完整 Agent 服务平台；
-- 需要嵌套团队；
-- 需要统一 Memory、Knowledge、Guardrail 和管理 UI；
-- 中小团队快速产品化。
-
-**优势**：
-
-- Agent 平台能力较完整；
-- Team 抽象直观；
-- 部署与管理能力集成度高；
-- 适合从原型走向服务化。
-
-参考：[Agno Teams Overview](https://docs.agno.com/teams/overview)
-
----
-
-### 17.3.9 AG2
-
-**定位：协议驱动、异步优先的 AgentOS 与多 Agent Network。**
-
-AG2 是从早期 AutoGen 社区路线发展而来的独立项目。AG2 1.0 使用新的协议驱动核心，以 Network、Hub 和 Channel 组织多个 Agent；原有 `autogen.*` 风格的经典实现被迁移到 AG2 Classic。
-
-**适用场景**：
-
-- 多 Agent 网络研究；
-- 异步事件系统；
-- 自定义消息协议；
-- Human-in-the-loop；
-- 去中心化或网络化 Agent 模型。
-
-**优势**：
-
-- 异步优先；
-- 通信模型灵活；
-- 适合复杂 Agent Network；
-- 社区延续了 AutoGen 风格的部分思想。
-
-**必须区分**：
-
-| 名称 | 含义 |
-|---|---|
-| `microsoft/autogen` | 微软 AutoGen，当前处于维护模式 |
-| `ag2ai/ag2` | 独立 AG2 项目 |
-| `ag2-classic` | 保留原 AutoGen 风格 API 的经典实现 |
-
-AG2 1.0 与 Classic 不是直接兼容升级。
-
-参考：[AG2 Motivation](https://docs.ag2.ai/docs/user-guide/motivation/)
-
----
-
-### 17.3.10 Mastra
-
-**定位：TypeScript 原生 Agent 与 Workflow 框架。**
-
-Mastra 支持：
-
-- Agent；
-- Workflow；
-- Memory；
-- Tool；
-- 多 Agent 协调；
-- TypeScript 应用集成。
-
-其早期的 `Agent.network()` 已被标记为弃用，当前更推荐使用 Supervisor Agent，通过普通 `generate()` 或 `stream()` 完成 Agent、Workflow 和 Tool 路由。
-
-**适用场景**：
-
-- TypeScript/Node.js 全栈；
-- Web 产品；
-- Agent 与业务 Workflow 混合；
-- 希望前后端统一 TypeScript 技术栈。
-
-**优势**：
-
-- TypeScript 原生；
-- 与 Web 和 Node.js 工程结合自然；
-- 工作流与 Agent 可以混合编排；
-- 适合全栈团队。
-
-参考：[Mastra Agent Networks](https://mastra.ai/docs/agents/networks)
-
----
-
-### 17.3.11 框架横向对比
-
-| 框架 | 核心定位 | 编排能力 | 状态持久化 | 多 Agent 原语 | 主要语言 | 典型场景 |
-|---|---|---|---|---|---|---|
-| Microsoft Agent Framework | 企业级 Agent + Workflow | 强 | 强 | Sequential、Concurrent、Handoff、Group Chat | Python、.NET、Go | Azure、企业流程 |
-| LangGraph | 图运行时与状态机 | 很强 | 很强 | 节点、子图、Supervisor、自定义拓扑 | Python、TypeScript | 长任务、复杂状态机 |
-| OpenAI Agents SDK | 轻量 Agent Runtime | 中等 | 需组合 | Handoff、Agent as Tool | Python、TypeScript | OpenAI 生态、轻量服务 |
-| Google ADK | 跨语言 Agent 开发套件 | 强 | 中到强 | 子 Agent、Workflow、A2A | Python、TS、Go、Java、Kotlin | Gemini、Google Cloud |
-| CrewAI | 角色团队 + Flow | 中到强 | 中 | Crew、Flow、Manager | Python | 内容、研究、业务自动化 |
-| PydanticAI | 类型安全 Agent | 中 | 需组合 | Agent、Graph、结构化委派 | Python | 类型安全后端 |
-| LlamaIndex | 数据/RAG Agent | 中 | 中 | Workflow、Handoff、Agent as Tool | Python、TS | 知识库、RAG |
-| Agno | Agent 平台与 Team | 强 | 强 | Team、Route、Broadcast、Tasks | Python | Agent 平台化 |
-| AG2 | 异步 Agent Network | 强 | 需设计 | Network、Hub、Channel | Python | Agent 网络研究 |
-| Mastra | TypeScript Agent/Workflow | 中到强 | 中 | Supervisor、Workflow | TypeScript | Web 全栈 |
-
----
-
-## 17.4 研究型与领域型多 Agent 系统
-
-### 17.4.1 CAMEL
-
-CAMEL 更偏向：
-
-- 多 Agent 社会；
-- 角色扮演；
-- 世界模拟；
-- 合成数据；
-- Agent Scaling；
-- 多角色协作研究。
-
-其能力覆盖 Agent Society、Memory、RAG、代码执行、工具和大规模数据生成。
-
-**适用场景**：
-
-- 多 Agent 社会模拟；
-- Synthetic Data；
-- 多角色对话研究；
-- Agent Scaling Law；
-- 教学和实验。
-
-参考：[CAMEL Introduction](https://docs.camel-ai.org/get_started/introduction)
-
----
-
-### 17.4.2 MetaGPT
-
-MetaGPT 使用“软件公司”思想，将产品经理、架构师、工程师、测试等角色组成协作实体，并通过标准操作过程约束 Agent 行为。
-
-其核心思路可以概括为：
-
-```text
-复杂软件任务
-→ 角色分工
-→ SOP 驱动
-→ 结构化中间产物
-→ 多阶段软件交付
-```
-
-**适用场景**：
-
-- 软件研发流程研究；
-- SOP 驱动的角色协作；
-- PRD、设计、编码和测试的流水线实验；
-- 教学和快速演示。
-
-MetaGPT 更像领域化多 Agent 方法论，不一定适合直接作为通用企业 Agent Runtime。
-
-参考：[MetaGPT Introduction](https://docs.deepwisdom.ai/main/en/guide/get_started/introduction.html)
-
----
-
-### 17.4.3 ChatDev 2.0
-
-ChatDev 1.0 以“虚拟软件公司”闻名；ChatDev 2.0 转向零代码通用多 Agent 编排平台，可以通过配置定义 Agent、任务和工作流。
-
-**适用场景**：
-
-- 多 Agent 教学与演示；
-- 零代码多 Agent 原型；
-- 软件研发角色协作；
-- 动态编排研究。
-
-参考：[ChatDev GitHub](https://github.com/OpenBMB/ChatDev)
-
----
-
-### 17.4.4 Anthropic Research 多 Agent 系统
-
-Anthropic 公开的 Research 系统是典型的 **Orchestrator-Worker** 架构：
-
-1. Lead Agent 分析任务；
-2. 生成研究计划；
-3. 创建多个独立子 Agent；
-4. 子 Agent 并行搜索；
-5. Lead Agent 汇总结果；
-6. Citation Agent 单独验证引用。
-
-其优势主要出现在：
-
-- 广度优先的研究任务；
-- 可并行拆分的问题；
-- 超出单一上下文容量的任务；
-- 需要多来源验证的问题。
-
-这说明多 Agent 的收益往往不是来自“角色更多”，而是来自：
-
-- 多个独立上下文窗口；
-- 并行搜索；
-- 更大的总推理预算；
-- 专业化工具；
-- 最终独立验证。
-
-参考：[How We Built Our Multi-Agent Research System](https://www.anthropic.com/engineering/multi-agent-research-system)
-
----
-
-## 17.5 云厂商多 Agent 平台
-
-### 17.5.1 Microsoft Foundry Agent Service
-
-Microsoft Foundry Agent Service 是托管的 Agent 构建、部署和扩缩容平台，可与 Microsoft Agent Framework 或其他框架结合。
-
-Foundry Workflow 支持：
-
-- 可视化编排；
-- 条件分支；
-- 变量；
-- 多 Agent；
-- Human-in-the-loop；
-- 托管执行和治理。
-
-典型组合：
-
-```text
-Microsoft Agent Framework
-        +
-Foundry Agent Service
-        +
-Foundry Models / Tools
-        +
-Azure Functions / Container Apps / Cosmos DB
-```
-
-参考：[Microsoft Foundry Workflow](https://learn.microsoft.com/en-us/azure/foundry/agents/concepts/workflow)
-
----
-
-### 17.5.2 Gemini Enterprise Agent Platform
-
-Google Cloud 通过 Gemini Enterprise Agent Platform 提供：
-
-- Agent Runtime；
-- Memory；
-- Session；
-- Gateway；
-- Evaluation；
-- 部署；
-- 治理；
-- Agent Identity。
-
-Agent Runtime 对 ADK 提供完整集成，也为 LangGraph、LangChain、AG2、LlamaIndex 等提供托管模板；CrewAI 和自定义框架可通过自定义模板部署。
-
-Google 的重点方向包括：
-
-- ADK；
-- A2A；
-- MCP；
-- Agent Gateway；
-- Agent Identity；
-- Memory Bank；
-- 托管 Runtime。
-
-Agent Gateway 强调每个 Agent 拥有独立、可追踪身份，并以 Agent 身份执行授权决策。
-
-参考：
-
-- [Gemini Enterprise Agent Runtime](https://docs.cloud.google.com/gemini-enterprise-agent-platform/build/runtime)
-- [Agent Gateway Overview](https://docs.cloud.google.com/gemini-enterprise-agent-platform/govern/gateways/agent-gateway-overview)
-
----
-
-### 17.5.3 Amazon Bedrock AgentCore
-
-AgentCore 是 AWS 面向 Agent 系统的托管基础设施，覆盖：
-
-- Runtime；
-- Memory；
-- Gateway；
-- Identity；
-- Browser；
-- Code Interpreter；
-- Observability；
-- Evaluation；
-- MCP；
-- 自定义容器。
-
-AgentCore 支持不同模型和框架，不要求必须使用特定 Agent SDK。
-
-**适用场景**：
-
-- AWS 企业应用；
-- 需要托管浏览器、代码解释器和 Memory；
-- 多框架统一运行；
-- IAM、VPC 和云治理要求较高的系统。
-
-参考：[Amazon Bedrock AgentCore](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/what-is-bedrock-agentcore.html)
-
----
-
-### 17.5.4 Salesforce Agentforce
-
-Agentforce 面向 CRM、客服、销售和企业流程。
-
-其能力包括：
-
-- Agent Script；
-- 状态变量；
-- 子 Agent 顺序控制；
-- Salesforce Flow；
-- CRM 数据访问；
-- MCP Tool 暴露；
-- 企业权限与审计。
-
-**适用场景**：
-
-- CRM 数据；
-- 客户服务；
-- 销售流程；
-- Salesforce Flow；
-- 企业 SaaS 内部 Agent 协作。
-
-参考：[Agentforce Multi-Turn Patterns](https://developer.salesforce.com/docs/ai/agentforce/guide/ascript-patterns-multi-turn.html)
-
----
-
-### 17.5.5 云平台横向对比
-
-| 云平台 | 重点能力 | 推荐框架 | 工具与执行环境 | 身份治理 | 典型场景 |
-|---|---|---|---|---|---|
-| Microsoft Foundry | Workflow、企业治理、模型与工具 | Microsoft Agent Framework | Azure Functions、Container Apps | Entra、Azure Policy | 企业流程、.NET、Azure |
-| Gemini Enterprise Agent Platform | ADK、A2A、Gateway、Memory | Google ADK | Google Cloud Runtime、Search、Workspace | Agent Identity、IAM | 跨 Agent 服务、Gemini |
-| Amazon Bedrock AgentCore | Runtime、Memory、Browser、Code Interpreter | 多框架 | AWS 托管沙箱、Gateway | IAM、VPC、Identity | AWS 企业 Agent |
-| Salesforce Agentforce | CRM、Flow、业务 Agent | Agentforce 原生 | Salesforce 工具与数据 | Salesforce 权限模型 | 客服、销售、CRM |
-
----
-
-## 17.6 主流多 Agent 编排模式
-
-### 17.6.1 顺序流水线
+### 17.3.1 顺序流水线
 
 ```text
 Researcher → Writer → Reviewer → Publisher
@@ -865,7 +204,7 @@ flowchart LR
 
 ---
 
-### 17.6.2 并行 Fan-out / Fan-in
+### 17.3.2 并行 Fan-out / Fan-in
 
 ```text
                   ┌→ Research Agent A ─┐
@@ -903,7 +242,7 @@ flowchart LR
 
 ---
 
-### 17.6.3 Supervisor / Worker
+### 17.3.3 Supervisor / Worker
 
 由一个管理 Agent 负责：
 
@@ -956,7 +295,7 @@ sequenceDiagram
 
 ---
 
-### 17.6.4 Handoff（Agent 控制权转移）详解
+### 17.3.4 Handoff（Agent 控制权转移）详解
 
 Handoff 是多 Agent 系统中的一种**控制权转移（transfer of control）** 机制：当前 Agent 判断另一个 Agent 更适合继续处理当前会话或任务，于是把后续决策权、用户交互权和相应上下文交给目标 Agent。
 
@@ -978,7 +317,7 @@ Active Agent 变更
 
 ---
 
-#### 6.4.1 Handoff 的三个核心所有权
+#### 3.4.1 Handoff 的三个核心所有权
 
 生产系统不能只记录“当前 Agent 是谁”，还需要区分三类所有权：
 
@@ -1008,7 +347,7 @@ ownership:
 
 ---
 
-#### 6.4.2 Handoff 与其他编排模式的区别
+#### 3.4.2 Handoff 与其他编排模式的区别
 
 | 模式 | 控制权 | 上下文所有者 | 结果返回路径 | 适用场景 |
 |---|---|---|---|---|
@@ -1040,7 +379,7 @@ Handoff:
 
 ---
 
-#### 6.4.3 Handoff 的主要类型
+#### 3.4.3 Handoff 的主要类型
 
 ##### 1. 永久会话接管
 
@@ -1117,7 +456,7 @@ Human Queue
 
 ---
 
-#### 6.4.4 Handoff 拓扑与允许边
+#### 3.4.4 Handoff 拓扑与允许边
 
 Handoff 关系应被建模为一张有向图，而不是允许所有 Agent 任意互转。
 
@@ -1179,7 +518,7 @@ handoff_policy:
 
 ---
 
-#### 6.4.5 Handoff 触发与路由策略
+#### 3.4.5 Handoff 触发与路由策略
 
 Handoff 可以由规则、分类器、LLM 或人工触发。
 
@@ -1272,7 +611,7 @@ handoff_decision:
 
 ---
 
-#### 6.4.6 推荐的 Handoff 生命周期
+#### 3.4.6 推荐的 Handoff 生命周期
 
 不同框架对 Handoff 的运行时状态定义不同。生产平台可以在框架之上增加统一的应用级状态机：
 
@@ -1343,7 +682,7 @@ Source → transfer_to_target() → Target Active
 
 ---
 
-#### 6.4.7 Handoff Contract 与数据包
+#### 3.4.7 Handoff Contract 与数据包
 
 推荐使用结构化 Handoff Contract，而不是只发送一句“请你继续处理”。
 
@@ -1443,7 +782,7 @@ handoff:
 
 ---
 
-#### 6.4.8 上下文传递策略
+#### 3.4.8 上下文传递策略
 
 Handoff 最常见的失败不是路由错误，而是**目标 Agent 没有获得足够、正确且安全的上下文**。
 
@@ -1508,7 +847,7 @@ context_layers:
 
 ---
 
-#### 6.4.9 消息历史完整性
+#### 3.4.9 消息历史完整性
 
 当 Handoff 通过 Tool Call 触发时，消息历史必须保持协议结构完整。
 
@@ -1551,7 +890,7 @@ transcript_lineage:
 
 ---
 
-#### 6.4.10 状态、记忆与 Artifact 的迁移
+#### 3.4.10 状态、记忆与 Artifact 的迁移
 
 Handoff 不应被实现为“复制所有内存对象”。应根据 Scope 决定目标 Agent 可以读取什么。
 
@@ -1598,7 +937,7 @@ created_at
 
 ---
 
-#### 6.4.11 未完成工具调用与副作用处理
+#### 3.4.11 未完成工具调用与副作用处理
 
 Handoff 前必须处理当前 Agent 的未完成工作，尤其是具有副作用的 Tool Call。
 
@@ -1644,7 +983,7 @@ side_effect:
 
 ---
 
-#### 6.4.12 权限、身份与安全边界
+#### 3.4.12 权限、身份与安全边界
 
 Handoff 不是权限继承。目标 Agent 的有效权限应重新计算：
 
@@ -1720,7 +1059,7 @@ sequenceDiagram
 
 ---
 
-#### 6.4.13 Human Handoff 设计
+#### 3.4.13 Human Handoff 设计
 
 Human Handoff 比 Agent 间转移多出排队、人员可用性、SLA 和人工工作台。
 
@@ -1777,7 +1116,7 @@ human_handoff:
 
 ---
 
-#### 6.4.14 Handoff-back 与返回策略
+#### 3.4.14 Handoff-back 与返回策略
 
 没有返回规则的 Handoff 很容易形成“转过去后再也回不来”或 Agent 间反复踢球。
 
@@ -1825,7 +1164,7 @@ loop_guard:
 
 ---
 
-#### 6.4.15 跨运行时 Handoff 与 A2A 的关系
+#### 3.4.15 跨运行时 Handoff 与 A2A 的关系
 
 Handoff 是控制权和任务所有权语义；A2A 是远程 Agent 发现、消息、任务、流式结果和 Artifact 的协议。二者可以组合，但不能直接等同。
 
@@ -1889,7 +1228,7 @@ remote_mapping:
 
 ---
 
-#### 6.4.16 可靠性、一致性与恢复
+#### 3.4.16 可靠性、一致性与恢复
 
 ##### 1. Handoff 的主要失败点
 
@@ -1955,7 +1294,7 @@ active_owner_lease:
 
 ---
 
-#### 6.4.17 可观测性与事件模型
+#### 3.4.17 可观测性与事件模型
 
 每次 Handoff 应创建独立 Span，并与源 Agent Span、目标 Agent Span建立父子关系或 Span Link。
 
@@ -2037,7 +1376,7 @@ handoff.human_accepted
 
 ---
 
-#### 6.4.18 Handoff 评估体系
+#### 3.4.18 Handoff 评估体系
 
 Handoff 评估应分别覆盖“是否该转”“转给谁”“传了什么”“接管后是否有效”“权限是否安全”。
 
@@ -2132,7 +1471,7 @@ Context Preservation Score
 
 ---
 
-#### 6.4.19 主流框架的 Handoff 实现差异
+#### 3.4.19 主流框架的 Handoff 实现差异
 
 截至 2026 年 9 月，主流框架并没有完全统一的 Handoff 语义。
 
@@ -2276,7 +1615,7 @@ ADK 还区分协作模式：
 
 ---
 
-#### 6.4.20 生产级 Handoff 参考流程
+#### 3.4.20 生产级 Handoff 参考流程
 
 ```mermaid
 sequenceDiagram
@@ -2373,7 +1712,7 @@ function handoff(source, requested_target, task):
 
 ---
 
-#### 6.4.21 常见失败模式与反模式
+#### 3.4.21 常见失败模式与反模式
 
 ##### 1. 把所有 Agent 做成自由 Mesh
 
@@ -2455,7 +1794,7 @@ A 判断 B 更适合，B 又判断 A 更适合。
 
 ---
 
-#### 6.4.22 什么时候优先使用 Handoff
+#### 3.4.22 什么时候优先使用 Handoff
 
 适合 Handoff：
 
@@ -2492,7 +1831,7 @@ A 判断 B 更适合，B 又判断 A 更适合。
 
 ---
 
-#### 6.4.23 Handoff 实施检查清单
+#### 3.4.23 Handoff 实施检查清单
 
 ##### 语义与拓扑
 
@@ -2554,7 +1893,7 @@ A 判断 B 更适合，B 又判断 A 更适合。
 
 ---
 
-### 17.6.5 Group Chat
+### 17.3.5 Group Chat
 
 多个 Agent 共享一个会话空间，通过以下策略决定下一个发言者：
 
@@ -2594,7 +1933,7 @@ Group Chat 最大风险是：**看起来协作很多，实际有效信息很少�
 
 ---
 
-### 17.6.6 Debate / Critic / Judge
+### 17.3.6 Debate / Critic / Judge
 
 典型结构：
 
@@ -2624,7 +1963,7 @@ Generator B ─┘
 
 ---
 
-### 17.6.7 Evaluator-Optimizer
+### 17.3.7 Evaluator-Optimizer
 
 ```text
 Worker → Evaluator
@@ -2663,7 +2002,7 @@ flowchart LR
 
 ---
 
-### 17.6.8 Blackboard / Shared Workspace
+### 17.3.8 Blackboard / Shared Workspace
 
 多个 Agent 不直接频繁对话，而是围绕一个共享工作区协作：
 
@@ -2701,7 +2040,7 @@ flowchart TB
 
 ---
 
-### 17.6.9 去中心化 Swarm
+### 17.3.9 去中心化 Swarm
 
 Agent 之间没有单一 Supervisor，可以：
 
@@ -2739,7 +2078,7 @@ Agent 之间没有单一 Supervisor，可以：
 
 ---
 
-### 17.6.10 编排模式选型表
+### 17.3.10 编排模式选型表
 
 | 模式 | 确定性 | 并行性 | 上下文隔离 | 工程复杂度 | 适用场景 |
 |---|---:|---:|---:|---:|---|
@@ -2755,7 +2094,7 @@ Agent 之间没有单一 Supervisor，可以：
 
 ---
 
-## 17.7 协议栈：MCP、A2A、AG-UI
+## 17.4 协议栈：MCP、A2A、AG-UI
 
 当前 Agent 生态逐步形成三层协议：
 
@@ -2774,7 +2113,7 @@ flowchart LR
     AgentB <-->|MCP| Tool2[工具 / 数据源]
 ```
 
-### 17.7.1 MCP
+### 17.4.1 MCP
 
 MCP 采用 Host—Client—Server 架构，标准化 Agent 对外部工具和数据的访问。
 
@@ -2793,13 +2132,13 @@ MCP 的重点不是多 Agent 编排，而是 **Agent 与能力之间的标准接
 
 ---
 
-### 17.7.2 A2A（Agent-to-Agent）协议详解
+### 17.4.2 A2A（Agent-to-Agent）协议详解
 
 > **版本说明（截至 2026 年 9 月 2 日）**：A2A 的稳定协议兼容主线为 **1.0**。官方规范页面发布版本为 `1.0.0`，协议仓库后续发布了 `1.0.1` 补丁；但在线路协商、请求头和 Agent Card 中只使用 `Major.Minor`，即 `1.0`，不能写成 `1.0.1`。A2A SDK 自身的版本号与协议版本号相互独立。
 >
-> A2A 已于 **2026 年 8 月 27 日**被 Agentic AI Foundation（AAIF）接纳为 Growth Stage 项目。协议最初由 Google 贡献，目前按开放治理模式持续演进。
+> A2A 已于 **2026 年 8 月 27 日** 被 Agentic AI Foundation（AAIF）接纳为 Growth Stage 项目。协议最初由 Google 贡献，目前按开放治理模式持续演进。
 
-A2A 的目标不是让两个模型简单互发文本，而是为**相互独立、内部实现不透明、可能属于不同厂商或组织的 Agent 系统**提供统一的发现、委派、任务状态、结果交付和安全交互模型。
+A2A 的目标不是让两个模型简单互发文本，而是为**相互独立、内部实现不透明、可能属于不同厂商或组织的 Agent 系统** 提供统一的发现、委派、任务状态、结果交付和安全交互模型。
 
 A2A 的核心抽象可以概括为：
 
@@ -2816,7 +2155,7 @@ Agent Card 能力发现
 
 本节基于 A2A 1.0 数据模型和三种标准绑定展开。官方规范的权威数据定义以 `a2a.proto` 为准，JSON Schema、语言 SDK 和文档均属于派生表示。
 
-#### 7.2.1 A2A 解决什么问题
+#### 4.2.1 A2A 解决什么问题
 
 A2A 主要解决以下问题：
 
@@ -2834,7 +2173,7 @@ A2A 主要解决以下问题：
 | 如何扩展领域语义 | URI 标识的 A2A Extension |
 | 如何适配不同技术栈 | JSON-RPC、gRPC、HTTP+JSON 三种标准绑定 |
 
-A2A **不直接解决**以下问题：
+A2A **不直接解决** 以下问题：
 
 | 非目标 | 应由谁负责 |
 |---|---|
@@ -2851,7 +2190,7 @@ A2A **不直接解决**以下问题：
 
 ---
 
-#### 7.2.2 参与方与参考架构
+#### 4.2.2 参与方与参考架构
 
 A2A 交互通常包含以下角色：
 
@@ -2905,7 +2244,7 @@ flowchart LR
 
 ---
 
-#### 7.2.3 一次完整 A2A 调用的生命周期
+#### 4.2.3 一次完整 A2A 调用的生命周期
 
 ```mermaid
 sequenceDiagram
@@ -2958,7 +2297,7 @@ sequenceDiagram
 
 ---
 
-#### 7.2.4 Agent 发现与 Agent Card
+#### 4.2.4 Agent 发现与 Agent Card
 
 ##### 1. 三种发现方式
 
@@ -3095,7 +2434,7 @@ Agent Card 被缓存后，Client 仍不能假设远端能力永久不变。发�
 
 ---
 
-#### 7.2.5 协议绑定、接口选择与版本协商
+#### 4.2.5 协议绑定、接口选择与版本协商
 
 A2A 1.0 提供三种标准协议绑定：
 
@@ -3105,7 +2444,7 @@ A2A 1.0 提供三种标准协议绑定：
 | **gRPC** | Protocol Buffers over HTTP/2 + TLS | gRPC Server Streaming | 内部高吞吐、强类型、跨语言服务 |
 | **HTTP+JSON** | REST 风格 Endpoint，推荐 `application/a2a+json` | HTTP SSE | API Gateway、企业开放平台、易调试集成 |
 
-所有绑定必须提供**语义等价**的核心功能：
+所有绑定必须提供**语义等价** 的核心功能：
 
 - 相同的核心操作；
 - 语义等价的数据模型；
@@ -3164,7 +2503,7 @@ A2A 1.0 提供三种标准协议绑定：
 
 ---
 
-#### 7.2.6 核心数据模型
+#### 4.2.6 核心数据模型
 
 ```mermaid
 classDiagram
@@ -3253,7 +2592,7 @@ classDiagram
 
 ##### 3. Part
 
-`Part` 是 Message 和 Artifact 的最小内容单元，并且必须**恰好包含一种**内容字段：
+`Part` 是 Message 和 Artifact 的最小内容单元，并且必须**恰好包含一种** 内容字段：
 
 ```text
 text | raw | url | data
@@ -3293,7 +2632,7 @@ text | raw | url | data
 
 ---
 
-#### 7.2.7 Task 状态机
+#### 4.2.7 Task 状态机
 
 A2A 1.0 定义了以下状态：
 
@@ -3346,7 +2685,7 @@ stateDiagram-v2
 
 ---
 
-#### 7.2.8 `contextId`、`taskId` 与多轮交互
+#### 4.2.8 `contextId`、`taskId` 与多轮交互
 
 三类 ID 的职责不同：
 
@@ -3418,7 +2757,7 @@ A2A 只定义 ID 语义，不定义上下文保留时长。生产实现应明确
 
 ---
 
-#### 7.2.9 `SendMessage` 请求与返回语义
+#### 4.2.9 `SendMessage` 请求与返回语义
 
 HTTP+JSON 示例：
 
@@ -3509,7 +2848,7 @@ Accept: application/a2a+json
 
 ---
 
-#### 7.2.10 Polling、Streaming 与任务订阅
+#### 4.2.10 Polling、Streaming 与任务订阅
 
 A2A 为 Task 更新提供三种互补机制：
 
@@ -3594,7 +2933,7 @@ A2A 核心字段没有提供完整的可重放事件游标。需要严格断点�
 
 ---
 
-#### 7.2.11 Push Notification 与断线异步任务
+#### 4.2.11 Push Notification 与断线异步任务
 
 Push 适合分钟、小时甚至天级任务，以及无法长期维护连接的 Serverless、移动端或跨组织 Client。
 
@@ -3670,7 +3009,7 @@ Push 是 A2A 中风险最高的部分之一：
 
 ---
 
-#### 7.2.12 认证、授权与 `AUTH_REQUIRED`
+#### 4.2.12 认证、授权与 `AUTH_REQUIRED`
 
 A2A 不发明新的身份系统，而是复用标准 Web 安全机制。认证发生在协议传输层或网关层，**凭据不应作为普通 Message/Part 内容发送**。
 
@@ -3719,7 +3058,7 @@ Server 应在每个操作上重新做授权，尤其是：
 
 ---
 
-#### 7.2.13 Agent Card 签名与信任链
+#### 4.2.13 Agent Card 签名与信任链
 
 Agent Card 可以携带一个或多个 JWS 签名，用于确认 Card 未被篡改并验证发布方。
 
@@ -3749,7 +3088,7 @@ Agent Card 可以携带一个或多个 JWS 签名，用于确认 Card 未被篡�
 
 ---
 
-#### 7.2.14 Extension 扩展机制
+#### 4.2.14 Extension 扩展机制
 
 A2A Extension 用于在不修改核心协议的前提下增加领域能力。每个 Extension 使用 URI 唯一标识，并应把版本放入 URI，例如：
 
@@ -3820,7 +3159,7 @@ A2A-Extensions: https://example.com/a2a/extensions/citations/v1
 
 ---
 
-#### 7.2.15 多租户与多 Agent 路由
+#### 4.2.15 多租户与多 Agent 路由
 
 A2A 1.0 支持多种路由方式：
 
@@ -3856,7 +3195,7 @@ Server 仍必须根据已认证主体做 Tenant、Task、Artifact 和 Skill 级�
 
 ---
 
-#### 7.2.16 错误模型、重试与幂等
+#### 4.2.16 错误模型、重试与幂等
 
 ##### 1. A2A 标准错误映射
 
@@ -3926,7 +3265,7 @@ Authenticated Principal
 
 ---
 
-#### 7.2.17 A2A 0.3 向 1.0 的迁移重点
+#### 4.2.17 A2A 0.3 向 1.0 的迁移重点
 
 A2A 1.0 对 0.3 存在多项破坏性变化：
 
@@ -3961,7 +3300,7 @@ A2A 1.0 对 0.3 存在多项破坏性变化：
 
 ---
 
-#### 7.2.18 A2A、MCP、AG-UI 与内部 Workflow 的边界
+#### 4.2.18 A2A、MCP、AG-UI 与内部 Workflow 的边界
 
 | 维度 | A2A | MCP | AG-UI | Workflow / Graph |
 |---|---|---|---|---|
@@ -3992,7 +3331,7 @@ A2A Server 对上游表现为“远端 Agent”，但其内部仍可包含多个
 
 ---
 
-#### 7.2.19 生产级 A2A 平台架构
+#### 4.2.19 生产级 A2A 平台架构
 
 ```mermaid
 flowchart TB
@@ -4068,7 +3407,7 @@ flowchart TB
 
 ---
 
-#### 7.2.20 可观测性与审计
+#### 4.2.20 可观测性与审计
 
 A2A Trace 应覆盖“发现—鉴权—委派—执行—结果—通知”的完整链路。
 
@@ -4166,7 +3505,7 @@ principal_id
 
 ---
 
-#### 7.2.21 一致性测试与评估
+#### 4.2.21 一致性测试与评估
 
 A2A Server 通过“能接收请求”并不代表具备互操作性。至少要验证：
 
@@ -4226,7 +3565,7 @@ A2A Server 通过“能接收请求”并不代表具备互操作性。至少要
 
 ---
 
-#### 7.2.22 Client 与 Server 实现清单
+#### 4.2.22 Client 与 Server 实现清单
 
 ##### A2A Client
 
@@ -4267,7 +3606,7 @@ A2A Server 通过“能接收请求”并不代表具备互操作性。至少要
 
 ---
 
-#### 7.2.23 什么时候应该使用 A2A
+#### 4.2.23 什么时候应该使用 A2A
 
 适合 A2A：
 
@@ -4311,7 +3650,7 @@ A2A 的合理定位是：
 
 ---
 
-### 17.7.3 AG-UI
+### 17.4.3 AG-UI
 
 AG-UI 是 Agent 后端与用户前端之间的双向、事件驱动协议，适合：
 
@@ -4333,7 +3672,7 @@ AG-UI 是 Agent 后端与用户前端之间的双向、事件驱动协议，适�
 
 ---
 
-### 17.7.4 三类协议的边界
+### 17.4.4 三类协议的边界
 
 | 问题 | 推荐协议 |
 |---|---|
@@ -4346,11 +3685,11 @@ AG-UI 是 Agent 后端与用户前端之间的双向、事件驱动协议，适�
 
 ---
 
-## 17.8 多 Agent 状态、上下文与记忆设计
+## 17.5 多 Agent 状态、上下文与记忆设计
 
 多 Agent 系统至少要区分以下状态域。
 
-### 17.8.1 Agent 私有上下文
+### 17.5.1 Agent 私有上下文
 
 每个 Agent 独立保存：
 
@@ -4374,7 +3713,7 @@ AG-UI 是 Agent 后端与用户前端之间的双向、事件驱动协议，适�
 
 ---
 
-### 17.8.2 共享任务状态
+### 17.5.2 共享任务状态
 
 共享状态应结构化，例如：
 
@@ -4415,7 +3754,7 @@ constraints:
 
 ---
 
-### 17.8.3 短期记忆与长期记忆
+### 17.5.3 短期记忆与长期记忆
 
 #### 短期记忆
 
@@ -4458,7 +3797,7 @@ task_scope
 
 ---
 
-### 17.8.4 Artifact Store
+### 17.5.4 Artifact Store
 
 多 Agent 之间最可靠的协作媒介往往不是消息，而是 Artifact：
 
@@ -4490,7 +3829,7 @@ validation_status: passed
 
 ---
 
-### 17.8.5 Checkpoint 与恢复
+### 17.5.5 Checkpoint 与恢复
 
 长任务必须支持 Checkpoint。一个有效 Checkpoint 至少包括：
 
@@ -4522,7 +3861,7 @@ stateDiagram-v2
 
 ---
 
-### 17.8.6 上下文注入策略
+### 17.5.6 上下文注入策略
 
 推荐按需注入，而不是全量注入：
 
@@ -4547,11 +3886,11 @@ Agent Input Context
 
 ---
 
-## 17.9 执行、沙箱与权限体系
+## 17.6 执行、沙箱与权限体系
 
 多 Agent 系统会放大权限风险。假设一个 Supervisor 可以委派 20 个 Worker，而每个 Worker 都继承 Supervisor 的全部权限，则系统风险可能呈乘法增长。
 
-### 17.9.1 每 Agent 独立身份
+### 17.6.1 每 Agent 独立身份
 
 每个 Agent 都应具有：
 
@@ -4570,7 +3909,7 @@ Agent 不应默认继承创建者的全部 Credential。
 
 ---
 
-### 17.9.2 最小权限
+### 17.6.2 最小权限
 
 示例：
 
@@ -4596,7 +3935,7 @@ Agent Role Policy
 
 ---
 
-### 17.9.3 高风险操作审批
+### 17.6.3 高风险操作审批
 
 以下操作通常要求 Human-in-the-loop：
 
@@ -4627,7 +3966,7 @@ approval_request:
 
 ---
 
-### 17.9.4 沙箱隔离
+### 17.6.4 沙箱隔离
 
 Coding Agent 和数据 Agent 应使用：
 
@@ -4653,7 +3992,7 @@ Coding Agent 和数据 Agent 应使用：
 
 ---
 
-### 17.9.5 委派权限约束
+### 17.6.5 委派权限约束
 
 Supervisor 委派任务时，不应把自身全部权限转交给 Worker。
 
@@ -4688,7 +4027,7 @@ delegation:
 
 ---
 
-### 17.9.6 Prompt Injection 与跨 Agent 污染
+### 17.6.6 Prompt Injection 与跨 Agent 污染
 
 多 Agent 系统中，Prompt Injection 可能沿以下路径传播：
 
@@ -4713,7 +4052,7 @@ delegation:
 
 ---
 
-## 17.10 多 Agent 可观测性
+## 17.7 多 Agent 可观测性
 
 单 Agent Trace 通常接近线性；多 Agent Trace 是图结构。
 
@@ -4731,7 +4070,7 @@ Run
  └── Finalize
 ```
 
-### 17.10.1 Trace 数据模型
+### 17.7.1 Trace 数据模型
 
 建议至少记录：
 
@@ -4767,7 +4106,7 @@ status: success
 
 ---
 
-### 17.10.2 任务质量指标
+### 17.7.2 任务质量指标
 
 - Task Success Rate；
 - 最终结果正确率；
@@ -4781,7 +4120,7 @@ status: success
 
 ---
 
-### 17.10.3 协作质量指标
+### 17.7.3 协作质量指标
 
 - Agent Routing Accuracy；
 - Delegation Success Rate；
@@ -4799,7 +4138,7 @@ status: success
 
 ---
 
-### 17.10.4 效率指标
+### 17.7.4 效率指标
 
 - 总 Token；
 - 每 Agent Token；
@@ -4824,7 +4163,7 @@ Parallel Speedup
 
 ---
 
-### 17.10.5 可靠性指标
+### 17.7.5 可靠性指标
 
 - Timeout Rate；
 - Retry Rate；
@@ -4841,7 +4180,7 @@ Parallel Speedup
 
 ---
 
-### 17.10.6 安全指标
+### 17.7.6 安全指标
 
 - 越权工具调用次数；
 - 未授权 Handoff；
@@ -4857,7 +4196,7 @@ Parallel Speedup
 
 ---
 
-### 17.10.7 可观测架构
+### 17.7.7 可观测架构
 
 ```mermaid
 flowchart LR
@@ -4878,11 +4217,11 @@ flowchart LR
 
 ---
 
-## 17.11 多 Agent 评估
+## 17.8 多 Agent 评估
 
 多 Agent 不能只评估最终回答，还要评估协作过程。
 
-### 17.11.1 结果评估
+### 17.8.1 结果评估
 
 使用任务本身对应的 Benchmark 或验收机制：
 
@@ -4899,7 +4238,7 @@ flowchart LR
 
 ---
 
-### 17.11.2 协作评估
+### 17.8.2 协作评估
 
 多 Agent 协作评估应覆盖：
 
@@ -4919,7 +4258,7 @@ MultiAgentBench 等研究工作尝试评估多 Agent 的协作和竞争，并比
 
 ---
 
-### 17.11.3 失败模式评估
+### 17.8.3 失败模式评估
 
 多 Agent 失败大致可以归纳为三类：
 
@@ -4944,7 +4283,7 @@ MultiAgentBench 等研究工作尝试评估多 Agent 的协作和竞争，并比
 
 ---
 
-### 17.11.4 评估维度模型
+### 17.8.4 评估维度模型
 
 ```text
 Multi-Agent Evaluation
@@ -4968,7 +4307,7 @@ Multi-Agent Evaluation
 
 ---
 
-### 17.11.5 Offline、Online 与 Shadow 评估
+### 17.8.5 Offline、Online 与 Shadow 评估
 
 #### Offline Evaluation
 
@@ -4992,9 +4331,9 @@ Multi-Agent Evaluation
 
 ---
 
-## 17.12 什么时候应该使用多 Agent
+## 17.9 什么时候应该使用多 Agent
 
-### 17.12.1 任务可以并行分解
+### 17.9.1 任务可以并行分解
 
 例如：
 
@@ -5003,7 +4342,7 @@ Multi-Agent Evaluation
 - 同时搜索多个信息源；
 - 同时生成多个候选方案。
 
-### 17.12.2 不同子任务需要不同上下文
+### 17.9.2 不同子任务需要不同上下文
 
 例如：
 
@@ -5011,7 +4350,7 @@ Multi-Agent Evaluation
 - 法务 Agent 不需要看到完整运行日志；
 - Reviewer 只需要 Artifact 和验收标准。
 
-### 17.12.3 不同子任务需要不同工具或权限
+### 17.9.3 不同子任务需要不同工具或权限
 
 例如：
 
@@ -5021,15 +4360,15 @@ Multi-Agent Evaluation
 - 财务审批 Agent；
 - 发布 Agent。
 
-### 17.12.4 需要独立验证
+### 17.9.4 需要独立验证
 
 生成 Agent 和验证 Agent 分开，有利于降低自我确认偏差。
 
-### 17.12.5 单上下文无法容纳任务
+### 17.9.5 单上下文无法容纳任务
 
 子 Agent 可以提供独立上下文窗口，并最终只返回压缩结果和 Artifact。
 
-### 17.12.6 需要接入外部 Agent
+### 17.9.6 需要接入外部 Agent
 
 例如通过 A2A 接入：
 
@@ -5039,23 +4378,23 @@ Multi-Agent Evaluation
 - 第三方服务 Agent；
 - 个人 Agent。
 
-### 17.12.7 需要故障隔离
+### 17.9.7 需要故障隔离
 
 某个 Agent 崩溃、超时或输出异常时，不应导致整个系统状态丢失。
 
 ---
 
-## 17.13 什么时候不应该使用多 Agent
+## 17.10 什么时候不应该使用多 Agent
 
-### 17.13.1 一个 Agent 加合适工具已经足够
+### 17.10.1 一个 Agent 加合适工具已经足够
 
 如果普通函数、单 Agent 或确定性 Workflow 可以完成，应优先采用更简单方案。
 
-### 17.13.2 任务高度串行且强依赖完整共享上下文
+### 17.10.2 任务高度串行且强依赖完整共享上下文
 
 例如某些编码任务要求所有步骤持续理解同一份复杂代码状态。此时频繁拆分给多个 Agent 可能导致上下文损失和合并冲突。
 
-### 17.13.3 延迟和成本要求极低
+### 17.10.3 延迟和成本要求极低
 
 多 Agent 会增加：
 
@@ -5066,15 +4405,15 @@ Multi-Agent Evaluation
 - 状态读写；
 - 调度时间。
 
-### 17.13.4 无法验证结果
+### 17.10.4 无法验证结果
 
 如果没有自动测试、Schema、规则、引用或人工验收，多 Agent 只会产生更多无法验证的文本。
 
-### 17.13.5 只是为了模拟组织结构
+### 17.10.5 只是为了模拟组织结构
 
 “CEO—CTO—开发—测试”看起来直观，但不代表必须对应四次独立模型调用。很多情况下，一个 Agent 加四个 Skill 和一个确定性 Workflow 更便宜、更稳定。
 
-### 17.13.6 子任务无法真正隔离
+### 17.10.6 子任务无法真正隔离
 
 如果所有 Agent 都需要完整上下文、相同工具、相同权限，而且任务不能并行，多 Agent 价值通常较低。
 
@@ -5089,6 +4428,667 @@ Multi-Agent Evaluation
 + 安全风险
 + 调试成本
 ```
+
+---
+
+## 17.11 主流通用多 Agent 框架
+
+### 17.11.1 Microsoft Agent Framework
+
+**定位：企业级、跨语言、生产级 Agent 与多 Agent 工作流框架。**
+
+Microsoft Agent Framework 将 AutoGen 的 Agent 抽象与 Semantic Kernel 的类型安全、Middleware、Telemetry、会话状态等能力整合，并增加图工作流、持久化状态和 Human-in-the-loop。
+
+其多 Agent 编排模式主要包括：
+
+- Sequential；
+- Concurrent；
+- Handoff；
+- Group Chat；
+- Magentic。
+
+它支持 Python、.NET 和 Go，并覆盖长运行任务、检查点、恢复、Telemetry、Middleware、A2A、MCP 等企业能力。
+
+**适用场景**：
+
+- Azure 和 Microsoft Foundry 技术栈；
+- .NET 企业应用；
+- 企业流程自动化；
+- 需要显式工作流和持久化状态；
+- 多 Agent 长任务；
+- 需要审计、治理、恢复和人工审批。
+
+**优势**：
+
+- 企业能力完整；
+- Agent 与 Workflow 抽象统一；
+- 适合强治理场景；
+- 与 Azure 生态集成紧密；
+- 支持多种编排模式。
+
+**注意事项**：
+
+- Microsoft AutoGen 已进入维护模式，新项目应重点评估 Microsoft Agent Framework；
+- 从 AutoGen 或 Semantic Kernel 迁移时，需要重新验证 Group Chat、状态、Handoff 和终止行为；
+- Workflow 比自由群聊更强调显式控制。
+
+参考：[Microsoft Agent Framework Overview](https://learn.microsoft.com/en-us/agent-framework/overview/)
+
+---
+
+### 17.11.2 LangGraph 与 Deep Agents
+
+**定位：低层图运行时，加高层长任务 Agent Harness。**
+
+LangGraph 将 Agent 工作流建模为由状态、节点和边组成的图，可以在同一个系统中混合：
+
+- 确定性代码节点；
+- LLM Agent 节点；
+- 条件路由；
+- 并发分支；
+- 循环；
+- Human-in-the-loop；
+- 持久化和恢复。
+
+LangGraph 的核心优势不是预定义大量“角色模板”，而是允许开发者精确控制运行图、共享状态、分支、循环和生命周期。
+
+LangChain 还提供 Deep Agents 作为更高层的 Agent Harness，内置：
+
+- 规划；
+- 文件系统；
+- Skill；
+- 上下文管理；
+- 子 Agent；
+- 长任务执行能力。
+
+Deep Agents 强调 **Context Quarantine**：把独立任务委派给拥有独立上下文的子 Agent，避免主 Agent 的上下文被大量搜索结果、中间日志和工具输出污染。
+
+**适用场景**：
+
+- 复杂状态机；
+- 长运行任务；
+- Coding Agent；
+- Deep Research；
+- 需要中断、恢复和人工干预；
+- 高度定制的多 Agent 拓扑。
+
+**优势**：
+
+- 图结构表达能力强；
+- 对状态和生命周期控制精细；
+- 支持循环、条件分支和并行；
+- 适合 Durable Execution；
+- 生态成熟。
+
+**注意事项**：
+
+- LangGraph 更像运行时和状态机，不是开箱即用的“虚拟团队”；
+- Agent 协议、角色模型和共享状态结构通常需要自行设计；
+- 灵活性很高，但工程复杂度也较高。
+
+参考：
+
+- [LangGraph Graph API](https://docs.langchain.com/oss/python/langgraph/graph-api)
+- [Deep Agents Subagents](https://docs.langchain.com/oss/python/deepagents/subagents)
+
+---
+
+### 17.11.3 OpenAI Agents SDK
+
+**定位：轻量级 Agent 原语，以及 OpenAI 模型、工具、Tracing 的统一运行时。**
+
+OpenAI Agents SDK 提供 Python 和 TypeScript 实现，核心抽象相对精简：
+
+- Agent；
+- Runner；
+- Tool；
+- Handoff；
+- Agent as Tool；
+- Session；
+- Guardrail；
+- Tracing。
+
+其多 Agent 编排有两种核心范式：
+
+1. **Agents as Tools**：管理 Agent 保持用户会话控制权，把专家 Agent 作为工具调用；
+2. **Handoff**：当前 Agent 把会话控制权转交给另一个 Agent。
+
+前者适合由管理 Agent 统一汇总结果，后者适合客服分流、专家接管等场景。
+
+SDK 还可以通过普通代码实现：
+
+- 顺序链；
+- 并行调用；
+- Evaluator-Optimizer；
+- 结构化路由；
+- 自定义重试和预算控制。
+
+**适用场景**：
+
+- OpenAI 模型和 Responses API；
+- Python、Node.js、TypeScript 服务；
+- Voice Agent；
+- Tool Calling 密集型应用；
+- 轻量级 Supervisor/Worker；
+- 不希望引入重量级图框架的系统。
+
+**优势**：
+
+- 核心抽象简单；
+- Handoff 和 Agent as Tool 语义清晰；
+- Guardrail 和 Tracing 集成度高；
+- Python 与 TypeScript 生态兼顾；
+- 易于嵌入现有服务。
+
+**注意事项**：
+
+- 复杂持久化工作流仍需要数据库、消息队列或 Durable Execution 基础设施；
+- Handoff 不等于子任务调用，两者在上下文所有权和最终回答责任上不同；
+- Agent as Tool 默认不会自动继承父 Agent 的全部会话状态，需要显式设计上下文传递。
+
+参考：
+
+- [OpenAI Agents SDK Multi-Agent](https://openai.github.io/openai-agents-python/multi_agent/)
+- [OpenAI Agents SDK Tracing](https://openai.github.io/openai-agents-python/tracing/)
+
+---
+
+### 17.11.4 Google Agent Development Kit
+
+**定位：Google 提供的跨语言 Agent 开发框架，与 Gemini Enterprise Agent Platform 深度集成。**
+
+ADK 支持把多个 Agent 和可执行节点组合为工作流。Agent 可以包含子 Agent，并通过以下方式协作：
+
+- 层级关系；
+- 任务委派；
+- 工作流节点；
+- A2A；
+- 工具调用；
+- 共享会话和状态。
+
+ADK 支持 Python、TypeScript、Go、Java 和 Kotlin；ADK 2.0 在部分语言中进一步引入图工作流能力。
+
+**适用场景**：
+
+- Gemini 和 Google Cloud；
+- 多语言团队；
+- A2A 跨系统 Agent；
+- Google Search、Maps、Workspace 和 Cloud 数据服务；
+- 从本地开发平滑部署到托管 Agent Runtime。
+
+**优势**：
+
+- 多语言覆盖较完整；
+- A2A 原生支持；
+- 与 Google Cloud 托管能力结合紧密；
+- 适合跨组织 Agent 服务；
+- 工具与云服务生态丰富。
+
+**注意事项**：
+
+- ADK 与 Google Cloud 结合最完整；
+- 在其他基础设施上运行时，部分托管能力需要自行替代；
+- 各语言 SDK 的功能成熟度可能不完全一致。
+
+参考：
+
+- [Google ADK Multi-Agent Systems](https://google.github.io/adk-docs/agents/multi-agents/)
+- [Google ADK A2A](https://google.github.io/adk-docs/a2a/)
+
+---
+
+### 17.11.5 CrewAI
+
+**定位：角色驱动的多 Agent 团队，以及事件驱动业务工作流。**
+
+CrewAI 的核心分为两个层次：
+
+- **Crew**：由多个具有角色、目标和工具的 Agent 组成；
+- **Flow**：负责确定性、事件驱动、带状态的执行流程。
+
+Crew 提供自主协作，Flow 提供显式流程控制。一个 Flow 节点可以运行：
+
+- 单次 LLM 调用；
+- 普通函数；
+- 一个 Agent；
+- 一个完整 Crew。
+
+**适用场景**：
+
+- 市场分析；
+- 内容生产；
+- 调研报告；
+- 业务流程自动化；
+- “研究员—作者—审核员”式团队；
+- 快速原型。
+
+**优势**：
+
+- 角色和任务描述直观；
+- 上手成本较低；
+- Crew 与 Flow 可以组合；
+- 适合业务团队建模；
+- 文档和示例较丰富。
+
+**注意事项**：
+
+- 单纯依赖 Agent 自主对话容易产生冗余讨论；
+- 复杂生产系统应更多使用 Flow 控制关键路径；
+- 需要额外关注状态一致性、重试幂等和分布式执行。
+
+参考：[CrewAI Introduction](https://docs.crewai.com/en/introduction)
+
+---
+
+### 17.11.6 PydanticAI
+
+**定位：Python 类型安全、结构化输出和依赖注入优先的 Agent 框架。**
+
+PydanticAI 强调：
+
+- Pydantic 数据模型；
+- 类型安全输入输出；
+- Dependency Injection；
+- 模型无关；
+- Graph 工作流；
+- 多 Agent 应用；
+- 可观测性和测试。
+
+它适合将 Agent 作为后端应用中的一个类型安全组件，而不是单独搭建一个庞大的 Agent 平台。
+
+**适用场景**：
+
+- FastAPI/Python 后端；
+- 强结构化输入输出；
+- 金融、法务、数据处理等对 Schema 要求较高的系统；
+- 希望避免 Agent 之间传递自由文本；
+- 需要较强测试和类型检查能力的项目。
+
+**优势**：
+
+- 类型系统友好；
+- 与 Python 后端工程实践契合；
+- 结构化输出能力强；
+- 依赖注入清晰；
+- 便于单元测试和 Mock。
+
+参考：[PydanticAI Multi-Agent Applications](https://ai.pydantic.dev/multi-agent-applications/)
+
+---
+
+### 17.11.7 LlamaIndex AgentWorkflow
+
+**定位：数据、RAG 和知识密集型多 Agent 工作流。**
+
+LlamaIndex 支持三类常见多 Agent 模式：
+
+- Agent Handoff；
+- Agent as Tool；
+- 自定义 Workflow。
+
+`AgentWorkflow` 可以管理一个或多个 Agent 的交互，适合研究、检索、报告生成和企业数据访问。
+
+**适用场景**：
+
+- RAG；
+- 企业知识库；
+- 数据库和文档检索；
+- Research Agent；
+- 不同数据源由不同 Agent 管理的系统。
+
+**优势**：
+
+- 数据连接器和检索生态丰富；
+- 文档、索引、知识库能力成熟；
+- 适合知识密集型任务；
+- 可与多种模型和向量数据库组合。
+
+参考：[LlamaIndex Multi-Agent Patterns](https://developers.llamaindex.ai/python/framework/understanding/agent/multi_agent/)
+
+---
+
+### 17.11.8 Agno
+
+**定位：Agent、Team、Workflow、AgentOS 和控制平面一体化。**
+
+Agno 的 Team 可以协调 Agent 或嵌套 Team，主要模式包括：
+
+- Coordinate；
+- Route；
+- Broadcast；
+- Tasks。
+
+Team Leader 可以根据成员角色委派任务并汇总结果。Agno 还提供 AgentOS 和 Control Plane，用于部署、监控和管理 Agent 平台。
+
+**适用场景**：
+
+- 快速搭建完整 Agent 服务平台；
+- 需要嵌套团队；
+- 需要统一 Memory、Knowledge、Guardrail 和管理 UI；
+- 中小团队快速产品化。
+
+**优势**：
+
+- Agent 平台能力较完整；
+- Team 抽象直观；
+- 部署与管理能力集成度高；
+- 适合从原型走向服务化。
+
+参考：[Agno Teams Overview](https://docs.agno.com/teams/overview)
+
+---
+
+### 17.11.9 AG2
+
+**定位：协议驱动、异步优先的 AgentOS 与多 Agent Network。**
+
+AG2 是从早期 AutoGen 社区路线发展而来的独立项目。AG2 1.0 使用新的协议驱动核心，以 Network、Hub 和 Channel 组织多个 Agent；原有 `autogen.*` 风格的经典实现被迁移到 AG2 Classic。
+
+**适用场景**：
+
+- 多 Agent 网络研究；
+- 异步事件系统；
+- 自定义消息协议；
+- Human-in-the-loop；
+- 去中心化或网络化 Agent 模型。
+
+**优势**：
+
+- 异步优先；
+- 通信模型灵活；
+- 适合复杂 Agent Network；
+- 社区延续了 AutoGen 风格的部分思想。
+
+**必须区分**：
+
+| 名称 | 含义 |
+|---|---|
+| `microsoft/autogen` | 微软 AutoGen，当前处于维护模式 |
+| `ag2ai/ag2` | 独立 AG2 项目 |
+| `ag2-classic` | 保留原 AutoGen 风格 API 的经典实现 |
+
+AG2 1.0 与 Classic 不是直接兼容升级。
+
+参考：[AG2 Motivation](https://docs.ag2.ai/docs/user-guide/motivation/)
+
+---
+
+### 17.11.10 Mastra
+
+**定位：TypeScript 原生 Agent 与 Workflow 框架。**
+
+Mastra 支持：
+
+- Agent；
+- Workflow；
+- Memory；
+- Tool；
+- 多 Agent 协调；
+- TypeScript 应用集成。
+
+其早期的 `Agent.network()` 已被标记为弃用，当前更推荐使用 Supervisor Agent，通过普通 `generate()` 或 `stream()` 完成 Agent、Workflow 和 Tool 路由。
+
+**适用场景**：
+
+- TypeScript/Node.js 全栈；
+- Web 产品；
+- Agent 与业务 Workflow 混合；
+- 希望前后端统一 TypeScript 技术栈。
+
+**优势**：
+
+- TypeScript 原生；
+- 与 Web 和 Node.js 工程结合自然；
+- 工作流与 Agent 可以混合编排；
+- 适合全栈团队。
+
+参考：[Mastra Agent Networks](https://mastra.ai/docs/agents/networks)
+
+---
+
+### 17.11.11 框架横向对比
+
+| 框架 | 核心定位 | 编排能力 | 状态持久化 | 多 Agent 原语 | 主要语言 | 典型场景 |
+|---|---|---|---|---|---|---|
+| Microsoft Agent Framework | 企业级 Agent + Workflow | 强 | 强 | Sequential、Concurrent、Handoff、Group Chat | Python、.NET、Go | Azure、企业流程 |
+| LangGraph | 图运行时与状态机 | 很强 | 很强 | 节点、子图、Supervisor、自定义拓扑 | Python、TypeScript | 长任务、复杂状态机 |
+| OpenAI Agents SDK | 轻量 Agent Runtime | 中等 | 需组合 | Handoff、Agent as Tool | Python、TypeScript | OpenAI 生态、轻量服务 |
+| Google ADK | 跨语言 Agent 开发套件 | 强 | 中到强 | 子 Agent、Workflow、A2A | Python、TS、Go、Java、Kotlin | Gemini、Google Cloud |
+| CrewAI | 角色团队 + Flow | 中到强 | 中 | Crew、Flow、Manager | Python | 内容、研究、业务自动化 |
+| PydanticAI | 类型安全 Agent | 中 | 需组合 | Agent、Graph、结构化委派 | Python | 类型安全后端 |
+| LlamaIndex | 数据/RAG Agent | 中 | 中 | Workflow、Handoff、Agent as Tool | Python、TS | 知识库、RAG |
+| Agno | Agent 平台与 Team | 强 | 强 | Team、Route、Broadcast、Tasks | Python | Agent 平台化 |
+| AG2 | 异步 Agent Network | 强 | 需设计 | Network、Hub、Channel | Python | Agent 网络研究 |
+| Mastra | TypeScript Agent/Workflow | 中到强 | 中 | Supervisor、Workflow | TypeScript | Web 全栈 |
+
+---
+
+## 17.12 研究型与领域型多 Agent 系统
+
+### 17.12.1 CAMEL
+
+CAMEL 更偏向：
+
+- 多 Agent 社会；
+- 角色扮演；
+- 世界模拟；
+- 合成数据；
+- Agent Scaling；
+- 多角色协作研究。
+
+其能力覆盖 Agent Society、Memory、RAG、代码执行、工具和大规模数据生成。
+
+**适用场景**：
+
+- 多 Agent 社会模拟；
+- Synthetic Data；
+- 多角色对话研究；
+- Agent Scaling Law；
+- 教学和实验。
+
+参考：[CAMEL Introduction](https://docs.camel-ai.org/get_started/introduction)
+
+---
+
+### 17.12.2 MetaGPT
+
+MetaGPT 使用“软件公司”思想，将产品经理、架构师、工程师、测试等角色组成协作实体，并通过标准操作过程约束 Agent 行为。
+
+其核心思路可以概括为：
+
+```text
+复杂软件任务
+→ 角色分工
+→ SOP 驱动
+→ 结构化中间产物
+→ 多阶段软件交付
+```
+
+**适用场景**：
+
+- 软件研发流程研究；
+- SOP 驱动的角色协作；
+- PRD、设计、编码和测试的流水线实验；
+- 教学和快速演示。
+
+MetaGPT 更像领域化多 Agent 方法论，不一定适合直接作为通用企业 Agent Runtime。
+
+参考：[MetaGPT Introduction](https://docs.deepwisdom.ai/main/en/guide/get_started/introduction.html)
+
+---
+
+### 17.12.3 ChatDev 2.0
+
+ChatDev 1.0 以“虚拟软件公司”闻名；ChatDev 2.0 转向零代码通用多 Agent 编排平台，可以通过配置定义 Agent、任务和工作流。
+
+**适用场景**：
+
+- 多 Agent 教学与演示；
+- 零代码多 Agent 原型；
+- 软件研发角色协作；
+- 动态编排研究。
+
+参考：[ChatDev GitHub](https://github.com/OpenBMB/ChatDev)
+
+---
+
+### 17.12.4 Anthropic Research 多 Agent 系统
+
+Anthropic 公开的 Research 系统是典型的 **Orchestrator-Worker** 架构：
+
+1. Lead Agent 分析任务；
+2. 生成研究计划；
+3. 创建多个独立子 Agent；
+4. 子 Agent 并行搜索；
+5. Lead Agent 汇总结果；
+6. Citation Agent 单独验证引用。
+
+其优势主要出现在：
+
+- 广度优先的研究任务；
+- 可并行拆分的问题；
+- 超出单一上下文容量的任务；
+- 需要多来源验证的问题。
+
+这说明多 Agent 的收益往往不是来自“角色更多”，而是来自：
+
+- 多个独立上下文窗口；
+- 并行搜索；
+- 更大的总推理预算；
+- 专业化工具；
+- 最终独立验证。
+
+参考：[How We Built Our Multi-Agent Research System](https://www.anthropic.com/engineering/multi-agent-research-system)
+
+---
+
+## 17.13 云厂商多 Agent 平台
+
+### 17.13.1 Microsoft Foundry Agent Service
+
+Microsoft Foundry Agent Service 是托管的 Agent 构建、部署和扩缩容平台，可与 Microsoft Agent Framework 或其他框架结合。
+
+Foundry Workflow 支持：
+
+- 可视化编排；
+- 条件分支；
+- 变量；
+- 多 Agent；
+- Human-in-the-loop；
+- 托管执行和治理。
+
+典型组合：
+
+```text
+Microsoft Agent Framework
+        +
+Foundry Agent Service
+        +
+Foundry Models / Tools
+        +
+Azure Functions / Container Apps / Cosmos DB
+```
+
+参考：[Microsoft Foundry Workflow](https://learn.microsoft.com/en-us/azure/foundry/agents/concepts/workflow)
+
+---
+
+### 17.13.2 Gemini Enterprise Agent Platform
+
+Google Cloud 通过 Gemini Enterprise Agent Platform 提供：
+
+- Agent Runtime；
+- Memory；
+- Session；
+- Gateway；
+- Evaluation；
+- 部署；
+- 治理；
+- Agent Identity。
+
+Agent Runtime 对 ADK 提供完整集成，也为 LangGraph、LangChain、AG2、LlamaIndex 等提供托管模板；CrewAI 和自定义框架可通过自定义模板部署。
+
+Google 的重点方向包括：
+
+- ADK；
+- A2A；
+- MCP；
+- Agent Gateway；
+- Agent Identity；
+- Memory Bank；
+- 托管 Runtime。
+
+Agent Gateway 强调每个 Agent 拥有独立、可追踪身份，并以 Agent 身份执行授权决策。
+
+参考：
+
+- [Gemini Enterprise Agent Runtime](https://docs.cloud.google.com/gemini-enterprise-agent-platform/build/runtime)
+- [Agent Gateway Overview](https://docs.cloud.google.com/gemini-enterprise-agent-platform/govern/gateways/agent-gateway-overview)
+
+---
+
+### 17.13.3 Amazon Bedrock AgentCore
+
+AgentCore 是 AWS 面向 Agent 系统的托管基础设施，覆盖：
+
+- Runtime；
+- Memory；
+- Gateway；
+- Identity；
+- Browser；
+- Code Interpreter；
+- Observability；
+- Evaluation；
+- MCP；
+- 自定义容器。
+
+AgentCore 支持不同模型和框架，不要求必须使用特定 Agent SDK。
+
+**适用场景**：
+
+- AWS 企业应用；
+- 需要托管浏览器、代码解释器和 Memory；
+- 多框架统一运行；
+- IAM、VPC 和云治理要求较高的系统。
+
+参考：[Amazon Bedrock AgentCore](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/what-is-bedrock-agentcore.html)
+
+---
+
+### 17.13.4 Salesforce Agentforce
+
+Agentforce 面向 CRM、客服、销售和企业流程。
+
+其能力包括：
+
+- Agent Script；
+- 状态变量；
+- 子 Agent 顺序控制；
+- Salesforce Flow；
+- CRM 数据访问；
+- MCP Tool 暴露；
+- 企业权限与审计。
+
+**适用场景**：
+
+- CRM 数据；
+- 客户服务；
+- 销售流程；
+- Salesforce Flow；
+- 企业 SaaS 内部 Agent 协作。
+
+参考：[Agentforce Multi-Turn Patterns](https://developer.salesforce.com/docs/ai/agentforce/guide/ascript-patterns-multi-turn.html)
+
+---
+
+### 17.13.5 云平台横向对比
+
+| 云平台 | 重点能力 | 推荐框架 | 工具与执行环境 | 身份治理 | 典型场景 |
+|---|---|---|---|---|---|
+| Microsoft Foundry | Workflow、企业治理、模型与工具 | Microsoft Agent Framework | Azure Functions、Container Apps | Entra、Azure Policy | 企业流程、.NET、Azure |
+| Gemini Enterprise Agent Platform | ADK、A2A、Gateway、Memory | Google ADK | Google Cloud Runtime、Search、Workspace | Agent Identity、IAM | 跨 Agent 服务、Gemini |
+| Amazon Bedrock AgentCore | Runtime、Memory、Browser、Code Interpreter | 多框架 | AWS 托管沙箱、Gateway | IAM、VPC、Identity | AWS 企业 Agent |
+| Salesforce Agentforce | CRM、Flow、业务 Agent | Agentforce 原生 | Salesforce 工具与数据 | Salesforce 权限模型 | 客服、销售、CRM |
 
 ---
 
@@ -5141,240 +5141,9 @@ Multi-Agent Evaluation
 
 ---
 
-## 17.15 2026 年多 Agent 发展趋势
+## 17.15 生产级参考架构
 
-### 17.15.1 从自由对话转向显式工作流
-
-早期框架强调 Group Chat；当前主流框架越来越强调：
-
-- Graph；
-- Workflow；
-- Structured Handoff；
-- Typed State；
-- Checkpoint；
-- Deterministic Control。
-
-这说明生产级多 Agent 正从“让模型自己讨论”转向“由系统约束模型在明确状态机中执行”。
-
----
-
-### 17.15.2 从共享全部上下文转向上下文隔离
-
-子 Agent 的重要价值之一，是把大量搜索、工具日志和中间过程隔离在独立上下文中，只向主 Agent 返回结构化结果。
-
-未来的上下文架构将更加接近：
-
-```text
-Global Goal
-+ Agent Private Context
-+ Shared Structured State
-+ Referenced Artifacts
-+ Scoped Memory
-```
-
-而不是所有 Agent 共用一条无限增长的对话历史。
-
----
-
-### 17.15.3 从框架内 Agent 转向跨组织 Agent
-
-未来多 Agent 不只发生在一个进程中，而会出现：
-
-```text
-企业 Agent
-    ↕ A2A
-供应商 Agent
-    ↕ A2A
-云平台 Agent
-    ↕ A2A
-个人 Agent
-```
-
-这要求系统具备：
-
-- Agent Registry；
-- Agent Card；
-- 服务发现；
-- 身份认证；
-- 委派授权；
-- 跨组织审计；
-- SLA 和计费。
-
----
-
-### 17.15.4 Agent Gateway 与 Agent Identity 成为基础设施
-
-企业 Agent 平台会逐渐像 API 平台一样拥有：
-
-- Agent Gateway；
-- Agent Registry；
-- Agent Identity；
-- Agent Policy；
-- Agent Rate Limit；
-- Agent Audit；
-- Agent Reputation；
-- Agent Billing。
-
-API Gateway 管理的是服务调用；Agent Gateway 还需要管理：
-
-- 任务委派；
-- 上下文传播；
-- Agent 身份；
-- 运行预算；
-- 工具权限；
-- Artifact 可信度。
-
----
-
-### 17.15.5 预算感知的动态编排
-
-Supervisor 不再无限创建 Agent，而会根据：
-
-- 剩余 Token；
-- 剩余时间；
-- 当前置信度；
-- 子任务价值；
-- 并行收益；
-- Agent 历史表现；
-- 当前系统负载；
-- 任务风险等级；
-
-动态决定是否创建、暂停、合并或终止 Agent。
-
-可以抽象为：
-
-```text
-Expected Utility
-=
-Expected Quality Gain
--
-Token Cost
--
-Latency Cost
--
-Risk Cost
-```
-
-只有当预期收益为正时才创建新的子 Agent。
-
----
-
-### 17.15.6 单 Agent + Skill 与多 Agent 融合
-
-很多过去通过多个角色 Agent 实现的能力，会被重新实现为：
-
-```text
-一个主 Agent
-+ 多个 Skill
-+ 动态工具加载
-+ 少量真正需要隔离的子 Agent
-```
-
-未来不会是“Agent 越多越好”，而是只有在以下条件成立时才创建子 Agent：
-
-- 需要上下文隔离；
-- 需要并行计算；
-- 需要权限隔离；
-- 需要独立验证；
-- 需要远程 Agent 能力。
-
----
-
-### 17.15.7 多 Agent 安全从单体安全转向系统安全
-
-安全边界必须覆盖：
-
-- 单 Agent；
-- Agent 间消息；
-- 共享状态；
-- Agent 身份；
-- 任务委派；
-- Tool 调用；
-- Artifact；
-- 最终聚合结果；
-- 外部 Agent；
-- 人工审批链路。
-
-新的群体性问题包括：
-
-- 过早共识；
-- 重要私有信息无法传播；
-- 对不可信 Agent 的错误信任；
-- 协作效率下降；
-- 多 Agent 共谋绕过策略；
-- 低权限 Agent 诱导高权限 Agent 执行操作。
-
----
-
-### 17.15.8 多 Agent 从在线对话转向 Durable Execution
-
-未来长任务系统会越来越依赖：
-
-- 持久状态；
-- Checkpoint；
-- 事件溯源；
-- 幂等执行；
-- 超时恢复；
-- Worker 重启；
-- 长时间等待人工审批；
-- 可重放的运行轨迹。
-
-多 Agent Runtime 将逐步融合 Workflow Engine、Actor System 和 Durable Execution 的思想。
-
----
-
-### 17.15.9 Agent 选择将从静态配置转向能力市场
-
-系统将根据 Agent 的：
-
-- 能力标签；
-- 模型类型；
-- 工具集合；
-- 历史成功率；
-- 延迟；
-- 成本；
-- 安全等级；
-- 当前负载；
-
-动态选择最合适的 Agent。
-
-```text
-Agent Selection Score
-=
-任务匹配度
-× 历史质量
-× 可用性
--
-成本
--
-延迟
--
-风险
-```
-
----
-
-### 17.15.10 多 Agent 评估将成为持续运营系统
-
-评估不再只发生在上线前，而会持续运行：
-
-```text
-线上 Trace
-→ 自动评分
-→ 失败聚类
-→ 路由或 Prompt 优化
-→ Shadow 验证
-→ 灰度发布
-→ 再次观测
-```
-
-这会形成 AgentOps 闭环。
-
----
-
-## 17.16 生产级参考架构
-
-### 17.16.1 总体架构
+### 17.15.1 总体架构
 
 ```mermaid
 flowchart TB
@@ -5474,7 +5243,7 @@ flowchart TB
     Audit --> Dashboard
 ```
 
-### 17.16.2 推荐核心服务
+### 17.15.2 推荐核心服务
 
 | 服务 | 职责 |
 |---|---|
@@ -5494,7 +5263,7 @@ flowchart TB
 
 ---
 
-### 17.16.3 任务生命周期
+### 17.15.3 任务生命周期
 
 ```mermaid
 sequenceDiagram
@@ -5535,7 +5304,7 @@ sequenceDiagram
 
 ---
 
-### 17.16.4 Agent 配置示例
+### 17.15.4 Agent 配置示例
 
 ```yaml
 agent:
@@ -5580,6 +5349,237 @@ agent:
 
   output_schema: CodeReviewReportV2
 ```
+
+---
+
+## 17.16 2026 年多 Agent 发展趋势
+
+### 17.16.1 从自由对话转向显式工作流
+
+早期框架强调 Group Chat；当前主流框架越来越强调：
+
+- Graph；
+- Workflow；
+- Structured Handoff；
+- Typed State；
+- Checkpoint；
+- Deterministic Control。
+
+这说明生产级多 Agent 正从“让模型自己讨论”转向“由系统约束模型在明确状态机中执行”。
+
+---
+
+### 17.16.2 从共享全部上下文转向上下文隔离
+
+子 Agent 的重要价值之一，是把大量搜索、工具日志和中间过程隔离在独立上下文中，只向主 Agent 返回结构化结果。
+
+未来的上下文架构将更加接近：
+
+```text
+Global Goal
++ Agent Private Context
++ Shared Structured State
++ Referenced Artifacts
++ Scoped Memory
+```
+
+而不是所有 Agent 共用一条无限增长的对话历史。
+
+---
+
+### 17.16.3 从框架内 Agent 转向跨组织 Agent
+
+未来多 Agent 不只发生在一个进程中，而会出现：
+
+```text
+企业 Agent
+    ↕ A2A
+供应商 Agent
+    ↕ A2A
+云平台 Agent
+    ↕ A2A
+个人 Agent
+```
+
+这要求系统具备：
+
+- Agent Registry；
+- Agent Card；
+- 服务发现；
+- 身份认证；
+- 委派授权；
+- 跨组织审计；
+- SLA 和计费。
+
+---
+
+### 17.16.4 Agent Gateway 与 Agent Identity 成为基础设施
+
+企业 Agent 平台会逐渐像 API 平台一样拥有：
+
+- Agent Gateway；
+- Agent Registry；
+- Agent Identity；
+- Agent Policy；
+- Agent Rate Limit；
+- Agent Audit；
+- Agent Reputation；
+- Agent Billing。
+
+API Gateway 管理的是服务调用；Agent Gateway 还需要管理：
+
+- 任务委派；
+- 上下文传播；
+- Agent 身份；
+- 运行预算；
+- 工具权限；
+- Artifact 可信度。
+
+---
+
+### 17.16.5 预算感知的动态编排
+
+Supervisor 不再无限创建 Agent，而会根据：
+
+- 剩余 Token；
+- 剩余时间；
+- 当前置信度；
+- 子任务价值；
+- 并行收益；
+- Agent 历史表现；
+- 当前系统负载；
+- 任务风险等级；
+
+动态决定是否创建、暂停、合并或终止 Agent。
+
+可以抽象为：
+
+```text
+Expected Utility
+=
+Expected Quality Gain
+-
+Token Cost
+-
+Latency Cost
+-
+Risk Cost
+```
+
+只有当预期收益为正时才创建新的子 Agent。
+
+---
+
+### 17.16.6 单 Agent + Skill 与多 Agent 融合
+
+很多过去通过多个角色 Agent 实现的能力，会被重新实现为：
+
+```text
+一个主 Agent
++ 多个 Skill
++ 动态工具加载
++ 少量真正需要隔离的子 Agent
+```
+
+未来不会是“Agent 越多越好”，而是只有在以下条件成立时才创建子 Agent：
+
+- 需要上下文隔离；
+- 需要并行计算；
+- 需要权限隔离；
+- 需要独立验证；
+- 需要远程 Agent 能力。
+
+---
+
+### 17.16.7 多 Agent 安全从单体安全转向系统安全
+
+安全边界必须覆盖：
+
+- 单 Agent；
+- Agent 间消息；
+- 共享状态；
+- Agent 身份；
+- 任务委派；
+- Tool 调用；
+- Artifact；
+- 最终聚合结果；
+- 外部 Agent；
+- 人工审批链路。
+
+新的群体性问题包括：
+
+- 过早共识；
+- 重要私有信息无法传播；
+- 对不可信 Agent 的错误信任；
+- 协作效率下降；
+- 多 Agent 共谋绕过策略；
+- 低权限 Agent 诱导高权限 Agent 执行操作。
+
+---
+
+### 17.16.8 多 Agent 从在线对话转向 Durable Execution
+
+未来长任务系统会越来越依赖：
+
+- 持久状态；
+- Checkpoint；
+- 事件溯源；
+- 幂等执行；
+- 超时恢复；
+- Worker 重启；
+- 长时间等待人工审批；
+- 可重放的运行轨迹。
+
+多 Agent Runtime 将逐步融合 Workflow Engine、Actor System 和 Durable Execution 的思想。
+
+---
+
+### 17.16.9 Agent 选择将从静态配置转向能力市场
+
+系统将根据 Agent 的：
+
+- 能力标签；
+- 模型类型；
+- 工具集合；
+- 历史成功率；
+- 延迟；
+- 成本；
+- 安全等级；
+- 当前负载；
+
+动态选择最合适的 Agent。
+
+```text
+Agent Selection Score
+=
+任务匹配度
+× 历史质量
+× 可用性
+-
+成本
+-
+延迟
+-
+风险
+```
+
+---
+
+### 17.16.10 多 Agent 评估将成为持续运营系统
+
+评估不再只发生在上线前，而会持续运行：
+
+```text
+线上 Trace
+→ 自动评分
+→ 失败聚类
+→ 路由或 Prompt 优化
+→ Shadow 验证
+→ 灰度发布
+→ 再次观测
+```
+
+这会形成 AgentOps 闭环。
 
 ---
 
