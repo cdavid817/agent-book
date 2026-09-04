@@ -16,18 +16,18 @@
 
 可以把它形式化为一个受约束优化问题：
 
-\[
+$$
 \max_C \; \mathbb{E}[Success(C)]
 - \lambda_1 Cost(C)
 - \lambda_2 Latency(C)
 - \lambda_3 Risk(C)
-\]
+$$
 
 满足：
 
-\[
+$$
 Tokens(C) + OutputReserve + ReasoningReserve + SafetyMargin \le WindowLimit
-\]
+$$
 
 其中 `C` 不是固定 Prompt，而是每轮动态选择、压缩、排序和组装后的上下文视图。
 
@@ -399,13 +399,13 @@ flowchart TB
 
 则：
 
-\[
+$$
 W_{usable} = W_{model} - R_{output} - R_{reasoning} - R_{safety}
-\]
+$$
 
-\[
+$$
 B_{dynamic} = W_{usable} - B_{static}
-\]
+$$
 
 注意：某些模型把输入与输出窗口分开声明，某些共用总窗口；公式应由 `ModelProfile` 根据供应商规则解释，而不是假设所有模型相同。
 
@@ -427,12 +427,12 @@ B_{dynamic} = W_{usable} - B_{static}
 
 只在“当前上下文已经超过阈值”时压缩，可能来不及。更合理的是预测下一轮：
 
-\[
+$$
 Projected = CurrentInput
 + P95(ExpectedToolResult)
 + P95(ExpectedModelOutput)
 + SafetyMargin
-\]
+$$
 
 当 `Projected > W_model` 或 `Projected > soft_limit` 时提前治理。
 
@@ -499,13 +499,13 @@ stateDiagram-v2
 
 简单滑动窗口只看时间，会误删早期硬约束，保留近期重复报错。更合理的选择目标是最大化单位 token 的预期价值：
 
-\[
+$$
 Density_i = \frac{Utility_i}{Tokens_i}
-\]
+$$
 
 其中：
 
-\[
+$$
 Utility_i =
 \alpha R_i +
 \beta A_i +
@@ -515,7 +515,7 @@ Utility_i =
 \zeta X_i
 - \eta Risk_i
 - \theta Staleness_i
-\]
+$$
 
 可解释为：
 
@@ -998,15 +998,15 @@ flowchart TB
 
 可以定义：
 
-\[
+$$
 EntityRetention = \frac{|CriticalEntities_{summary} \cap CriticalEntities_{source}|}
 {|CriticalEntities_{source}|}
-\]
+$$
 
-\[
+$$
 ConstraintRetention = \frac{|Constraints_{summary} \cap Constraints_{source}|}
 {|Constraints_{source}|}
-\]
+$$
 
 但自动指标不能完全替代端到端评测。一个摘要可能保留了所有实体，却把因果关系写反，因此还需运行任务恢复测试。
 
@@ -1131,17 +1131,17 @@ OpenAI 对 Codex Agent Loop 的公开说明特别强调精确前缀匹配，并�
 
 Compaction 改变历史，因此压缩后的第一轮往往需要建立新缓存。但它也缩短后续每轮输入。决策应计算真实盈亏：
 
-\[
+$$
 SavedPerTurn = InputBefore - InputAfter
-\]
+$$
 
-\[
+$$
 CompactionCost = SummaryInput + SummaryOutput + CacheRebuildPenalty
-\]
+$$
 
-\[
+$$
 BreakevenTurns = \frac{CompactionCost}{SavedPerTurn}
-\]
+$$
 
 如果预计压缩后仍会运行很多轮，即使第一轮缓存重建，通常仍然值得；如果任务马上结束，压缩可能只增加成本。
 
@@ -1211,9 +1211,9 @@ RULER 将评测扩展到多针、变量追踪、聚合和问答等任务，并�
 
 可定义：
 
-\[
+$$
 EffectiveWindow(\tau) = \max_L \{L \mid SuccessRate(L) \ge \tau\}
-\]
+$$
 
 其中 `τ` 是业务可接受成功率，例如 95%。
 

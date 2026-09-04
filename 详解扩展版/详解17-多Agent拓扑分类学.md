@@ -310,15 +310,15 @@ flowchart LR
 
 多 Agent 总 Token 可写成：
 
-\[
+$$
 T_{multi}=\sum_{i=1}^{n}(P_{shared,i}+P_i+O_i)+C_{coord}+C_{retry}
-\]
+$$
 
 Token 放大系数：
 
-\[
+$$
 TAF=\frac{T_{multi}}{T_{single}}
-\]
+$$
 
 其中 `TAF` 必须与明确的单 Agent 基线绑定。若单 Agent 原本也要读取全部分区并逐一处理，那么 Parallel 的总 Token 可能只略增；若每个并行分支都重复携带一个巨大代码仓库摘要，总 Token 可能接近 `n` 倍。
 
@@ -326,13 +326,13 @@ TAF=\frac{T_{multi}}{T_{single}}
 
 #### Parallel
 
-\[
+$$
 L_{parallel}\approx L_{split}+\max(L_1,\ldots,L_n)+L_{merge}
-\]
+$$
 
-\[
+$$
 T_{parallel}=n\cdot P_{shared}+\sum_i(P_i+O_i)+T_{merge}
-\]
+$$
 
 Parallel 的主要收益是把 `ΣL_i` 降为 `max(L_i)`，但公共上下文会重复 `n` 次。因此：
 
@@ -340,9 +340,9 @@ Parallel 的主要收益是把 `ΣL_i` 降为 `max(L_i)`，但公共上下文会
 
 #### Pipeline
 
-\[
+$$
 L_{pipeline}\approx \sum_{i=1}^{n} L_i
-\]
+$$
 
 Pipeline 几乎没有并发收益，但每一阶段可以只携带前一阶段的结构化产物，避免背负全部历史。
 
@@ -350,9 +350,9 @@ Pipeline 几乎没有并发收益，但每一阶段可以只携带前一阶段�
 
 若主管执行 `k` 次派发/回收决策：
 
-\[
+$$
 T_{supervisor}=T_{manager}(k)+\sum_iT_{worker,i}+T_{final}
-\]
+$$
 
 主管上下文若持续累积全部原始输出，`T_manager(k)` 会随轮次增长；若使用结构化账本和引用式 Artifact，可把增长从“全历史复制”变为“固定摘要 + 按需取证”。
 
@@ -387,17 +387,17 @@ T_{supervisor}=T_{manager}(k)+\sum_iT_{worker,i}+T_{final}
 
 若各阶段成功率为 `p_i`：
 
-\[
+$$
 P(success)\approx\prod_i p_i
-\]
+$$
 
 链越长，端到端可靠性越容易下降，因此边上验证与可重试性非常关键。
 
 #### Parallel：所有分支都必须成功
 
-\[
+$$
 P(all)=\prod_i p_i
-\]
+$$
 
 若允许部分成功，则应定义 `k-of-n` 或必选/可选分区，而不是把一个缺失分支直接等价为全局失败。
 
@@ -405,9 +405,9 @@ P(all)=\prod_i p_i
 
 若每个独立候选正确概率为 `p`，且 Judge 完美：
 
-\[
+$$
 P(at\ least\ one)=1-(1-p)^n
-\]
+$$
 
 真实系统还要乘上 Judge 识别正确候选的能力。候选相关性越高，独立性假设越不成立，增加实例的收益越快饱和。采样与投票类研究展示了增加候选可能带来推理增益，但这种增益与任务难度、模型和候选多样性有关，不应理解成“Agent 越多一定越好”。[^more-agents]
 
@@ -415,9 +415,9 @@ P(at\ least\ one)=1-(1-p)^n
 
 若每轮被接受概率为 `a`，最多 `R` 轮，则执行轮数期望近似：
 
-\[
+$$
 E[K]=\sum_{k=1}^{R}(1-a)^{k-1}=\frac{1-(1-a)^R}{a}
-\]
+$$
 
 审查标准过严会降低 `a`，导致成本和延迟快速上升。
 
@@ -425,9 +425,9 @@ E[K]=\sum_{k=1}^{R}(1-a)^{k-1}=\frac{1-(1-a)^R}{a}
 
 可以把拓扑选择写成一个粗略效用函数：
 
-\[
+$$
 \Delta U=\Delta Q-\alpha\Delta Cost-\beta\Delta Latency-\gamma\Delta Risk-\delta\Delta Ops
-\]
+$$
 
 其中：
 
@@ -989,9 +989,9 @@ flowchart TB
 
 若每个主管平均管理 `b` 个下级，管理深度为 `d`，总节点数近似：
 
-\[
+$$
 N=\frac{b^{d+1}-1}{b-1}
-\]
+$$
 
 消息边数量仍约为 `N-1`，但真正的问题是：
 
@@ -1427,9 +1427,9 @@ Arena 不一定只“选一个”。常见收敛方式：
 
 在没有返工的情况下：
 
-\[
+$$
 T_{arena}\approx\sum_{i=1}^{n}T_{candidate,i}+T_{judge}
-\]
+$$
 
 这比 Debate 更容易预算。Arena 可以并行生成，因此墙钟延迟约为最慢候选加 Judge。
 
@@ -1925,16 +1925,16 @@ sequenceDiagram
 
 一个简化打分函数：
 
-\[
+$$
 Score_i = w_q Q_i - w_c C_i - w_l L_i - w_r R_i
-\]
+$$
 
 其中：
 
-- \(Q_i\)：能力匹配或预计质量；
-- \(C_i\)：预计成本；
-- \(L_i\)：预计延迟；
-- \(R_i\)：风险、负载或失败概率。
+- $Q_i$：能力匹配或预计质量；
+- $C_i$：预计成本；
+- $L_i$：预计延迟；
+- $R_i$：风险、负载或失败概率。
 
 #### 投标必须可验证
 
@@ -2370,23 +2370,23 @@ flowchart TB
 
 一个实用判断式：
 
-\[
+$$
 V_{multi} = \Delta Q + \Delta C_{coverage} + \Delta R_{isolation} + \Delta L_{parallel}
 - C_{coord} - C_{token} - C_{ops} - C_{failure}
-\]
+$$
 
-只有当 \(V_{multi} > 0\) 且提升可通过评测验证时，才值得引入多 Agent。
+只有当 $V_{multi} > 0$ 且提升可通过评测验证时，才值得引入多 Agent。
 
 其中：
 
-- \(\Delta Q\)：质量提升；
-- \(\Delta C_{coverage}\)：能力或知识覆盖提升；
-- \(\Delta R_{isolation}\)：权限、上下文或故障隔离收益；
-- \(\Delta L_{parallel}\)：并行带来的延迟收益；
-- \(C_{coord}\)：协调开销；
-- \(C_{token}\)：额外 Token 成本；
-- \(C_{ops}\)：部署、监控、调试开销；
-- \(C_{failure}\)：新增失败面的期望损失。
+- $\Delta Q$：质量提升；
+- $\Delta C_{coverage}$：能力或知识覆盖提升；
+- $\Delta R_{isolation}$：权限、上下文或故障隔离收益；
+- $\Delta L_{parallel}$：并行带来的延迟收益；
+- $C_{coord}$：协调开销；
+- $C_{token}$：额外 Token 成本；
+- $C_{ops}$：部署、监控、调试开销；
+- $C_{failure}$：新增失败面的期望损失。
 
 ### 7.2 选型的八个核心维度
 
@@ -2532,9 +2532,9 @@ flowchart TD
 
 总分：
 
-\[
+$$
 Score(t) = \sum_{k=1}^{m} w_k \cdot s_{t,k}
-\]
+$$
 
 但必须注意：
 
@@ -3053,11 +3053,11 @@ error_policy:
 
 一个简单的并发预算分配：
 
-\[
+$$
 k_i = \min\left(k_i^{max},\left\lfloor K \cdot \frac{p_i w_i}{\sum_j p_j w_j}\right\rfloor\right)
-\]
+$$
 
-其中 \(K\) 为全局并发，\(p_i\) 为优先级，\(w_i\) 为预计收益或权重。
+其中 $K$ 为全局并发，$p_i$ 为优先级，$w_i$ 为预计收益或权重。
 
 ---
 
@@ -3341,9 +3341,9 @@ MAST 的重要启示不是记住编号，而是：
 
 Parallel 的墙钟时间由最慢分支决定：
 
-\[
+$$
 L_{fan-in} \approx \max_i L_i + L_{merge}
-\]
+$$
 
 防线：
 
@@ -3431,9 +3431,9 @@ stateDiagram-v2
 
 控制重试消耗占总请求量的比例：
 
-\[
+$$
 RetryRatio = \frac{N_{retry}}{N_{initial}+N_{retry}}
-\]
+$$
 
 超过预算时宁可降级，也不要制造重试风暴。
 
@@ -3457,16 +3457,16 @@ RetryRatio = \frac{N_{retry}}{N_{initial}+N_{retry}}
 
 定义一个单调进度指标：
 
-\[
+$$
 P_t = w_1 A_t + w_2 D_t + w_3 V_t - w_4 B_t
-\]
+$$
 
-- \(A_t\)：已通过验收项；
-- \(D_t\)：已完成依赖；
-- \(V_t\)：已验证 Artifact；
-- \(B_t\)：阻断问题数。
+- $A_t$：已通过验收项；
+- $D_t$：已完成依赖；
+- $V_t$：已验证 Artifact；
+- $B_t$：阻断问题数。
 
-若连续 \(k\) 轮 \(P_t\) 不增加，则：
+若连续 $k$ 轮 $P_t$ 不增加，则：
 
 1. 停止当前循环；
 2. 汇总循环证据；
@@ -3621,9 +3621,9 @@ triage_agent 拥有什么权限，billing_agent 接手后全部继承。
 
 形式化表示：
 
-\[
+$$
 Cap_{new}=Cap_{role}\cap Cap_{task}\cap Cap_{delegable}\cap Cap_{policy}
-\]
+$$
 
 并且在 Handoff 结束或超时后自动撤销。
 
@@ -3918,9 +3918,9 @@ flowchart LR
 
 #### 11.4.1 Token Amplification Factor
 
-\[
+$$
 TAF = \frac{Tokens_{multi}}{Tokens_{single\ baseline}}
-\]
+$$
 
 基线必须明确：
 
@@ -3933,25 +3933,25 @@ TAF = \frac{Tokens_{multi}}{Tokens_{single\ baseline}}
 
 #### 11.4.2 Context Duplication Ratio
 
-\[
+$$
 CDR = \frac{\sum_i Tokens_{shared\ context,i}}{Tokens_{unique\ shared\ context}}
-\]
+$$
 
 用于发现同一大段文档被复制到多个 Agent 的问题。
 
 #### 11.4.3 Coordination Cost Ratio
 
-\[
+$$
 CCR = \frac{Cost_{routing}+Cost_{delegation}+Cost_{merge}+Cost_{review}}{Cost_{total}}
-\]
+$$
 
 当 CCR 很高时，说明 Agent 大量时间花在“谈论工作”而不是工作。
 
 #### 11.4.4 Cost per Accepted Artifact
 
-\[
+$$
 CPAA = \frac{Cost_{total}}{N_{accepted\ artifacts}}
-\]
+$$
 
 比“每次 Run 成本”更适合比较不同批处理拓扑。
 
@@ -3973,11 +3973,11 @@ CPAA = \frac{Cost_{total}}{N_{accepted\ artifacts}}
 
 #### Parallel Efficiency
 
-\[
+$$
 PE = \frac{\sum_i L_i}{k \cdot L_{wall}}
-\]
+$$
 
-其中 \(k\) 为并行度。PE 越低，通常意味着：
+其中 $k$ 为并行度。PE 越低，通常意味着：
 
 - 分支负载不均；
 - 排队或限流；
@@ -3987,9 +3987,9 @@ PE = \frac{\sum_i L_i}{k \cdot L_{wall}}
 
 #### Straggler Penalty
 
-\[
+$$
 SP = \frac{\max_i L_i - median(L_i)}{\max_i L_i}
-\]
+$$
 
 ---
 
@@ -3999,31 +3999,31 @@ SP = \frac{\max_i L_i - median(L_i)}{\max_i L_i}
 
 Supervisor 分配的任务中，有多少由正确能力的 Agent 接受并成功完成：
 
-\[
+$$
 DP = \frac{N_{correct\ delegations}}{N_{delegations}}
-\]
+$$
 
 #### Delegation Recall
 
 应当委派的子任务中，有多少实际被识别并委派：
 
-\[
+$$
 DR = \frac{N_{delegated\ required\ subtasks}}{N_{all\ required\ subtasks}}
-\]
+$$
 
 #### Duplicate Work Rate
 
-\[
+$$
 DWR = \frac{Work_{duplicate}}{Work_{total}}
-\]
+$$
 
 可通过任务语义、读写路径和 Artifact Diff 估算。
 
 #### Useful Work Ratio
 
-\[
+$$
 UWR = \frac{Tokens_{evidence}+Tokens_{artifact}+Tokens_{accepted\ reasoning}}{Tokens_{total}}
-\]
+$$
 
 这不是一个容易精确测量的指标，但可用标注或代理信号估计。
 
@@ -4031,9 +4031,9 @@ UWR = \frac{Tokens_{evidence}+Tokens_{artifact}+Tokens_{accepted\ reasoning}}{To
 
 其他 Agent 传递的关键事实中，有多少在后续决策里被引用或处理：
 
-\[
+$$
 IUR = \frac{N_{consumed\ critical\ facts}}{N_{shared\ critical\ facts}}
-\]
+$$
 
 用于发现“消息发了，但无人真正使用”。
 
@@ -4054,9 +4054,9 @@ IUR = \frac{N_{consumed\ critical\ facts}}{N_{shared\ critical\ facts}}
 
 #### Orchestrator Bottleneck Ratio
 
-\[
+$$
 OBR = \frac{L_{supervisor\ critical\ path}}{L_{end-to-end}}
-\]
+$$
 
 如果 Supervisor 占用关键路径过多，可考虑：
 
@@ -4082,9 +4082,9 @@ OBR = \frac{L_{supervisor\ critical\ path}}{L_{end-to-end}}
 
 #### Defect Escape Rate
 
-\[
+$$
 DER_j = \frac{N_{defects\ originating\ before\ j\ detected\ after\ j}}{N_{defects\ originating\ before\ j}}
-\]
+$$
 
 用来判断哪条边缺少有效门禁。
 
@@ -4105,11 +4105,11 @@ DER_j = \frac{N_{defects\ originating\ before\ j\ detected\ after\ j}}{N_{defect
 
 #### Coverage Gain
 
-\[
+$$
 CG(k)=Coverage(k)-Coverage(1)
-\]
+$$
 
-随着分支数增加，Coverage 往往边际递减。应测量 \(CG(k)\) 曲线，而不是默认越多越好。
+随着分支数增加，Coverage 往往边际递减。应测量 $CG(k)$ 曲线，而不是默认越多越好。
 
 ---
 
@@ -4128,9 +4128,9 @@ CG(k)=Coverage(k)-Coverage(1)
 
 #### Reviewer Churn
 
-\[
+$$
 RC = \frac{N_{findings\ added}+N_{findings\ removed\ without\ fix}}{N_{all\ findings}}
-\]
+$$
 
 高 RC 说明 Rubric 不稳定或 Reviewer 上下文不独立。
 
@@ -4150,17 +4150,17 @@ RC = \frac{N_{findings\ added}+N_{findings\ removed\ without\ fix}}{N_{all\ find
 
 #### Novelty Rate
 
-\[
+$$
 NR_t = \frac{N_{new\ claims\ or\ evidence\ at\ round\ t}}{N_{all\ claims\ at\ round\ t}}
-\]
+$$
 
 连续多轮 NR 低于阈值，应停止辩论。
 
 #### Epistemic Correction Rate
 
-\[
+$$
 ECR = \frac{N_{incorrect\ initial\ claims\ corrected}}{N_{incorrect\ initial\ claims}}
-\]
+$$
 
 ---
 
@@ -4179,17 +4179,17 @@ ECR = \frac{N_{incorrect\ initial\ claims\ corrected}}{N_{incorrect\ initial\ cl
 
 将候选顺序交换后：
 
-\[
+$$
 JPB = 1 - Agreement(rank_{original}, rank_{permuted})
-\]
+$$
 
 #### Winner Regret
 
 若存在真实得分：
 
-\[
+$$
 Regret = Score(best\ candidate) - Score(selected\ candidate)
-\]
+$$
 
 ---
 
@@ -4208,15 +4208,15 @@ Regret = Score(best\ candidate) - Score(selected\ candidate)
 
 #### Handoff Loop Rate
 
-\[
+$$
 HLR = \frac{N_{runs\ containing\ repeated\ handoff\ cycle}}{N_{runs\ with\ handoff}}
-\]
+$$
 
 #### Context Re-ask Rate
 
-\[
+$$
 CRR = \frac{N_{facts\ user\ must\ repeat}}{N_{handoffs}}
-\]
+$$
 
 ---
 
@@ -4367,14 +4367,14 @@ slos:
 
 不要只报准确率：
 
-\[
+$$
 Utility = w_q Q - w_c C - w_l L - w_r R
-\]
+$$
 
-- \(Q\)：任务质量；
-- \(C\)：费用或资源；
-- \(L\)：延迟；
-- \(R\)：风险、失败或人工负担。
+- $Q$：任务质量；
+- $C$：费用或资源；
+- $L$：延迟；
+- $R$：风险、失败或人工负担。
 
 可以展示 Pareto Frontier：某个方案只有在质量更高且成本/延迟没有被另一方案全面支配时，才有存在价值。
 
@@ -4583,9 +4583,9 @@ LLM 具有随机性，每个样本只运行一次通常不足以判断差异。
 
 Arena 常使用多个候选。高 `pass@k` 不代表生产系统能找到正确候选；还必须评估 Judge 的 `select@k`：
 
-\[
+$$
 SystemSuccess@k = Pass@k \times P(Judge\ selects\ a\ valid\ candidate \mid valid\ exists)
-\]
+$$
 
 ---
 
@@ -6504,9 +6504,9 @@ flowchart TB
 
 ### 24.22 Handoff 后权限如何计算？
 
-\[
+$$
 Cap_{new}=Cap_{role}\cap Cap_{task}\cap Cap_{delegable}\cap Cap_{policy}
-\]
+$$
 
 不能默认继承原 Agent 全部权限；令牌还需绑定 Task、TTL 和 Agent 身份。
 

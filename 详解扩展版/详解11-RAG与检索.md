@@ -150,28 +150,28 @@ Retrieval-Augmented Generation 最初用于把参数化语言模型与外部非�
 
 在工程系统中，可以把一次 RAG 请求抽象为：
 
-\[
+$$
 D_q = \operatorname{Retrieve}(q, I, P)
-\]
+$$
 
-\[
+$$
 y = \operatorname{Generate}(q, D_q, S)
-\]
+$$
 
 其中：
 
-- \(q\)：用户问题及会话状态；
-- \(I\)：一个或多个知识索引；
-- \(P\)：权限、时间、租户、语言、来源等策略；
-- \(D_q\)：检索后得到的证据集合；
-- \(S\)：生成约束，包括引用、拒答、输出格式和安全策略；
-- \(y\)：最终答案。
+- $q$：用户问题及会话状态；
+- $I$：一个或多个知识索引；
+- $P$：权限、时间、租户、语言、来源等策略；
+- $D_q$：检索后得到的证据集合；
+- $S$：生成约束，包括引用、拒答、输出格式和安全策略；
+- $y$：最终答案。
 
 生产级系统还需要加入验证：
 
-\[
+$$
 (y', V) = \operatorname{Verify}(y, D_q, S)
-\]
+$$
 
 若验证不通过，系统可以拒答、降级、修订答案或触发追加检索。因此，更完整的定义是：
 
@@ -536,23 +536,23 @@ sequenceDiagram
 
 ## 5.1 稀疏检索：BM25 为什么仍然重要
 
-BM25 基于词项匹配、逆文档频率和文档长度归一化。对查询 \(q\) 与文档 \(d\)，常见形式为：
+BM25 基于词项匹配、逆文档频率和文档长度归一化。对查询 $q$ 与文档 $d$，常见形式为：
 
-\[
+$$
 \operatorname{BM25}(q,d)=\sum_{t\in q}
 \operatorname{IDF}(t)\cdot
 \frac{f(t,d)(k_1+1)}
 {f(t,d)+k_1\left(1-b+b\frac{|d|}{\operatorname{avgdl}}\right)}
-\]
+$$
 
 其中：
 
-- \(f(t,d)\)：词项 \(t\) 在文档 \(d\) 中的频次；
-- \(|d|\)：文档长度；
-- \(\operatorname{avgdl}\)：语料平均文档长度；
-- \(k_1\)：控制词频饱和，常见调参范围大约在 1.2～2.0；
-- \(b\)：控制长度归一化，常见初值约 0.75；
-- \(\operatorname{IDF}(t)\)：低频词权重更高。
+- $f(t,d)$：词项 $t$ 在文档 $d$ 中的频次；
+- $|d|$：文档长度；
+- $\operatorname{avgdl}$：语料平均文档长度；
+- $k_1$：控制词频饱和，常见调参范围大约在 1.2～2.0；
+- $b$：控制长度归一化，常见初值约 0.75；
+- $\operatorname{IDF}(t)$：低频词权重更高。
 
 BM25 在以下查询上通常不可替代：
 
@@ -569,39 +569,39 @@ BM25 在以下查询上通常不可替代：
 
 Dense Retrieval 通常采用双编码器：
 
-\[
+$$
 \mathbf{q}=E_q(q),\qquad \mathbf{d}=E_d(d)
-\]
+$$
 
 再计算相似度：
 
-\[
+$$
 s(q,d)=\operatorname{sim}(\mathbf{q},\mathbf{d})
-\]
+$$
 
 常见相似度包括：
 
 ### 余弦相似度
 
-\[
+$$
 \cos(\mathbf{q},\mathbf{d})=
 \frac{\mathbf{q}\cdot\mathbf{d}}
 {\|\mathbf{q}\|_2\|\mathbf{d}\|_2}
-\]
+$$
 
 若入库和查询向量都做 L2 归一化，则余弦相似度等价于内积排序。
 
 ### 内积
 
-\[
+$$
 \operatorname{IP}(\mathbf{q},\mathbf{d})=\mathbf{q}^{\top}\mathbf{d}
-\]
+$$
 
 ### 欧氏距离
 
-\[
+$$
 L_2(\mathbf{q},\mathbf{d})=\|\mathbf{q}-\mathbf{d}\|_2
-\]
+$$
 
 **必须让索引度量与模型训练目标一致。** 把按余弦训练的向量直接用未归一化内积搜索，可能改变排序；更换 Embedding 模型后也必须重建向量，不能让不同空间的向量混在一个索引中。
 
@@ -631,29 +631,29 @@ SPLADE 等方法学习词汇表维度上的稀疏权重，既保留可解释的�
 
 ColBERT 系列不把文本压成一个向量，而是保留 Token 级向量，再用 MaxSim 等晚交互机制匹配：[R7]
 
-\[
+$$
 s(q,d)=\sum_{i\in q}\max_{j\in d}
 \mathbf{q}_i^{\top}\mathbf{d}_j
-\]
+$$
 
 优势是细粒度匹配能力更强，代价是向量数量、索引体积和计算量上升。它适合对检索精度要求高、能承担更复杂服务链的场景，不应无差别替代单向量检索。
 
 ## 5.4 为什么近似最近邻搜索是必要的
 
-若语料有 \(N\) 个向量，每个向量维度为 \(d\)，精确暴力搜索复杂度约为：
+若语料有 $N$ 个向量，每个向量维度为 $d$，精确暴力搜索复杂度约为：
 
-\[
+$$
 O(Nd)
-\]
+$$
 
-当 \(N\) 足够大时，逐个计算相似度不可接受。ANN（Approximate Nearest Neighbor）通过牺牲少量召回来降低延迟。
+当 $N$ 足够大时，逐个计算相似度不可接受。ANN（Approximate Nearest Neighbor）通过牺牲少量召回来降低延迟。
 
 ANN 的核心权衡不是“准或不准”二选一，而是：
 
-\[
+$$
 \text{Recall@K} \leftrightarrow \text{Latency} \leftrightarrow
 \text{Memory} \leftrightarrow \text{Build Cost}
-\]
+$$
 
 例如 HNSW 的查询参数 `ef_search` 越大，通常召回更高但延迟增加；建图参数越激进，索引构建和内存成本也越高。[R21]
 
@@ -671,17 +671,17 @@ BM25 分数、余弦相似度和不同模型的相关性分数没有统一尺度
 
 RRF 只利用排名：
 
-\[
+$$
 \operatorname{RRF}(d)=
 \sum_{r\in R}\frac{w_r}{k+\operatorname{rank}_r(d)}
-\]
+$$
 
 其中：
 
-- \(R\)：检索通道集合；
-- \(w_r\)：通道权重；
-- \(k\)：平滑常数；
-- \(\operatorname{rank}_r(d)\)：文档在通道 \(r\) 中的名次。
+- $R$：检索通道集合；
+- $w_r$：通道权重；
+- $k$：平滑常数；
+- $\operatorname{rank}_r(d)$：文档在通道 $r$ 中的名次。
 
 RRF 的优点：
 
@@ -700,9 +700,9 @@ RRF 的优点：
 
 可将各路分数做 Min-Max、Z-Score、Quantile 或基于标注数据的概率校准，再加权：
 
-\[
+$$
 s_{fusion}(d)=\sum_r w_r\cdot \hat{s}_r(d)
-\]
+$$
 
 它能保留绝对分数，但需要稳定分布和离线标注；模型或语料变化后要重新校准。
 
@@ -710,9 +710,9 @@ s_{fusion}(d)=\sum_r w_r\cdot \hat{s}_r(d)
 
 双编码器允许文档向量预计算，适合从大语料中快速找候选；Cross-Encoder 把 `query + document` 一起输入模型：
 
-\[
+$$
 s_{ce}(q,d)=C([q;d])
-\]
+$$
 
 它能建模细粒度交互，通常更准，但不能对全库逐条计算。因此常见架构是：
 
@@ -726,13 +726,13 @@ s_{ce}(q,d)=C([q;d])
 
 若结果只按相关性排序，Top-K 可能都来自同一文档或同一观点。Maximum Marginal Relevance 可同时考虑相关性与结果间冗余：
 
-\[
+$$
 \operatorname{MMR}(d)=
 \lambda\operatorname{sim}(q,d)
 -(1-\lambda)\max_{d'\in S}\operatorname{sim}(d,d')
-\]
+$$
 
-其中 \(S\) 是已选结果。\(\lambda\) 越高越偏相关性，越低越偏多样性。
+其中 $S$ 是已选结果。$\lambda$ 越高越偏相关性，越低越偏多样性。
 
 MMR 不等于简单去重：
 
@@ -743,9 +743,9 @@ MMR 不等于简单去重：
 
 一个小 Chunk 更利于精确命中，但生成答案可能需要标题、前置条件和上下文。可把两个单位分开：
 
-\[
+$$
 \text{Retrieval Unit} \neq \text{Generation Unit}
-\]
+$$
 
 典型方案：
 
@@ -757,20 +757,20 @@ MMR 不等于简单去重：
 
 ## 5.9 上下文预算是一个受约束优化问题
 
-设证据 \(e_i\) 的相关性为 \(r_i\)、新颖性为 \(n_i\)、权威性为 \(a_i\)、新鲜度为 \(f_i\)、Token 成本为 \(c_i\)，上下文组装可抽象为：
+设证据 $e_i$ 的相关性为 $r_i$、新颖性为 $n_i$、权威性为 $a_i$、新鲜度为 $f_i$、Token 成本为 $c_i$，上下文组装可抽象为：
 
-\[
+$$
 \max_{S}\sum_{i\in S}
 (\alpha r_i+\beta n_i+\gamma a_i+\delta f_i)
-\]
+$$
 
 满足：
 
-\[
+$$
 \sum_{i\in S}c_i \le B
-\]
+$$
 
-其中 \(B\) 是上下文预算。真实系统还要加入：
+其中 $B$ 是上下文预算。真实系统还要加入：
 
 - 每个文档最大片段数；
 - 来源多样性约束；
@@ -1135,11 +1135,11 @@ passage: 对象存储分片上传超时处理流程……
 
 原始向量存储约为：
 
-\[
+$$
 \text{Bytes}=N\times d\times b
-\]
+$$
 
-其中 \(N\) 为向量数、\(d\) 为维度、\(b\) 为每维字节数。ANN 图、ID、Payload 和副本还会增加额外开销。
+其中 $N$ 为向量数、$d$ 为维度、$b$ 为每维字节数。ANN 图、ID、Payload 和副本还会增加额外开销。
 
 Matryoshka Representation Learning 让一个向量的前若干维也保留可用表示，使系统可以按成本选择维度，但前提是模型确实以该方式训练，不能随意截断普通向量。[R20]
 
@@ -1558,15 +1558,15 @@ candidate:
 
 最终排序可组合：
 
-\[
+$$
 S(d)=w_rR(d)+w_aA(d)+w_fF(d)+w_tT(d)-w_pP(d)
-\]
+$$
 
-- \(R\)：语义相关性；
-- \(A\)：权威级；
-- \(F\)：新鲜度；
-- \(T\)：任务/来源匹配；
-- \(P\)：风险、重复或低信任惩罚。
+- $R$：语义相关性；
+- $A$：权威级；
+- $F$：新鲜度；
+- $T$：任务/来源匹配；
+- $P$：风险、重复或低信任惩罚。
 
 相关但过时的博客不应压过当前生效的官方制度。
 
@@ -2703,15 +2703,15 @@ VectorRecord:
 
 仅原始 Float32 向量的大小：
 
-\[
+$$
 \operatorname{RawBytes}=N\times d\times 4
-\]
+$$
 
 示例：1000 万个 1536 维 Float32 向量：
 
-\[
+$$
 10,000,000\times1536\times4=61,440,000,000\text{ bytes}
-\]
+$$
 
 约为 61.44 GB（十进制）或 57.22 GiB（二进制）。这还没有包含 HNSW 图边、ID、Payload、倒排索引、WAL、副本和缓存。
 
@@ -2731,7 +2731,7 @@ VectorRecord:
 
 缺点：
 
-- 随 \(N\) 和 \(d\) 线性增长；
+- 随 $N$ 和 $d$ 线性增长；
 - 大规模在线查询成本高。
 
 精确搜索常用作 ANN Recall 的评测真值。
@@ -2740,10 +2740,10 @@ VectorRecord:
 
 ANN 只探索候选空间的一部分。评估索引时应比较：
 
-\[
+$$
 \operatorname{ANNRecall@K}=
 \frac{|TopK_{ANN}\cap TopK_{Exact}|}{K}
-\]
+$$
 
 注意这是“索引近似召回”，与业务相关文档 Recall@K 是两个不同指标。
 
@@ -2855,10 +2855,10 @@ AND effective_at = now
 
 需要评估过滤选择率：
 
-\[
+$$
 \operatorname{Selectivity}=
 \frac{N_{after\ filter}}{N_{total}}
-\]
+$$
 
 当选择率极低时，索引可能需要：
 
@@ -3116,43 +3116,43 @@ graph TB
 
 ## 12.5 检索指标
 
-设查询的相关文档集合为 \(Rel(q)\)，系统返回前 \(K\) 条为 \(Ret_K(q)\)。
+设查询的相关文档集合为 $Rel(q)$，系统返回前 $K$ 条为 $Ret_K(q)$。
 
 ### Hit Rate@K
 
-\[
+$$
 \operatorname{Hit@K}(q)=
 \mathbb{1}\left(|Rel(q)\cap Ret_K(q)|>0\right)
-\]
+$$
 
 适合“只需命中任一正确文档”的单跳场景。
 
 ### Recall@K
 
-\[
+$$
 \operatorname{Recall@K}(q)=
 \frac{|Rel(q)\cap Ret_K(q)|}{|Rel(q)|}
-\]
+$$
 
 多证据问题尤其重要。单条命中不代表证据充分。
 
 ### Precision@K
 
-\[
+$$
 \operatorname{Precision@K}(q)=
 \frac{|Rel(q)\cap Ret_K(q)|}{K}
-\]
+$$
 
 反映上下文噪声，但当标注不完整时容易低估真实 Precision。
 
 ### MRR
 
-若第一条相关结果的名次为 \(rank_q\)：
+若第一条相关结果的名次为 $rank_q$：
 
-\[
+$$
 \operatorname{MRR}=
 \frac{1}{|Q|}\sum_{q\in Q}\frac{1}{rank_q}
-\]
+$$
 
 适合重视首个正确结果位置的任务。
 
@@ -3160,15 +3160,15 @@ graph TB
 
 对于有多级相关性标注的结果：
 
-\[
+$$
 \operatorname{DCG@K}=
 \sum_{i=1}^{K}\frac{2^{rel_i}-1}{\log_2(i+1)}
-\]
+$$
 
-\[
+$$
 \operatorname{nDCG@K}=
 \frac{DCG@K}{IDCG@K}
-\]
+$$
 
 它同时考虑相关性等级与排名位置。
 
@@ -3220,10 +3220,10 @@ MRR@10
 
 答案中的事实主张有多少能由上下文支持：
 
-\[
+$$
 \operatorname{Faithfulness}=
 \frac{\#SupportedClaims}{\#VerifiableClaims}
-\]
+$$
 
 ### Answer Correctness
 
@@ -3683,10 +3683,10 @@ RAG 的生产问题往往不是模型精度，而是文档未同步、索引版�
 
 ### 新鲜度
 
-\[
+$$
 \operatorname{FreshnessLag}=
 T_{searchable}-T_{source\ change}
-\]
+$$
 
 分别统计新增、修改、删除和权限变化的延迟。
 
@@ -3868,15 +3868,15 @@ hash(query + ordered_candidate_ids + reranker_version)
 
 单请求成本可近似为：
 
-\[
+$$
 C_{request}=C_{rewrite}+\sum C_{retrieve}+C_{rerank}+C_{generation}+C_{verify}
-\]
+$$
 
 系统总成本还包括：
 
-\[
+$$
 C_{total}=C_{online}+C_{ingestion}+C_{storage}+C_{observability}+C_{operations}
-\]
+$$
 
 不要只优化生成 Token。以下操作也可能昂贵：
 
@@ -3889,10 +3889,10 @@ C_{total}=C_{online}+C_{ingestion}+C_{storage}+C_{observability}+C_{operations}
 
 推荐指标：
 
-\[
+$$
 \operatorname{CostPerSuccessfulTask}=
 \frac{\text{总成本}}{\text{成功且通过质量门的任务数}}
-\]
+$$
 
 便宜但经常答错的系统不是真正低成本。
 

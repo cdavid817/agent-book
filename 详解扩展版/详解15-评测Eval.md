@@ -1466,9 +1466,9 @@ Judge 评测调用还应具备：
 
 设评测集中有 `N` 个 Case，第 `i` 个 Case 的成功指示变量为 `y_i ∈ {0,1}`：
 
-\[
+$$
 \text{SuccessRate} = \frac{1}{N}\sum_{i=1}^{N} y_i
-\]
+$$
 
 这个指标直观，但必须同时报告：
 
@@ -1487,9 +1487,9 @@ Judge 评测调用还应具备：
 
 若单次成功概率为 `p`，并近似独立：
 
-\[
+$$
 P(\text{至少一次成功}) = 1 - (1-p)^k
-\]
+$$
 
 它衡量的是：
 
@@ -1497,9 +1497,9 @@ P(\text{至少一次成功}) = 1 - (1-p)^k
 
 在代码生成 Benchmark 中，如果一共采样 `n` 个候选，其中 `c` 个正确，常见无偏估计形式为：
 
-\[
+$$
 \operatorname{pass@k}=1-\frac{\binom{n-c}{k}}{\binom{n}{k}}
-\]
+$$
 
 `pass@k` 适合衡量能力上限，但可能掩盖第一次成功率和重试成本。一个系统 `pass@5` 很高，不代表它适合只能执行一次的支付或删除任务。
 
@@ -1507,9 +1507,9 @@ P(\text{至少一次成功}) = 1 - (1-p)^k
 
 如果要求 `k` 次全部成功，可定义：
 
-\[
+$$
 P(\text{连续 k 次成功}) = p^k
-\]
+$$
 
 经验评测中，一个 Case 只有在 `k` 次运行全部成功时才计为 `pass^k` 成功。
 
@@ -1546,21 +1546,21 @@ P(\text{连续 k 次成功}) = p^k
 
 设成功数为 `x`，样本数为 `n`，`p̂=x/n`，置信水平对应 `z`：
 
-\[
+$$
 \text{center}=
 \frac{\hat p+\frac{z^2}{2n}}
 {1+\frac{z^2}{n}}
-\]
+$$
 
-\[
+$$
 \text{halfwidth}=
 \frac{z}{1+\frac{z^2}{n}}
 \sqrt{\frac{\hat p(1-\hat p)}{n}+\frac{z^2}{4n^2}}
-\]
+$$
 
-\[
+$$
 CI=[\text{center}-\text{halfwidth},\text{center}+\text{halfwidth}]
-\]
+$$
 
 ```python
 from math import sqrt
@@ -1662,9 +1662,9 @@ def paired_bootstrap_delta(
 
 非劣假设可表述为：
 
-\[
+$$
 \Delta = p_{candidate} - p_{baseline} > -\delta
-\]
+$$
 
 例如允许总体成功率最多回退 `1` 个百分点，但高风险退款切片不允许任何实际回退。
 
@@ -1672,9 +1672,9 @@ def paired_bootstrap_delta(
 
 对单一比例，粗略样本量公式为：
 
-\[
+$$
 n \approx \frac{z^2p(1-p)}{e^2}
-\]
+$$
 
 其中 `e` 是期望误差范围。最保守取 `p=0.5`，95% 置信、误差约 ±5 个百分点时，独立样本约需 `385` 个。
 
@@ -1776,13 +1776,13 @@ n \approx \frac{z^2p(1-p)}{e^2}
 
 ### 工具选择
 
-\[
+$$
 \text{Tool Precision} = \frac{\text{正确且必要的工具调用}}{\text{全部工具调用}}
-\]
+$$
 
-\[
+$$
 \text{Tool Recall} = \frac{\text{已完成的必要工具能力}}{\text{全部必要工具能力}}
-\]
+$$
 
 注意：同一能力可能由多个等价工具实现，评测器应基于能力或效果，而不是只认工具名。
 
@@ -1799,17 +1799,17 @@ n \approx \frac{z^2p(1-p)}{e^2}
 
 ### 无效步骤率
 
-\[
+$$
 \text{WasteRate} = \frac{\text{无贡献或重复步骤数}}{\text{总步骤数}}
-\]
+$$
 
 “无贡献”需要谨慎定义。探索性搜索未命中不一定是浪费；在已有明确证据后重复相同查询，则更可能是浪费。
 
 ### 恢复率
 
-\[
+$$
 \text{RecoveryRate} = \frac{\text{遇到可恢复故障后最终成功的任务数}}{\text{遇到可恢复故障的任务数}}
-\]
+$$
 
 还应记录：
 
@@ -1907,17 +1907,17 @@ stateDiagram-v2
 
 可定义：
 
-\[
+$$
 \text{Clarification Precision} =
 \frac{\text{确实必要的澄清次数}}
 {\text{全部澄清次数}}
-\]
+$$
 
-\[
+$$
 \text{Clarification Recall} =
 \frac{\text{已触发的必要澄清}}
 {\text{全部应澄清场景}}
-\]
+$$
 
 过低 Precision 意味着 Agent 啰嗦、阻碍任务；过低 Recall 意味着 Agent 在信息不足时冒险执行。
 
@@ -2324,11 +2324,11 @@ flowchart LR
 
 ## 16.2 Cost per Successful Task
 
-\[
+$$
 \text{CostPerSuccess} =
 \frac{\text{全部任务总成本}}
 {\text{成功任务数}}
-\]
+$$
 
 这个指标比单次平均成本更有意义。例如：
 
@@ -2343,17 +2343,17 @@ B 单次更贵，但完成一个成功任务反而更便宜。
 
 在给定成本或时间预算下衡量成功：
 
-\[
+$$
 \text{BudgetedSuccess}(B)=
 P(\text{success} \land \text{cost}\le B)
-\]
+$$
 
 或：
 
-\[
+$$
 \text{LatencyBoundedSuccess}(T)=
 P(\text{success} \land \text{latency}\le T)
-\]
+$$
 
 这比单独看成功率和延迟更贴近用户体验。
 

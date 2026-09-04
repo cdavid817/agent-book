@@ -306,7 +306,7 @@ vaneHub-AI 是一个多 Agent 桌面应用。
 
 以下是一套适合工程落地的示例公式，并非行业强制标准：
 
-\[
+$$
 P =
 0.25E +
 0.25U +
@@ -316,7 +316,7 @@ P =
 0.10N -
 Risk -
 Conflict
-\]
+$$
 
 参数含义：
 
@@ -645,13 +645,13 @@ scripts/validate-migrations.ts
 
 长期记忆维护可以采用综合评分：
 
-\[
+$$
 RetentionScore =
 Importance \times
 UsageFrequency \times
 Confidence \times
 Freshness
-\]
+$$
 
 但不建议对所有类型使用同一衰减公式。可按类型分别管理：
 
@@ -685,7 +685,7 @@ Freshness
 
 ### 8.1 推荐召回评分
 
-\[
+$$
 Rank =
 \alpha \cdot SemanticSimilarity +
 \beta \cdot KeywordMatch +
@@ -694,7 +694,7 @@ Rank =
 \epsilon \cdot Confidence +
 \zeta \cdot Authority -
 \lambda \cdot Redundancy
-\]
+$$
 
 还应加入硬过滤条件：
 

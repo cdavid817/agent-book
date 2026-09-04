@@ -14,31 +14,31 @@
 
 可以将 Agent 状态抽象为：
 
-\[
+$$
 A_t=(M_{\theta_t},P_t,Mem_t,Skill_t,Tool_t,Graph_t,Code_t)
-\]
+$$
 
 其中：
 
-- \(M_{\theta_t}\)：基础模型及其参数；
-- \(P_t\)：Prompt、规则、Playbook、角色配置；
-- \(Mem_t\)：情景记忆、语义记忆、程序记忆；
-- \(Skill_t\)：可复用技能；
-- \(Tool_t\)：工具、API、MCP Server；
-- \(Graph_t\)：单 Agent 工作流或多 Agent 协作拓扑；
-- \(Code_t\)：Agent Harness 或 Agent 自身实现。
+- $M_{\theta_t}$：基础模型及其参数；
+- $P_t$：Prompt、规则、Playbook、角色配置；
+- $Mem_t$：情景记忆、语义记忆、程序记忆；
+- $Skill_t$：可复用技能；
+- $Tool_t$：工具、API、MCP Server；
+- $Graph_t$：单 Agent 工作流或多 Agent 协作拓扑；
+- $Code_t$：Agent Harness 或 Agent 自身实现。
 
-执行任务产生轨迹 \(\tau_t\) 和反馈 \(f_t\)，进化器生成候选变更：
+执行任务产生轨迹 $\tau_t$ 和反馈 $f_t$，进化器生成候选变更：
 
-\[
+$$
 \Delta_t=Evolve(A_t,\tau_t,f_t)
-\]
+$$
 
 但只有满足效果、安全、成本和稳定性约束时，才应提交：
 
-\[
+$$
 A_{t+1}=Commit(A_t,\Delta_t)
-\]
+$$
 
 这意味着，完整自进化并不只是“反思一次”，而是：
 
@@ -1075,54 +1075,54 @@ SWE-EVO 面向长期软件演进，不再只测试单个 Bug，而是要求 Agen
 
 #### 进化收益
 
-\[
+$$
 EvolutionGain_k =
 Score(A_k,D_{holdout})-Score(A_0,D_{holdout})
-\]
+$$
 
 必须在未参与进化的固定 Holdout 上计算。
 
 #### 保持率
 
-\[
+$$
 Retention_k =
 \frac{Score(A_k,D_{replay})}
 {Score(A_0,D_{replay})}
-\]
+$$
 
 用于检测遗忘和能力退化。
 
 #### 学习效率
 
-\[
+$$
 Efficiency_k=
 \frac{\Delta Score}
 {TokenCost+ToolCost+ComputeCost}
-\]
+$$
 
 #### 技能复用率
 
-\[
+$$
 ReuseRate =
 \frac{成功调用已有技能的任务数}
 {适合复用技能的任务数}
-\]
+$$
 
 #### 更新接受率
 
-\[
+$$
 AcceptanceRate =
 \frac{通过评测和安全门禁的候选数}
 {全部候选变更数}
-\]
+$$
 
 #### 退化率
 
-\[
+$$
 RegressionRate =
 \frac{旧任务上发生性能下降的任务数}
 {Replay任务总数}
-\]
+$$
 
 还应记录：
 

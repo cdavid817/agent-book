@@ -125,9 +125,9 @@
 
 对一个最小工具型 Agent，可以使用下面的简化公式：
 
-\[
+$$
 Agent = LLM + Loop + Tools
-\]
+$$
 
 其中：
 
@@ -135,17 +135,17 @@ Agent = LLM + Loop + Tools
 - **Loop**：反复调用模型、执行工具并把观察结果回填，直到任务结束或被运行时中止。
 - **Tools**：连接外部世界的能力，例如读文件、查数据库、调用 HTTP API、执行代码或发送消息。
 
-更形式化地，在第 \(t\) 轮，模型根据当前状态 \(s_t\) 产生动作 \(a_t\)：
+更形式化地，在第 $t$ 轮，模型根据当前状态 $s_t$ 产生动作 $a_t$：
 
-\[
+$$
 a_t \sim \pi_{LLM}(a \mid s_t)
-\]
+$$
 
-如果动作是工具调用，环境执行后产生观察 \(o_t\)，状态更新为：
+如果动作是工具调用，环境执行后产生观察 $o_t$，状态更新为：
 
-\[
+$$
 s_{t+1} = Update(s_t, a_t, o_t)
-\]
+$$
 
 如果动作是最终回答，循环结束。这里的 `messages` 只是状态的一种序列化表示，并不是状态设计的唯一形式。
 
@@ -153,9 +153,9 @@ s_{t+1} = Update(s_t, a_t, o_t)
 
 `LLM + Loop + Tools` 是认知公式，不是完整生产架构。进入工程阶段后，更实用的表达是：
 
-\[
+$$
 AgentRuntime = Policy + State + Loop + Tools + Guardrails + Observability
-\]
+$$
 
 | 部件 | 核心职责 | 缺失后的典型问题 |
 |---|---|---|
@@ -2107,11 +2107,11 @@ flowchart LR
 
 ## 11.4 为什么输入成本可能近似二次增长
 
-假设每轮新增约 \(d\) 个 token，第 \(i\) 次请求都重发之前历史，则输入 token 总量近似：
+假设每轮新增约 $d$ 个 token，第 $i$ 次请求都重发之前历史，则输入 token 总量近似：
 
-\[
+$$
 \sum_{i=1}^{n} i \cdot d = d \cdot \frac{n(n+1)}{2} = O(n^2)
-\]
+$$
 
 这不是说所有 API 成本必然严格二次增长，因为：
 
@@ -3289,9 +3289,9 @@ action_1 → observation_1 → action_2 → observation_2 → ... → final
 
 一个简单的冗余率：
 
-\[
+$$
 RedundantCallRatio = \frac{N_{redundant\ tool\ calls}}{N_{all\ tool\ calls}}
-\]
+$$
 
 但“重复”不一定总是错误：读取变化中的日志、轮询异步任务可能是合理重复。因此评估器要理解工具语义和时间条件。
 
@@ -4170,15 +4170,15 @@ checkpoints
 
 最小公式仍然成立：
 
-\[
+$$
 Agent = LLM + Loop + Tools
-\]
+$$
 
 但当系统进入真实世界后，还必须补全：
 
-\[
+$$
 AgentRuntime = Policy + State + Loop + Tools + Guardrails + Observability
-\]
+$$
 
 ## 24.2 十条必须记住的原则
 
